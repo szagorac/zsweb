@@ -1,0 +1,87 @@
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td,article,aside,canvas,details,embed,figure,figcaption,footer,header,hgroup,menu,nav,output,ruby,section,summary,time,mark,audio,video{margin:0;padding:0;border:0;font-size:100%;font:inherit;vertical-align:baseline;}article,aside,details,figcaption,figure,footer,header,hgroup,menu,nav,section{display:block;}body{line-height:1;}ol,ul{list-style:none;}blockquote,q{quotes:none;}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none;}table{border-collapse:collapse;border-spacing:0;}body{-webkit-text-size-adjust:none}
+
+body {
+    /* background-color: #545353; */
+    background-color: white;
+    color: black;
+    font-size: 1.0em;
+    text-align: center;
+    margin: 0;
+    padding:0; 
+    /* position: fixed; */
+    overflow:hidden;
+}
+
+svg {
+    display: block;
+    border: 1px solid #ccc;
+    position:absolute;
+    top: 0;
+    left: 0;
+    height: 100%; 
+    width: 100%;
+    background: white;
+}
+
+h1 {
+    color: #d1d2d4;
+    font-size: 2.5em;
+}
+
+#intro {
+    font-size: 1.3em;
+}
+
+.top-3cm-spacer {
+    margin-top: 3cm;
+}
+
+.myButton {
+	box-shadow: 3px 4px 0px 0px #91b8b3;
+	background:linear-gradient(to bottom, #768d87 5%, #6c7c7c 100%);
+	background-color:#768d87;
+	border-radius:18px;
+	border:1px solid #566963;
+	display:inline-block;
+	cursor:pointer;
+	color:#ffffff;
+	font-family:Arial;
+	font-size: 2em;
+	padding:7px 25px;
+	text-decoration:none;
+    text-shadow:0px 1px 0px #2b665e;
+    position:fixed; 
+    z-index:3; 
+    /* top: 10px;
+    left:10px; */
+    vertical-align:middle;
+}
+.myTxt {
+	/* display:inline-block; */
+	font-family:Arial;
+    font-size: 3em;
+    /* padding:7px 25px; */
+	text-decoration:none;
+    text-shadow:0px 1px 0px #2b665e;
+    position: fixed; 
+    z-index:2; 
+    top: 10px;
+    left: 160px;
+    vertical-align:middle;
+    /* To always place in the centre:
+    position: fixed;
+	top:50%;
+	left: 50%;
+	transform: translate(-50%, -50%); */
+}
+.myButton:hover {
+	background:linear-gradient(to bottom, #6c7c7c 5%, #768d87 100%);
+	background-color:#6c7c7c;
+}
+.myButton:active {
+	position:fixed;
+	top:1px;
+}
+.myButton:focus {
+    outline:0;
+}
