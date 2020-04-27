@@ -1,0 +1,25 @@
+<project name="ZsWeb" default="dist" basedir=".">
+    <description>
+        simple example build file
+    </description>
+    <!-- set global properties for this build -->
+    <property name="src" location="src"/>
+    <property name="dist" location="dist"/>
+
+    <target name="init">
+        <!-- Create the time stamp -->
+        <tstamp/>
+        <!-- Create the build directory structure used by compile -->
+        <mkdir dir="${dist}"/>
+    </target>
+
+    <target name="dist" depends="init" description="generate the distribution">
+        <!-- Create the distribution directory -->
+
+    </target>
+
+    <target name="clean" description="clean up">
+        <!-- Delete the ${build} and ${dist} directory trees -->
+        <delete dir="${dist}"/>
+    </target>
+</project>
