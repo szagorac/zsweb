@@ -29,3 +29,5 @@ target/
 .history/
 dist/
 .DS_Store
+.vscode/
+*.code-workspace
