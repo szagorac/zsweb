@@ -1,4 +1,4 @@
-<project name="ZsWeb" default="dist" basedir=".">
+<project name="ZsWeb" default="main" basedir=".">
     <description>
         ZScore Web Client
     </description>
@@ -33,4 +33,6 @@
     <target name="clean" description="clean up">
         <delete dir="${dist}"/>
     </target>
+
+    <target name="main" depends="clean, dist"/>
 </project>
