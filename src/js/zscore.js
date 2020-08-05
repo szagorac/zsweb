@@ -228,6 +228,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
     }
     function resetTileState(tileState) {
+        resetTileGroup(tileState.id);
         tileState.isSelected = false;
         tileState.isActive = false;
         tileState.isVisible = true;
@@ -245,6 +246,13 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
         var tileObj = u.getElement(tileState.id);
         setTileStyle(tileState, tileObj);
+    }
+    function resetTileGroup(tileId) {
+        var tileGroupId = config.tileGroupPrefix + tileId;
+        var tileGroup = u.getElement(tileGroupId);
+        if(!isNull(tileGroup)) {
+            tileGroup.style.opacity = "1";
+        }
     }
     function resetShapes() {
         resetShape(state.centreShape);
@@ -697,7 +705,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         var tile = selectedObj;
         var elementId = selectedObj.id;
         log("onPointerEntry: " + elementId);
-        isTileGroupId
+
         if (isTileGroupId(elementId)) {
             elementId = getTileIdFromGroupId(elementId);
             tile = u.getElement(elementId);
@@ -982,6 +990,20 @@ var zscore = (function (u, n, s, a, win, doc) {
             paused: true
         });
     }
+    function createDissolve(objId, dur) {
+        if (isNull(objId)) {
+            logError("dissolve: Invalid objectId: " + objId);
+            return;
+        }
+
+        return gsap.to(u.toCssIdQuery(objId), {
+            duration: dur,
+            opacity: 0,
+            onComplete: onAnimationComplete,
+            onCompleteParams: [objId],
+            paused: true
+        });
+    }
     function getRandomPointInsideCircle(xc, yc, rc) {
         if (!u) {
             logError("getRandomPointInsideCircle: invalid zsUtil");
@@ -1243,7 +1265,6 @@ var zscore = (function (u, n, s, a, win, doc) {
         var tween = null;
         if (isTileId(target)) {
             var tGroupId = config.tileGroupPrefix + target;
-            var tileGroup = u.getElement(tGroupId);
             var tile = u.getElement(target);
             var tweens = getObjectTweens(tile);
             if (u.isArray(tweens) && tweens.length > 0) {
@@ -1283,6 +1304,45 @@ var zscore = (function (u, n, s, a, win, doc) {
         if (config.all === target.toUpperCase()) {
             state.tiles
         }
+    }
+    function dissolve(actionId, targets, params) {
+        if (u.isArray(targets)) {
+            for (var i = 0; i < targets.length; i++) {
+                runDissolve(actionId, targets[i], params);
+            }
+        } else {
+            runDissolve(actionId, targets, params);
+        }
+    }
+    function runDissolve(actionId, target, params) {
+        if (!u.isString(actionId) || !u.isObject(params)) {
+            return;
+        }
+
+        log("runDissolve: " + target);
+
+        switch (actionId) {
+            case 'start':
+                runDissolveStart(target, params);
+                break;
+            default:
+                logError("Unknown rotate actionId: " + actionId);
+                return;
+        }
+    }
+    function runDissolveStart(target, params) {
+        var dur = 0;
+        if (!isNull(params.duration)) {
+            dur = params.duration;
+        }
+
+        var tween = null;
+        if (isTileId(target)) {
+            var tGroupId = config.tileGroupPrefix + target;
+            tween = createDissolve(tGroupId, dur);
+        } 
+
+        playOrRestartTween(tween);
     }
     function reset(actionId, targets, params) {
         if (u.isArray(targets)) {
@@ -1723,6 +1783,9 @@ var zscore = (function (u, n, s, a, win, doc) {
             case "ROTATE":
                 rotate(id, elementIds, params);
                 break;
+            case "DISSOLVE":
+                dissolve(id, elementIds, params);
+                break;                
             case "AUDIO":
                 audio(id, elementIds, params);
                 break;
