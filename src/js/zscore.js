@@ -75,12 +75,12 @@ var zscore = (function (u, n, s, a, win, doc) {
         tileStyleTextPathDef: { "fill": "none", "stroke": "none" },
         tileStyleTextElement: { "visibility": "visible", "opacity": 1 },
         tileStyleTextElementInvisible: { "visibility": "hidden" },
-        tileStyleTorusTextPathElement: { "startOffset": "50%", "text-anchor": "middle", "fill": "black", "stroke": "none"},
-        tileStylePieTextPathElement: { "startOffset": "90%", "text-anchor": "end", "fill": "black", "stroke": "none"},
-        tileStyleInvertedPieTextPathElement: { "startOffset": "10%", "text-anchor": "start", "fill": "black", "stroke": "none"},
-        tileStyleTextSpan: { "font-family": "Arial", "dominant-baseline": "middle"},
+        tileStyleTorusTextPathElement: { "startOffset": "50%", "text-anchor": "middle", "fill": "black", "stroke": "none" },
+        tileStylePieTextPathElement: { "startOffset": "90%", "text-anchor": "end", "fill": "black", "stroke": "none" },
+        tileStyleInvertedPieTextPathElement: { "startOffset": "10%", "text-anchor": "start", "fill": "black", "stroke": "none" },
+        tileStyleTextSpan: { "font-family": "Arial", "dominant-baseline": "middle" },
         tileTextMinLength: 4,
-        tileTextSizeMultiplier: {torus: 0.8, pie: 0.7},
+        tileTextSizeMultiplier: { torus: 0.8, pie: 0.7 },
         shapeStyleInvisible: { "visibility": "hidden" },
         shapeStyleVisible: { "visibility": "visible" },
         shapeTimelineDuration: 60,
@@ -181,10 +181,10 @@ var zscore = (function (u, n, s, a, win, doc) {
         resetZoom();
         resetAudio();
     }
-    function initNet() {        
-        n.init(config.connectionPreference,  config.appUrlSse, config.appUrlWebsockets, config.appUrlHttp, onServerEventReceived, processSeverState);
+    function initNet() {
+        n.init(config.connectionPreference, config.appUrlSse, config.appUrlWebsockets, config.appUrlHttp, onServerEventReceived, processSeverState);
     }
-    function getServerState() {        
+    function getServerState() {
         n.getServerState();
     }
     function initAudio() {
@@ -201,7 +201,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
         a.reset();
     }
-    function initSvg() {        
+    function initSvg() {
         s.init();
     }
     function initTiles() {
@@ -284,7 +284,7 @@ var zscore = (function (u, n, s, a, win, doc) {
             var angle = arr[i];
             var lineElement = s.createSvgLine(centre.x, centre.y, lineEnd.x, lineEnd.y, angle, i + 1);
             u.setElementAttributes(lineElement, config.gridStyle);
-            u.addChildToParentId(config.gridParentId, lineElement);    
+            u.addChildToParentId(config.gridParentId, lineElement);
         }
     }
     function initShapes() {
@@ -397,7 +397,7 @@ var zscore = (function (u, n, s, a, win, doc) {
             hideInstructions();
         }
     }
-   
+
     function createSvgTile(cX, cY, r, startAngle, endAngle, circleNo, tileNo) {
         var tileId = config.tilePrefix + u.toStr(circleNo) + config.elementIdDelimiter + u.toStr(tileNo);
 
@@ -438,10 +438,10 @@ var zscore = (function (u, n, s, a, win, doc) {
         setTileStyle(tileState, tileElement)
 
         var txtState = null;
-        if(!isNull(tileState.txt)) {
+        if (!isNull(tileState.txt)) {
             txtState = tileState.txt;
         }
-        
+
         var tilePath = null;
         if (circleNo <= 1) {
             tilePath = s.createPieTilePath(cX, cY, arc);
@@ -462,20 +462,20 @@ var zscore = (function (u, n, s, a, win, doc) {
         var textPathId = config.tileTextPathElementPrefix + tileId;
         var textPathDef = s.createPathElement(textPathId);
         var textPathStyle = config.tileStylePieTextPathElement;
-        var angle = startAngle + u.round((endAngle - startAngle)/2, 1);
+        var angle = startAngle + u.round((endAngle - startAngle) / 2, 1);
 
         var lineEndX = cX;
-        var lineEndY = cY - r;        
-        var linePath = null;        
+        var lineEndY = cY - r;
+        var linePath = null;
         if (tileNo > 4 && tileNo < 9) {
             linePath = s.createLinePath(lineEndX, lineEndY, cX, cY);
             textPathStyle = config.tileStyleInvertedPieTextPathElement;
         } else {
-            linePath = s.createLinePath(cX, cY, lineEndX, lineEndY);            
+            linePath = s.createLinePath(cX, cY, lineEndX, lineEndY);
         }
         textPathDef.setAttribute("d", linePath);
         s.rotateElement(textPathDef, angle, cX, cY);
-        
+
         txtState.sizeMultiplier = config.tileTextSizeMultiplier.pie;
 
         createTileTextElement(txtState, textPathDef, textPathId, tileGroupId, tileId, textPathStyle);
@@ -499,7 +499,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         createTileTextElement(txtState, textPathDef, textPathId, tileGroupId, tileId, textPathStyle);
     }
     function createTileTextElement(txtState, textPathDef, textPathId, tileGroupId, tileId, textPathStyle) {
-        
+
         setElementAttributes(textPathDef, config.tileStyleTextPathDef);
         u.addFirstChildToParent(getSvg(), textPathDef);
 
@@ -523,7 +523,7 @@ var zscore = (function (u, n, s, a, win, doc) {
 
         var txt = EMPTY;
         var textSizeMultiplier = 1.0;
-        if(!u.isObjectInstanceOf(TileText, txtState)) {
+        if (!u.isObjectInstanceOf(TileText, txtState)) {
             txt = txtState.value;
             textSizeMultiplier = txtState.sizeMultiplier;
         }
@@ -534,16 +534,16 @@ var zscore = (function (u, n, s, a, win, doc) {
         if (isNull(textSpanElement) || isNull(textPath)) {
             return;
         }
-        
+
         var textNode = textSpanElement;
-        
+
         if (isNull(textNode)) {
             return;
         }
 
-        var oldVal = textNode.textContent;        
+        var oldVal = textNode.textContent;
         var newVal = EMPTY;
-        if(u.isString(txt) && EMPTY !== txt) {
+        if (u.isString(txt) && EMPTY !== txt) {
             newVal = txt;
         }
         if (oldVal === newVal) {
@@ -552,7 +552,7 @@ var zscore = (function (u, n, s, a, win, doc) {
 
         var testValue = newVal;
         var len = testValue.length;
-        if(len < config.tileTextMinLength) {
+        if (len < config.tileTextMinLength) {
             var diff = config.tileTextMinLength - len;
             for (var i = 0; i < diff; i++) {
                 testValue += SPACER;
@@ -562,30 +562,30 @@ var zscore = (function (u, n, s, a, win, doc) {
         var pathLen = textPath.getTotalLength();
         var fontSizeMultiplier = textSizeMultiplier;
 
-        var testElement = u.getElement(config.testTextElementId);        
+        var testElement = u.getElement(config.testTextElementId);
         testElement.textContent = testValue;
-        
+
         var fs = 10;
         var fontSize = EMPTY + fs + "px";
-        
+
         testElement.setAttribute("font-size", fontSize);
-        var testTextLen = testElement.getComputedTextLength();        
-        
+        var testTextLen = testElement.getComputedTextLength();
+
         if (0 === testTextLen) {
             testTextLen = pathLen;
         }
-        
-        var ratio = pathLen / testTextLen;            
+
+        var ratio = pathLen / testTextLen;
 
         fs *= ratio * fontSizeMultiplier;
         fs = Math.floor(fs);
         fontSize = EMPTY + fs + "px";
 
         log("setTileText: text: " + newVal + " pathLen: " + pathLen + " testTextLen: " + testTextLen + " ratio: " + ratio + " fontSize: " + fontSize);
-        textNode.setAttribute("font-size", fontSize);                
+        textNode.setAttribute("font-size", fontSize);
         textNode.textContent = newVal;
     }
-    
+
     function getShapeStyle(shapeState) {
         if (isNull(shapeState)) {
             return null;
@@ -645,7 +645,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
 
         return config.tileStyleActive;
-    }    
+    }
     function onTileClick() {
         log("onTileClick: ");
     }
@@ -806,7 +806,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         var column = u.toInt(tileInfoArr[1]) - 1;
         return u.createPoint(row, column);
     }
-    
+
     function getTileObject(element) {
         if (!u.isObject(element)) {
             return null;
@@ -861,6 +861,12 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
         return u.startsWith(id, config.tilePrefix);
     }
+    function isCircleGroupId(id) {
+        if (isNull(id) || !u.isString(id)) {
+            return false;
+        }
+        return u.startsWith(id, config.tileCircleGroupPrefix);
+    }
     function isTileTextId(id) {
         if (isNull(id) || !u.isString(id)) {
             return false;
@@ -893,6 +899,18 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
         return tileId;
     }
+    function getCircleGroup(id) {
+        if (isNull(id) || !u.isString(id)) {
+            return false;
+        }
+        var groupId = id.substring(config.tileCircleGroupPrefix.length, id.length);
+        var groupIdIndex = u.toInt(groupId) - 1;
+        if (groupIdIndex < 0 || groupIdIndex >= state.tileCircles.length) {
+            logError("getCircleGroupIndexFromId: Invalid circle group index: " + groupIdIndex);
+            return;
+        }
+        return state.tileCircles[groupIdIndex];
+    }
     function setTileStyleText(tileState, tileObj) {
         if (isNull(tileState) || isNull(tileObj)) {
             return;
@@ -912,7 +930,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
 
         var txtState = EMPTY;
-        if(!isNull(tileState) && !isNull(tileState.txt)) {
+        if (!isNull(tileState) && !isNull(tileState.txt)) {
             txtState = tileState.txt;
         }
 
@@ -924,7 +942,7 @@ var zscore = (function (u, n, s, a, win, doc) {
 
         var txt = EMPTY;
         var textSizeMultipler = 1.0;
-        if(!u.isObjectInstanceOf(TileText, txtState)) {
+        if (!u.isObjectInstanceOf(TileText, txtState)) {
             txt = txtState.value;
             textSizeMultipler = txtState.sizeMultiplier;
         }
@@ -1234,6 +1252,15 @@ var zscore = (function (u, n, s, a, win, doc) {
                 tween = createRotateAroundSvgCentre(tGroupId, dur, angle);
                 tweens.push(tween);
             }
+        } else if (isCircleGroupId(target)) {
+            var tileCircleState = getCircleGroup(target);
+            if (!isNull(tileCircleState)) {
+                var circleTweens = tileCircleState.tweens;
+                tween = circleTweens;
+                if (u.isArray(circleTweens)) {
+                    tween = circleTweens[0];
+                }
+            }
         }
 
         playOrRestartTween(tween);
@@ -1491,13 +1518,13 @@ var zscore = (function (u, n, s, a, win, doc) {
                 longestLine = checkLongestLine(l1, longestLine);
                 l1 = u.wrapInSpanElement(l1, spanId1);
                 val += l1;
-            }            
+            }
             if (!u.isEmptyString(l2)) {
                 longestLine = checkLongestLine(l2, longestLine);
                 l2 = u.wrapInSpanElement(l2, spanId2);
                 val = u.addSuffixIfNotThere(val, config.textLineBreak);
                 val += l2;
-            }            
+            }
             if (!u.isEmptyString(l3)) {
                 longestLine = checkLongestLine(l3, longestLine);
                 l3 = u.wrapInSpanElement(l3, spanId3);
@@ -1524,16 +1551,16 @@ var zscore = (function (u, n, s, a, win, doc) {
         state.instructions.isVisible = true;
         setInstructionsTextStyle(instructionsElement, state.instructions);
 
-        if(config.textSpanIsFadeIn) {
+        if (config.textSpanIsFadeIn) {
             var du = config.textSpanFadeTimeSec;
             var dl = config.textSpanFadeStaggerTimeSec;
-            gsap.to(span1, {duration: du, autoAlpha: 1,  ease: "power1.in"});
-            gsap.to(span2, {delay: dl, duration: du, autoAlpha: 1,  ease: "power1.in"});
-            gsap.to(span3, {delay: 2*dl, duration: du, autoAlpha: 1,  ease: "power1.in"});
+            gsap.to(span1, { duration: du, autoAlpha: 1, ease: "power1.in" });
+            gsap.to(span2, { delay: dl, duration: du, autoAlpha: 1, ease: "power1.in" });
+            gsap.to(span3, { delay: 2 * dl, duration: du, autoAlpha: 1, ease: "power1.in" });
         } else {
             span1.style.opacity = 1;
             span2.style.opacity = 1;
-            span3.style.opacity = 1;    
+            span3.style.opacity = 1;
         }
     }
     function checkLongestLine(lineToCheck, longestLine) {
