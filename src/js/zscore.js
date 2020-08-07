@@ -9,7 +9,20 @@ var zscore = (function (u, n, s, a, win, doc) {
     const EVENT_ELEMENT_SELECTED = "ELEMENT_SELECTED";
     const EVENT_PARAM_ELEMENT_ID = "elementId";
     const EVENT_PARAM_SELECTED = "selected";
-
+    const ATTR_FILL = "fill";
+    const COL_WHITE = "#FFFFFF";
+    const COL_LAVANDER_BLUSH = "#FFF0F5";
+    const COL_LIGHT_BLUE = "#ADD8E6";
+    const COL_PALE_TURQOISE = "#AFEEEE";
+    const COL_LIGHT_GREEN = "#90EE90";    
+    const FILL_ACTIVE = COL_LAVANDER_BLUSH;
+    const FILL_PLAYING = COL_LAVANDER_BLUSH;
+    const FILL_VISIBLE = COL_WHITE;
+    const FILL_INACTIVE = COL_WHITE;
+    const FILL_POINTER_ENTRY = COL_LIGHT_BLUE;
+    const FILL_SELECTED = COL_PALE_TURQOISE;
+    const FILL_PLAY_NEXT = COL_LIGHT_GREEN;
+    
     // const RUN_MODE = "DEV";
     // const RUN_MODE = "PROD";
 
@@ -63,15 +76,15 @@ var zscore = (function (u, n, s, a, win, doc) {
         gridParentId: "grid",
         gridStyle: { "fill": "none", "stroke": "aqua", "stroke-width": "2px" },
         tilesParentId: "tiles",
-        tileStyleVisible: { "fill": "white", "stroke": "silver", "stroke-width": "2px", "pointer-events": "all", "visibility": "visible", "opacity": 1 },
-        tileStyleActive: { "fill": "lavenderblush", "stroke": "silver", "stroke-width": "2px", "pointer-events": "all", "visibility": "visible", "opacity": 1 },
-        tileStyleInActive: { "fill": "white", "stroke": "silver", "stroke-width": "2px", "pointer-events": "all", "visibility": "visible", "opacity": 1 },
+        tileStyleVisible: { "fill": FILL_VISIBLE, "stroke": "silver", "stroke-width": "2px", "pointer-events": "all", "visibility": "visible", "opacity": 1 },
+        tileStyleActive: { "fill": FILL_ACTIVE, "stroke": "silver", "stroke-width": "2px", "pointer-events": "all", "visibility": "visible", "opacity": 1 },
+        tileStyleInActive: { "fill": FILL_INACTIVE, "stroke": "silver", "stroke-width": "2px", "pointer-events": "all", "visibility": "visible", "opacity": 1 },
         tileStyleInvisible: { "visibility": "hidden" },
-        tileStyleOnPonterEntry: { "fill": "lightblue" },
-        tileStyleSelected: { "fill": "paleturquoise", "stroke": "silver", "stroke-width": "2px", "visibility": "visible", "opacity": 1 },
+        tileStyleOnPonterEntry: { "fill": FILL_POINTER_ENTRY},
+        tileStyleSelected: { "fill": FILL_SELECTED, "stroke": "silver", "stroke-width": "2px", "visibility": "visible", "opacity": 1 },
         tileStylePlayed: { "visibility": "hidden" },
-        tileStylePlaying: { "fill": "lavenderblush", "stroke": "aqua", "stroke-width": "1px", "visibility": "visible", "opacity": 1 },
-        tileStylePlayingNext: { "fill": "lightgreen", "stroke": "silver", "stroke-width": "2px", "visibility": "visible", "opacity": 1 },
+        tileStylePlaying: { "fill": FILL_PLAYING, "stroke": "aqua", "stroke-width": "1px", "visibility": "visible", "opacity": 1 },
+        tileStylePlayingNext: { "fill": FILL_PLAY_NEXT, "stroke": "silver", "stroke-width": "2px", "visibility": "visible", "opacity": 1 },
         tileStyleTextPathDef: { "fill": "none", "stroke": "none" },
         tileStyleTextElement: { "visibility": "visible", "opacity": 1 },
         tileStyleTextElementInvisible: { "visibility": "hidden" },
@@ -107,6 +120,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         zoomDuration: 3,
         all: "ALL",
         testTextElementId: "testTxt",
+        colModPerClick: -10,
     }
 
     function ZScoreException(message) {
@@ -654,6 +668,21 @@ var zscore = (function (u, n, s, a, win, doc) {
 
         return config.tileStyleActive;
     }
+    function modifyFillOnClickCount(tileObj, tileState) {
+        if(!tileState.isActive || tileState.isSelected) {
+            return;
+        }
+        var fill = FILL_ACTIVE;
+        var clickCount = tileState.clickCount;
+        if(clickCount <= 0) {
+            return;
+        }
+        var mod = config.colModPerClick * clickCount;
+        log("fill before: " + fill);
+        fill = u.modColour(fill, mod);
+        log("fill after: " + fill  + " clickCount: " + clickCount);
+        tileObj.setAttribute(ATTR_FILL, fill);
+    }    
     function onTileClick() {
         log("onTileClick: ");
     }
@@ -960,6 +989,8 @@ var zscore = (function (u, n, s, a, win, doc) {
     function setTileStyle(tileState, tileObj) {
         var tileStyle = getTileStyle(tileState);
         setElementAttributes(tileObj, tileStyle);
+
+        modifyFillOnClickCount(tileObj, tileState);
 
         var tileTextElementId = config.tileTextElementPrefix + tileState.id;
         var tileTextElement = u.getElement(tileTextElementId);
@@ -1912,7 +1943,7 @@ var zscore = (function (u, n, s, a, win, doc) {
 
         ctx.fillRect(0, 0, fontDraw.width, fontDraw.height);
         ctx.textBaseline = 'top';
-        ctx.fillStyle = 'white';
+        ctx.fillStyle = COL_WHITE;
         ctx.font = fontStyle;
         return ctx.measureText(text);
     }
@@ -1924,7 +1955,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         fontDraw.height = height;
         ctx.fillRect(0, 0, fontDraw.width, fontDraw.height);
         ctx.textBaseline = 'top';
-        ctx.fillStyle = 'white';
+        ctx.fillStyle = COL_WHITE;
         ctx.font = fontStyle;
         var fill = 'gM';
         ctx.fillText(fill, 0, 0);

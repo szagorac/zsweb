@@ -744,6 +744,29 @@ var zsUtil = (function (console, win, doc) {
     function _oscillator(time, frequency = 1, amplitude = 1, phase = 0, offset = 0) {
         return Math.sin(time * frequency * Math.PI * 2 + phase * Math.PI * 2) * amplitude + offset;
     }
+    function _modColour(col, amt) {  
+        var usePound = false;      
+        if (col[0] == "#") {
+            col = col.slice(1);
+            usePound = true;
+        }     
+        var num = parseInt(col,16);     
+        var r = (num >> 16) + amt;
+        r = _validateCol(r);
+        var b = ((num >> 8) & 0x00FF) + amt;     
+        b = _validateCol(b);
+        var g = (num & 0x0000FF) + amt;
+        g = _validateCol(g);
+        return (usePound?"#":"") + (g | (b << 8) | (r << 16)).toString(16);      
+    }
+    function _validateCol(col) {  
+        if (col > 255) {
+            return 255;
+        } else if (col < 0) {
+            return 0;
+        }
+        return col;
+    }
 
     // PUBLIC API
     return {
@@ -752,6 +775,9 @@ var zsUtil = (function (console, win, doc) {
         RampLinear: RampLinear,
         RampSin: RampSin,
         Point: Point,
+        modColour: function (col, amt) {
+            return _modColour(col, amt);
+        },
         cloneObj: function (obj) {
             return _cloneObj(obj);
         },
