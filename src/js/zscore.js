@@ -402,13 +402,13 @@ var zscore = (function (u, n, s, a, win, doc) {
             return;
         }
         if (!isNull(l1)) {
-            state.instructions.l1 = l1;
+            state.instructions.l1 = l1.trim();
         }
         if (!isNull(l2)) {
-            state.instructions.l2 = l2;
+            state.instructions.l2 = l2.trim();
         }
         if (!isNull(l3)) {
-            state.instructions.l3 = l3;
+            state.instructions.l3 = l3.trim();
         }
         if (!isNull(colour)) {
             state.instructions.bckgCol = colour;
@@ -1611,12 +1611,14 @@ var zscore = (function (u, n, s, a, win, doc) {
                 val += l1;
             }
             if (!u.isEmptyString(l2)) {
+                log("displayInstructions: processing line2 " + l2);
                 longestLine = checkLongestLine(l2, longestLine);
                 l2 = u.wrapInSpanElement(l2, spanId2);
                 val = u.addSuffixIfNotThere(val, config.textLineBreak);
                 val += l2;
             }
             if (!u.isEmptyString(l3)) {
+                log("displayInstructions: processing line3 " + l3);
                 longestLine = checkLongestLine(l3, longestLine);
                 l3 = u.wrapInSpanElement(l3, spanId3);
                 val = u.addSuffixIfNotThere(val, config.textLineBreak);
@@ -1633,11 +1635,17 @@ var zscore = (function (u, n, s, a, win, doc) {
         instructionsElement.innerHTML = val;
 
         var span1 = u.getChildElement(instructionsElement, u.toCssIdQuery(spanId1));
-        span1.style.opacity = 0;
+        if(!isNull(span1)) {
+            span1.style.opacity = 0;
+        }
         var span2 = u.getChildElement(instructionsElement, u.toCssIdQuery(spanId2));
-        span2.style.opacity = 0;
+        if(!isNull(span2)) {
+            span2.style.opacity = 0;
+        }
         var span3 = u.getChildElement(instructionsElement, u.toCssIdQuery(spanId3));
-        span3.style.opacity = 0;
+        if(!isNull(span3)) {
+            span3.style.opacity = 0;
+        }
 
         state.instructions.isVisible = true;
         setInstructionsTextStyle(instructionsElement, state.instructions);
@@ -1645,13 +1653,25 @@ var zscore = (function (u, n, s, a, win, doc) {
         if (config.textSpanIsFadeIn) {
             var du = config.textSpanFadeTimeSec;
             var dl = config.textSpanFadeStaggerTimeSec;
-            gsap.to(span1, { duration: du, autoAlpha: 1, ease: "power1.in" });
-            gsap.to(span2, { delay: dl, duration: du, autoAlpha: 1, ease: "power1.in" });
-            gsap.to(span3, { delay: 2 * dl, duration: du, autoAlpha: 1, ease: "power1.in" });
+            if(!isNull(span1)) {
+                gsap.to(span1, { duration: du, autoAlpha: 1, ease: "power1.in" });
+            }
+            if(!isNull(span2)) {
+                gsap.to(span2, { delay: dl, duration: du, autoAlpha: 1, ease: "power1.in" });
+            }
+            if(!isNull(span3)) {
+                gsap.to(span3, { delay: 2 * dl, duration: du, autoAlpha: 1, ease: "power1.in" });
+            }
         } else {
-            span1.style.opacity = 1;
-            span2.style.opacity = 1;
-            span3.style.opacity = 1;
+            if(!isNull(span1)) {
+                span1.style.opacity = 1;
+            }
+            if(!isNull(span2)) {
+                span2.style.opacity = 1;
+            }
+            if(!isNull(span3)) {
+                span3.style.opacity = 1;
+            }
         }
     }
     function checkLongestLine(lineToCheck, longestLine) {
