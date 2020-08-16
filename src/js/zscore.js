@@ -49,7 +49,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         centreShape: { isVisible: false, gsapTimeline: {} },
         innerCircle: { isVisible: false, gsapTimeline: {} },
         outerCircle: { isVisible: false, gsapTimeline: {} },
-        instructions: { isVisible: false, l1: EMPTY, l2: EMPTY, l3: EMPTY, bckgCol: "rgba(225, 225, 225, 0.65)" },
+        instructions: { isVisible: false, l1: EMPTY, l2: EMPTY, l3: EMPTY, bckgCol: "rgba(225, 225, 225, 0.85)" },
         selectedTileId: null,
         fontCanvas: null,
         canvasCtx: null,
