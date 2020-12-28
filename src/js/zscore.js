@@ -14,13 +14,14 @@ var zscore = (function (u, n, s, a, win, doc) {
     const COL_LAVANDER_BLUSH = "#FFF0F5";
     const COL_LIGHT_BLUE = "#ADD8E6";
     const COL_PALE_TURQOISE = "#AFEEEE";
-    const COL_LIGHT_GREEN = "#90EE90";
+    const COL_LIGHT_GREEN = "#CCFFCC";
+    const COL_LIGHT_PURPLE = "#CCCCFF";
     const FILL_ACTIVE = COL_LAVANDER_BLUSH;
     const FILL_PLAYING = COL_LAVANDER_BLUSH;
     const FILL_VISIBLE = COL_WHITE;
     const FILL_INACTIVE = COL_WHITE;
     const FILL_POINTER_ENTRY = COL_LIGHT_BLUE;
-    const FILL_SELECTED = COL_PALE_TURQOISE;
+    const FILL_SELECTED = COL_LIGHT_PURPLE;
     const FILL_PLAY_NEXT = COL_LIGHT_GREEN;
 
     // const RUN_MODE = "DEV";
@@ -83,8 +84,8 @@ var zscore = (function (u, n, s, a, win, doc) {
         tileStyleOnPonterEntry: { "fill": FILL_POINTER_ENTRY },
         tileStyleSelected: { "fill": FILL_SELECTED, "stroke": "silver", "stroke-width": "2px", "visibility": "visible", "opacity": 1 },
         tileStylePlayed: { "visibility": "hidden" },
-        tileStylePlaying: { "fill": FILL_PLAYING, "stroke": "aqua", "stroke-width": "1px", "visibility": "visible", "opacity": 1 },
-        tileStylePlayingNext: { "fill": FILL_PLAY_NEXT, "stroke": "silver", "stroke-width": "2px", "visibility": "visible", "opacity": 1 },
+        tileStylePlaying: { "fill": FILL_PLAYING, "stroke": "lime", "stroke-width": "1px", "visibility": "visible", "opacity": 1 },
+        tileStylePlayingNext: { "stroke": "teal", "stroke-width": "2px", "visibility": "visible", "opacity": 1 },
         tileStyleTextPathDef: { "fill": "none", "stroke": "none" },
         tileStyleTextElement: { "visibility": "visible", "opacity": 1 },
         tileStyleTextElementInvisible: { "visibility": "hidden" },
@@ -120,7 +121,8 @@ var zscore = (function (u, n, s, a, win, doc) {
         zoomDuration: 3,
         all: "ALL",
         testTextElementId: "testTxt",
-        colModPerClick: -10,
+        colModPerClick: -20,
+        maxColModPerClick: -150,
     }
 
     function ZScoreException(message) {
@@ -700,11 +702,58 @@ var zscore = (function (u, n, s, a, win, doc) {
         if (clickCount <= 0) {
             return;
         }
-        var mod = config.colModPerClick * clickCount;
+        var mod = getTileFillMod(tileState);
+        // config.colModPerClick * clickCount;
         log("fill before: " + fill);
         fill = u.modColour(fill, mod);
         log("fill after: " + fill + " clickCount: " + clickCount);
         tileObj.setAttribute(ATTR_FILL, fill);
+    }
+    function getTileFillMod(tileState) {
+        var tileCount = tileState.clickCount;
+        var mod = config.colModPerClick * tileCount;
+        if(isNull(tileState)) {
+            return mod;
+        }
+        var rowCol = getTileRowCol(tileState.id);
+        if(isNull(rowCol)) {
+            return mod;
+        }
+        
+        var row = rowCol.x;
+        var col = rowCol.y;
+        var clickCounts = getRowClickCounts(row);
+        if(isNull(clickCounts)) {
+            return mod;
+        }
+        var nonZeroArr = u.arrSortedNonZeroElem(clickCounts);
+        if(nonZeroArr.length < 1) {
+            return mod;
+        }
+        var nonZeroNo = nonZeroArr.length;
+        var maxMod = config.maxColModPerClick;
+        // var maxMod = nonZeroNo * config.colModPerClick;
+        var minMod = 0;
+        var maxVal = nonZeroArr[0];
+        var minVal = 0;
+        var mod = u.mapRange(tileCount, minVal, maxVal, minMod, maxMod);
+
+        log("getTileFillMod: mod: " + mod);
+        return mod;
+    }
+    function getRowClickCounts(row) {
+        var clickCounts = u.initArray(state.tiles[0].length, 0);
+        if(row < 0 || row >= state.tiles.length) {
+            return clickCounts;
+        }
+        var rows = state.tiles[row];
+        for (var j = 0; j < rows.length; j++) {
+            var tileState = state.tiles[row][j];
+            clickCounts[j] = tileState.clickCount;
+        }
+        return clickCounts;
+    }
+    function getMinMaxRowClickCount() {
     }
     function onTileClick() {
         log("onTileClick: ");
@@ -756,7 +805,7 @@ var zscore = (function (u, n, s, a, win, doc) {
 
         var tile = selectedObj;
         var elementId = selectedObj.id;
-        log("onPointerEntry: " + elementId);
+        // log("onPointerEntry: " + elementId);
 
         if (isTileGroupId(elementId)) {
             elementId = getTileIdFromGroupId(elementId);
@@ -778,7 +827,7 @@ var zscore = (function (u, n, s, a, win, doc) {
             return;
         }
 
-        log("onPointerLeave: " + selectedObj.id);
+        // log("onPointerLeave: " + selectedObj.id);
 
         var tile = getTileObject(selectedObj);
         if (isNull(tile)) {
@@ -1380,7 +1429,7 @@ var zscore = (function (u, n, s, a, win, doc) {
                 runDissolveStart(target, params);
                 break;
             default:
-                logError("Unknown rotate actionId: " + actionId);
+                logError("Unknown dissolve actionId: " + actionId);
                 return;
         }
     }

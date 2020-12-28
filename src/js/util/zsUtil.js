@@ -762,10 +762,37 @@ var zsUtil = (function (console, win, doc) {
     function _validateCol(col) {  
         if (col > 255) {
             return 255;
-        } else if (col < 0) {
-            return 0;
+        } else if (col < 50) {
+            return 50;
         }
         return col;
+    }
+    function _arrSortedNonZeroElem(arr) {
+        var out = [];
+        if(!_isArray(arr)) {
+            return out;
+        }        
+        for (var i = 0; i < arr.length; i++) {
+            var value = arr[i];
+            if(value !== 0) {
+                out.push(value);
+            }
+        }
+        out.sort(function(a, b){return b - a});
+        return out;
+    }
+    function _arrMinMax(arr) {
+        if(!_isArray(arr) || arr.length < 1) {
+            return new Point(0,0);
+        }
+        
+        var min = arr[0], max = arr[0];
+        for (var i = 1; i < arr.length; i++) {
+            var value = arr[i];
+            min = (value < min) ? value : min;
+            max = (value > max) ? value : max;
+        }
+        return new Point(min,max);
     }
 
     // PUBLIC API
@@ -775,6 +802,13 @@ var zsUtil = (function (console, win, doc) {
         RampLinear: RampLinear,
         RampSin: RampSin,
         Point: Point,
+        
+        arrMinMax: function (arr) {
+            return _arrMinMax(arr);
+        },
+        arrSortedNonZeroElem: function (arr) {
+            return _arrSortedNonZeroElem(arr);
+        },
         modColour: function (col, amt) {
             return _modColour(col, amt);
         },
