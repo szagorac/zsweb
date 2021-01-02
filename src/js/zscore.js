@@ -730,9 +730,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         if(nonZeroArr.length < 1) {
             return mod;
         }
-        var nonZeroNo = nonZeroArr.length;
         var maxMod = config.maxColModPerClick;
-        // var maxMod = nonZeroNo * config.colModPerClick;
         var minMod = 0;
         var maxVal = nonZeroArr[0];
         var minVal = 0;
@@ -846,6 +844,19 @@ var zscore = (function (u, n, s, a, win, doc) {
         if (!a.isReady()) {
             initAudio();
         }
+
+
+        //TODO remove
+        if(a.isSpeachReady()) {
+            log("#### Speach is ready");
+            a.speak("I, believe. I believe in. I believe in science.", "random", false);
+        } else {
+            log("#### Speach is not ready, 5 sec timeout");
+            setTimeout(function () {
+                a.speak("I, believe. I believe in. I believe in science.", "random", false);
+            }, 5000);
+        }
+             
 
         var tileState = getTileState(selectedObj);
         if (isNull(tileState)) {

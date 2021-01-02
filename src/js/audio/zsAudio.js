@@ -1,4 +1,4 @@
-var zsAudio = (function (u, gr, win) {
+var zsAudio = (function (u, gr, sp, win) {
     "use strict";
 
     //static members
@@ -66,8 +66,8 @@ var zsAudio = (function (u, gr, win) {
 
     //Private functions
     function _initAudio(audioFilesToLoad, granulatorFileIndex) {
-        if (!u || !gr) {
-            throw new ZsAudioException("Invalid libraries. Required: zsUtil and zsGranulator");
+        if (!u || !gr || ! sp) {
+            throw new ZsAudioException("Invalid libraries. Required: zsUtil, zsGranulator and zsSpeech");
         }
 
         try {
@@ -93,6 +93,10 @@ var zsAudio = (function (u, gr, win) {
                     }
                 }
 
+                if (win.hasOwnProperty('speechSynthesis')) {
+                    win.speechSynthesis.getVoices();
+                }
+
                 _audioCtxRetryCount++;
                 setTimeout(function () {
                     _initAudio(audioFilesToLoad, granulatorFileIndex);
@@ -101,6 +105,7 @@ var zsAudio = (function (u, gr, win) {
             }
 
             log("initAudio: AudioContext state: " + _ctx.state);
+            _initSpeech();
 
             if (u.isArray(audioFilesToLoad)) {
                 _audioFilesToLoad = audioFilesToLoad;
@@ -221,6 +226,16 @@ var zsAudio = (function (u, gr, win) {
     }
     function _resetAudio() {
         _resetGranulator();
+    }
+    //speech
+    function _initSpeech() {
+        if (isNull(sp)) {
+            logError("_initSpeech: Can not initialise speech");
+            sp = null;
+            return;
+        }
+
+        sp.init();
     }
     //granulator
     function _initGranulator(bufferIndex, destination) {
@@ -379,9 +394,15 @@ var zsAudio = (function (u, gr, win) {
         resetGranulator: function () {
             _resetGranulator();
         },
+        isSpeachReady: function () {
+            return sp.isReady();
+        },
+        speak: function (text, voiceName, isInterrupt) {
+            return sp.speak(text, voiceName, isInterrupt);
+        },
         reset: function () {
             _resetAudio();
         },
     }
 
-}(zsUtil, zsGranulator, window));
+}(zsUtil, zsGranulator, zsSpeech, window));

@@ -949,6 +949,9 @@ var zsUtil = (function (console, win, doc) {
         randomFloatFromInterval: function (min, max) { // min and max included 
             return Math.random() * (max - min) + min;
         },
+        randomArrayElement: function (arr) { 
+            return arr[Math.floor(Math.random() * arr.length)];
+        },
         round: function (val, decimalPlaces) {
             return _round(val, decimalPlaces);
         },
@@ -996,6 +999,9 @@ var zsUtil = (function (console, win, doc) {
         },
         isEmptyString: function (val) {
             return _isString(val) && val === EMPTY;
+        },
+        isEmptyArray: function (arr) {
+            return _isArray(arr) && !arr.length;
         },
         isNull: function (val) {
             return _isNull(val);
