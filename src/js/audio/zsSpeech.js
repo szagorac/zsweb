@@ -9,6 +9,7 @@ var zsSpeech = (function (u, win) {
         lang: "en-GB",
         maxVoiceLoadAttempts: 10,
         maxUtterances: 5,
+        utteranceTimeoutSec: 30,
         underscore: "_",
         hyphen: "-",
         englishPrefix: "en",
@@ -21,6 +22,7 @@ var zsSpeech = (function (u, win) {
     var _voice = null;
     var _isInitialised = false;
     var _isSupported = false;
+    var _isActive = false;
     var _loadVoiceAttempts = 0;
 
     function ZsSpeechException(msg) {
@@ -28,7 +30,8 @@ var zsSpeech = (function (u, win) {
         this.name = "ZsSpeechException";
     }
 
-    function ZsUtterance() {
+    function ZsUtterance(utid) {
+        this.id = utid;
         this.utterance = null;
         this.createdTime = 0;
         this.finishedTime = 0;
@@ -71,7 +74,7 @@ var zsSpeech = (function (u, win) {
     }
     function _initUterrances() {
         for(var i = 0; i < config.maxUtterances ; i++) {  
-            _utterances[i] = new ZsUtterance();
+            _utterances[i] = new ZsUtterance(i + 1);
         }
     }
     function _initVoices() {
@@ -147,11 +150,11 @@ var zsSpeech = (function (u, win) {
             return;
         }
 
-        _log("_speak: voice: " + voice.name + " text: " + text);
         var zsUtterance = _createUtterance(text, voice, config.volume, config.pitch, config.rate);
         if(_isNull(zsUtterance) || _isNull(zsUtterance.utterance)) {
-            retrun;
+            return;
         }
+        _log("_speak: utId: " + zsUtterance.id + ", voice: " + voice.name + " text: " + text);
         _speechSynth.speak(zsUtterance.utterance);
     }
     function _createUtterance(text, voice, volume, pitch, rate) {
@@ -196,12 +199,25 @@ var zsSpeech = (function (u, win) {
         return zsUtterance;
     }
     function _getNextUtterance() {
+        var now = Date.now();
+        var oldestTime = now;
+        var oldest = null;
         for(var i = 0; i < _utterances.length ; i++) {  
             var zsUtternace = _utterances[i];
+            if(zsUtternace.createdTime < oldestTime) {
+                oldest = zsUtternace;
+                oldestTime = zsUtternace.createdTime;
+            }
             if(_isNull(zsUtternace.utterance) || zsUtternace.isComplete) {
                 return zsUtternace;
             } 
         }
+        var diff = u.msecToSec(now - oldestTime);
+        if(diff > config.utteranceTimeoutSec) {
+            _log("_getNextUtterance: could not find any available utterances, re-using oldest: " + oldest.id);
+            return oldest;
+        }
+        
         return null;
     }
     function _onUtteranceEnd(event, zsUtterance) {
@@ -211,7 +227,7 @@ var zsSpeech = (function (u, win) {
         }
         var utterance = zsUtterance.utterance;
         var duration = u.round(u.msecToSec(zsUtterance.finishedTime - zsUtterance.createdTime), 2);
-        _log("_onUtteranceEnd: voice: " + utterance.voice.name + ", duration: " + duration + "sec, text: " + utterance.text);
+        _log("_onUtteranceEnd: utId: " + zsUtterance.id + ", voice: " + utterance.voice.name + ", duration: " + duration + "sec, text: " + utterance.text);
     }
     function _findRandomVoice() {
         if(!u.isArray(_voices)) {
@@ -252,6 +268,13 @@ var zsSpeech = (function (u, win) {
         _log("setSupported: " + isOk);
         _isSupported = isOk;
     }
+    function _setActive(isOk) {
+        if (_isNull(isOk)) {
+            return;
+        }
+        _log("setActive: " + isOk);
+        _isActive = isOk;
+    }
     function _stop() {
         _log("stop: " + isValue);
         if(!_isReady()) {
@@ -260,7 +283,7 @@ var zsSpeech = (function (u, win) {
         _speechSynth.cancel();
     }
     function _isReady() {
-        return _isSupported && _isInitialised && !_isNull(_speechSynth);
+        return _isSupported && _isInitialised && _isActive && !_isNull(_speechSynth);
     }
     function _isPlaying() {
         if(!_isReady()) {
@@ -309,6 +332,9 @@ var zsSpeech = (function (u, win) {
         },
         setLang: function (lang) {
             config.lang = lang;
+        },
+        setActive: function (isActive) {
+            _setActive(isActive);
         },
         isSupported: function () {
             return _getSupported();

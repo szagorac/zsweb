@@ -848,13 +848,11 @@ var zscore = (function (u, n, s, a, win, doc) {
 
         //TODO remove
         if(a.isSpeachReady()) {
-            log("#### Speach is ready");
             a.speak("I, believe. I believe in. I believe in science.", "random", false);
         } else {
-            log("#### Speach is not ready, 5 sec timeout");
             setTimeout(function () {
                 a.speak("I, believe. I believe in. I believe in science.", "random", false);
-            }, 5000);
+            }, 2000);
         }
              
 
