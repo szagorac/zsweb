@@ -1,11 +1,12 @@
 var zsSpeech = (function (u, win) {
     "use strict";
     const LOG_ID = "ZsSpeech: ";
+    const EMPTY = "";
 
     var config = {
         volume: 1.0, //0 (lowest) and 1 (highest) 
         pitch: 1.0,  //0 (lowest) and 2 (highest)
-        rate: 1.0,   //0.1 (lowest) and 10 (highest)     
+        rate: 0.7,   //0.1 (lowest) and 10 (highest)     
         lang: "en-GB",
         maxVoiceLoadAttempts: 10,
         maxUtterances: 5,
@@ -15,6 +16,8 @@ var zsSpeech = (function (u, win) {
         englishPrefix: "en",
         random: "random",
         default: "default",
+        isInterrupt: false,
+        interruptTimeout: 250,
     }
     var _speechSynth = null;
     var _voices = [];
@@ -22,7 +25,6 @@ var zsSpeech = (function (u, win) {
     var _voice = null;
     var _isInitialised = false;
     var _isSupported = false;
-    var _isActive = false;
     var _loadVoiceAttempts = 0;
 
     function ZsSpeechException(msg) {
@@ -123,14 +125,20 @@ var zsSpeech = (function (u, win) {
         }        
     }
     function _speak(text, voiceName, isInterrupt) {
-        if (!_isReady()) {
+        if(!_isReady() || _isNull(text) || u.isEmptyString(text)) {
             return;
+        }
+        if(_isNull(voiceName)) {
+            voiceName = config.random;
+        }
+        if(_isNull(isInterrupt)) {
+            isInterrupt = config.isInterrupt;
         }
         if(isInterrupt && _speechSynth.speaking) {
             _stop();
             setTimeout(() => {
                 _speak(text, voiceName, false);
-            }, 250);
+            }, config.interruptTimeout);
             return;
         } 
         var voice = null;
@@ -149,7 +157,6 @@ var zsSpeech = (function (u, win) {
             _log("speak: Could not find voice");
             return;
         }
-
         var zsUtterance = _createUtterance(text, voice, config.volume, config.pitch, config.rate);
         if(_isNull(zsUtterance) || _isNull(zsUtterance.utterance)) {
             return;
@@ -185,8 +192,14 @@ var zsSpeech = (function (u, win) {
         utterance.pitch = pitch;
         utterance.rate = rate;
         utterance.volume = volume;
-        utterance.onerror = function(error) {
-            _logError(error);
+        utterance.onerror = function(event) {
+            var utterance = event.utterance;
+            var utteranceStr = EMPTY;
+            if(!_isNull(utterance)) {
+                utteranceStr = " voice : " + utterance.voice + " utterance.text: " + utterance.text;
+            }
+            var out = "Received Speech error " + event.error + " event: " + event.name + utteranceStr; 
+            _logError(out);
         }
         utterance.onend = function(event) {
             _onUtteranceEnd(event, zsUtterance);
@@ -222,12 +235,19 @@ var zsSpeech = (function (u, win) {
     }
     function _onUtteranceEnd(event, zsUtterance) {
         if(!_isNull(zsUtterance)) {
-            zsUtterance.isComplete = true;
-            zsUtterance.finishedTime = Date.now();
+            _setUtteranceComplete(zsUtterance);
         }
         var utterance = zsUtterance.utterance;
+        var voiceName = (_isNull(utterance.voice))?EMPTY:utterance.voice.name; 
         var duration = u.round(u.msecToSec(zsUtterance.finishedTime - zsUtterance.createdTime), 2);
-        _log("_onUtteranceEnd: utId: " + zsUtterance.id + ", voice: " + utterance.voice.name + ", duration: " + duration + "sec, text: " + utterance.text);
+        _log("_onUtteranceEnd: utId: " + zsUtterance.id + ", voice: " + voiceName + ", duration: " + duration + "sec, text: " + utterance.text);
+    }
+    function _setUtteranceComplete(zsUtterance) {
+        if(_isNull(zsUtterance) || zsUtterance.isComplete) {
+            return;
+        }
+        zsUtterance.isComplete = true;
+        zsUtterance.finishedTime = Date.now();
     }
     function _findRandomVoice() {
         if(!u.isArray(_voices)) {
@@ -268,22 +288,37 @@ var zsSpeech = (function (u, win) {
         _log("setSupported: " + isOk);
         _isSupported = isOk;
     }
-    function _setActive(isOk) {
-        if (_isNull(isOk)) {
+    function _setSpeechConfig(params) {
+        if (!isObject(params)) {
+            logError("setSpeechConf: Invalid speech config");
             return;
         }
-        _log("setActive: " + isOk);
-        _isActive = isOk;
+
+        for (var prop in params) {
+            if (params.hasOwnProperty(prop) && u.hasNestedObjectKey(config, prop)) {
+                var value = params[prop];
+                log("setSpeechConf: " + prop + ": " + value);
+                var current = u.getNestedObjectValue(config, prop);
+                if (current === value) {
+                    log("setSpeechConf: value for param " + prop + " is identical to previous, ignoring...");
+                    continue;
+                }
+                u.setNestedObjectValue(config, prop, value);
+            }
+        }
     }
     function _stop() {
-        _log("stop: " + isValue);
+        _log("stop: ");
         if(!_isReady()) {
             return;
         }
         _speechSynth.cancel();
+        for(var i = 0; i < config.maxUtterances ; i++) {  
+            _setUtteranceComplete(_utterances[i]);
+        }
     }
     function _isReady() {
-        return _isSupported && _isInitialised && _isActive && !_isNull(_speechSynth);
+        return _isSupported && _isInitialised && !_isNull(_speechSynth);
     }
     function _isPlaying() {
         if(!_isReady()) {
@@ -333,11 +368,11 @@ var zsSpeech = (function (u, win) {
         setLang: function (lang) {
             config.lang = lang;
         },
-        setActive: function (isActive) {
-            _setActive(isActive);
-        },
         isSupported: function () {
             return _getSupported();
         },
+        setSpeechConfig: function (params) {
+            _setSpeechConfig(params);
+        },        
     }
 }(zsUtil, window));

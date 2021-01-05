@@ -400,6 +400,12 @@ var zsAudio = (function (u, gr, sp, win) {
         speak: function (text, voiceName, isInterrupt) {
             return sp.speak(text, voiceName, isInterrupt);
         },
+        stopSpeach: function () {
+            return sp.stop();
+        },
+        setSpeechConfig: function (params) {
+            return sp.setSpeechConfig(params);
+        },
         reset: function () {
             _resetAudio();
         },

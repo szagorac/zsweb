@@ -23,7 +23,7 @@ var zscore = (function (u, n, s, a, win, doc) {
     const FILL_POINTER_ENTRY = COL_LIGHT_BLUE;
     const FILL_SELECTED = COL_LIGHT_PURPLE;
     const FILL_PLAY_NEXT = COL_LIGHT_GREEN;
-
+    const TILE_TEXT_TOKEN = "@TILE_TEXT@";
     // const RUN_MODE = "DEV";
     // const RUN_MODE = "PROD";
 
@@ -52,8 +52,13 @@ var zscore = (function (u, n, s, a, win, doc) {
         outerCircle: { isVisible: false, gsapTimeline: {} },
         instructions: { isVisible: false, l1: EMPTY, l2: EMPTY, l3: EMPTY, bckgCol: "rgba(225, 225, 225, 0.85)" },
         selectedTileId: null,
+        playingTileId: null,
         fontCanvas: null,
         canvasCtx: null,
+        isPlaySpeechSynthOnClick: false,
+        speechText: "I, believe. I believe in " + TILE_TEXT_TOKEN + ".",
+        speechVoice: "random",
+        speechIsInterrupt: true,
     }
     var config = {
         connectionPreference: "ws,poll",
@@ -632,7 +637,6 @@ var zscore = (function (u, n, s, a, win, doc) {
         textNode.setAttribute("font-size", fontSize);
         textNode.textContent = newVal;
     }
-
     function getShapeStyle(shapeState) {
         if (isNull(shapeState)) {
             return null;
@@ -843,24 +847,17 @@ var zscore = (function (u, n, s, a, win, doc) {
     function onElementSelected(selectedObj) {
         if (!a.isReady()) {
             initAudio();
-        }
-
-
-        //TODO remove
-        if(a.isSpeachReady()) {
-            a.speak("I, believe. I believe in. I believe in science.", "random", false);
-        } else {
-            setTimeout(function () {
-                a.speak("I, believe. I believe in. I believe in science.", "random", false);
-            }, 2000);
-        }
-             
+        }             
 
         var tileState = getTileState(selectedObj);
         if (isNull(tileState)) {
             log("processSelectedTile: invalid selected tile");
             return;
         }
+        onTileSelected(tileState);
+    }
+    function onTileSelected(tileState) {
+        playSelectedTileAudio(tileState);
 
         var tileId = tileState.id;
         if (!tileState.isActive && tileState.isVisible) {
@@ -897,6 +894,12 @@ var zscore = (function (u, n, s, a, win, doc) {
         evParams[EVENT_PARAM_ELEMENT_ID] = tileState.id;
         evParams[EVENT_PARAM_SELECTED] = tileState.isSelected;
         n.sendEvent(EVENT_ELEMENT_SELECTED, evParams);
+    }
+    function playSelectedTileAudio(tileState) {
+        if(!state.isPlaySpeechSynthOnClick || !a.isSpeachReady() || !u.isString(state.speechText)) {
+            return;
+        }
+        playSpeechText(state.speechText, state.speechVoice, state.speechIsInterrupt, tileState);
     }
     function onWindowResize(event) {
         if (!u.isObject(this)) {
@@ -1174,6 +1177,8 @@ var zscore = (function (u, n, s, a, win, doc) {
                 break;
             case 'granulator':
                 runAudioGranulator(actionId, params);
+            case 'speechSynth':
+                runSpeechSynth(actionId, params);    
                 break;
         }
     }
@@ -1301,6 +1306,102 @@ var zscore = (function (u, n, s, a, win, doc) {
             return;
         }
         a.setGranulatorConfig(params);
+    }
+    function runSpeechSynth(actionId, params) {
+        if (!u.isString(actionId)) {
+            return;
+        }
+
+        switch (actionId) {
+            case 'play':
+                runPlaySpeechSynth(params);
+                break;
+            case 'stop':
+                runStopSpeechSynth(params);
+                break;
+            case 'config':
+                updateSpeechCofig(params);
+            case 'state':
+                setSpeechState(params);                
+                break;
+            default:
+                logError("runSpeechSynth: Unknown actionId: " + actionId);
+                return;
+        }
+    }
+    function runPlaySpeechSynth(params) {
+        if (isNull(a)) {
+            logError("runPlaySpeechSynth: Invalid zsAudio lib");
+            return;
+        }
+        if (isNull(params)) {
+            logError("runPlaySpeechSynth: Invalid params");
+            return;
+        }
+        var text = EMPTY;
+        var voiceName = "random";
+        var isInterrupt = false;
+
+        if (!isNull(params.text)) {
+            text = params.text;
+        }
+        if (!isNull(params.voiceName)) {
+            voiceName = params.voiceName;
+        }
+        if (!isNull(params.isInterrupt)) {
+            isInterrupt = params.isInterrupt;
+        }
+        var tileId = state.playingTileId;
+        if(isNull(tileId)) {
+           tileId = state.selectedTileId;
+        }
+        
+        var selectedTileState = getTileIdState(tileId);
+
+        playSpeechText(text, voiceName, isInterrupt, selectedTileState);
+    }
+    function playSpeechText(text, voice, isInterrupt, tileState) {
+        if(isNull(text)) {
+            return;
+        }
+        if(u.contains(text, TILE_TEXT_TOKEN)) {
+            var tileText = null;
+            if(!isNull(tileState)) {
+                tileText = tileState.txt;
+            }
+            if(u.isString(tileText)) {
+                text = u.replace(text, TILE_TEXT_TOKEN, tileText);
+            } else {
+                text = u.replace(text, TILE_TEXT_TOKEN, EMPTY);
+            }
+        }        
+        a.speak(text, voice, isInterrupt);
+    }
+    function runStopSpeechSynth(params) {
+        if (isNull(a)) {
+            logError("runStopSpeechSynth: Invalid zsAudio lib");
+            return;
+        }
+        a.stopSpeach();
+    }
+    function updateSpeechCofig(params) {
+        if (isNull(a)) {
+            logError("updateSpeechCofig: Invalid zsAudio lib");
+            return;
+        }
+        a.setSpeechConfig(params);
+    }
+    function setSpeechState(params) {
+        if (!u.isObject(params)) {
+            logError("setSpeechState: Invalid params");
+            return;
+        }
+        if (!isNull(params.isPlaySpeechSynthOnClick)) {
+            state.isPlaySpeechSynthOnClick = params.isPlaySpeechSynthOnClick;
+        }
+        if (!isNull(params.speechText)) {
+            state.speechText = params.speechText;
+        }
     }
     function runAudioPlayBuffer(params) {
         if (isNull(a)) {
@@ -1872,6 +1973,9 @@ var zscore = (function (u, n, s, a, win, doc) {
             // log("updating tile " + tileState.id);
             setTileStyle(tileState, tileObj);
             setTileStyleText(tileState, tileObj);
+            if(tileState.isPlaying) {
+                state.playingTileId = tileState.id;
+            }
         }
     }
     function processSeverActions(actions) {
