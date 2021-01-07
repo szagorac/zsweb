@@ -289,23 +289,7 @@ var zsSpeech = (function (u, win) {
         _isSupported = isOk;
     }
     function _setSpeechConfig(params) {
-        if (!isObject(params)) {
-            logError("setSpeechConf: Invalid speech config");
-            return;
-        }
-
-        for (var prop in params) {
-            if (params.hasOwnProperty(prop) && u.hasNestedObjectKey(config, prop)) {
-                var value = params[prop];
-                log("setSpeechConf: " + prop + ": " + value);
-                var current = u.getNestedObjectValue(config, prop);
-                if (current === value) {
-                    log("setSpeechConf: value for param " + prop + " is identical to previous, ignoring...");
-                    continue;
-                }
-                u.setNestedObjectValue(config, prop, value);
-            }
-        }
+        u.setConfig(config, params);
     }
     function _stop() {
         _log("stop: ");

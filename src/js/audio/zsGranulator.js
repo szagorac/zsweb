@@ -596,23 +596,7 @@ var zsGranulator = (function (u) {
         }
     }
     function setGranulatorConf(params) {
-        if (!isObject(params)) {
-            logError("setGrainConf: Invalid grain config");
-            return;
-        }
-
-        for (var prop in params) {
-            if (params.hasOwnProperty(prop) && u.hasNestedObjectKey(config, prop)) {
-                var value = params[prop];
-                log("setGranulatorConf: " + prop + ": " + value);
-                var current = u.getNestedObjectValue(config, prop);
-                if (current === value) {
-                    log("setGranulatorConf: value for param " + prop + " is identical to previous, ignoring...");
-                    continue;
-                }
-                u.setNestedObjectValue(config, prop, value);
-            }
-        }
+        u.setConfig(config, params);
     }
     function createBufferAudioSourceNode() {
         if (!buffer) {

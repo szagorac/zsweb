@@ -55,10 +55,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         playingTileId: null,
         fontCanvas: null,
         canvasCtx: null,
-        isPlaySpeechSynthOnClick: false,
-        speechText: "I, believe. I believe in " + TILE_TEXT_TOKEN + ".",
-        speechVoice: "random",
-        speechIsInterrupt: true,
+        speech: { isPlaySpeechSynthOnClick: false, speechText: "I, I clicked on " + TILE_TEXT_TOKEN, speechVoice: "random", speechIsInterrupt: true},
     }
     var config = {
         connectionPreference: "ws,poll",
@@ -1177,6 +1174,7 @@ var zscore = (function (u, n, s, a, win, doc) {
                 break;
             case 'granulator':
                 runAudioGranulator(actionId, params);
+                break;
             case 'speechSynth':
                 runSpeechSynth(actionId, params);    
                 break;
@@ -1321,6 +1319,7 @@ var zscore = (function (u, n, s, a, win, doc) {
                 break;
             case 'config':
                 updateSpeechCofig(params);
+                break;
             case 'state':
                 setSpeechState(params);                
                 break;
@@ -1342,14 +1341,14 @@ var zscore = (function (u, n, s, a, win, doc) {
         var voiceName = "random";
         var isInterrupt = false;
 
-        if (!isNull(params.text)) {
-            text = params.text;
+        if (!isNull(params.speechText)) {
+            text = params.speechText;
         }
-        if (!isNull(params.voiceName)) {
-            voiceName = params.voiceName;
+        if (!isNull(params.speechVoice)) {
+            voiceName = params.speechVoice;
         }
-        if (!isNull(params.isInterrupt)) {
-            isInterrupt = params.isInterrupt;
+        if (!isNull(params.speechIsInterrupt)) {
+            isInterrupt = params.speechIsInterrupt;
         }
         var tileId = state.playingTileId;
         if(isNull(tileId)) {
@@ -1396,12 +1395,19 @@ var zscore = (function (u, n, s, a, win, doc) {
             logError("setSpeechState: Invalid params");
             return;
         }
+        var speechState = state.speech;
         if (!isNull(params.isPlaySpeechSynthOnClick)) {
-            state.isPlaySpeechSynthOnClick = params.isPlaySpeechSynthOnClick;
+            speechState.isPlaySpeechSynthOnClick = params.isPlaySpeechSynthOnClick;
         }
         if (!isNull(params.speechText)) {
-            state.speechText = params.speechText;
+            speechState.speechText = params.speechText;
         }
+        if (!isNull(params.speechVoice)) {
+            speechState.speechVoice = params.speechVoice;
+        }
+        if (!isNull(params.speechIsInterrupt)) {
+            speechState.speechIsInterrupt = params.speechIsInterrupt;
+        }        
     }
     function runAudioPlayBuffer(params) {
         if (isNull(a)) {

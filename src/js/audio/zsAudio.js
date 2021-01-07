@@ -268,42 +268,42 @@ var zsAudio = (function (u, gr, sp, win) {
         gr.addRampLinear(configParamName, rampEndValue, rampDurationMs);
     }
     function _setGranulatorRampSin(configParamName, rampAmplitude, rampFrequency, rampDurationMs) {
-        if (isNull(gr)) {
+        if (isNull(gr) || !_isAudioInitialised) {
             logError("setGranulatorRampSin: Invalid granulator");
             return;
         }
         gr.addRampSin(configParamName, rampAmplitude, rampFrequency, rampDurationMs);
     }
     function _setGranulatorGain(level, timeMs) {
-        if (isNull(gr)) {
+        if (isNull(gr) || !_isAudioInitialised) {
             logError("setGranulatorGain: Invalid granulator");
             return;
         }
         gr.setGain(level, timeMs);
     }
     function _setGranulatorEnvelope(envelopeConfig) {
-        if (isNull(gr)) {
+        if (isNull(gr) || !_isAudioInitialised) {
             logError("setGranulatorEnvelope: Invalid granulator");
             return;
         }
         gr.setGrainEnvelope(envelopeConfig);
     }
     function _setGranulatorConfig(granulatorConfig) {
-        if (isNull(gr)) {
+        if (isNull(gr) || !_isAudioInitialised) {
             logError("setGranulatorConfig: Invalid granulator");
             return;
         }
         gr.setGranulatorConfig(granulatorConfig);
     }
     function _setGranulatorGrainConfig(grainConfig) {
-        if (isNull(gr)) {
+        if (isNull(gr) || !_isAudioInitialised) {
             logError("setGranulatorGrainConfig: Invalid granulator");
             return;
         }
         gr.setGrainConfig(grainConfig);
     }
     function _setGranulatorPlayDuration(durationSec) {
-        if (isNull(gr)) {
+        if (isNull(gr) || !_isAudioInitialised) {
             logError("setGranulatorPlayDuration: Invalid granulator");
             return;
         }
@@ -314,7 +314,7 @@ var zsAudio = (function (u, gr, sp, win) {
         gr.setPlayDuration(durationSec);
     }
     function _playGranulator() {
-        if (isNull(gr)) {
+        if (isNull(gr) || !_isAudioInitialised) {
             logError("playGranulator: Invalid granulator");
             return;
         }
@@ -325,7 +325,7 @@ var zsAudio = (function (u, gr, sp, win) {
         gr.play();
     }
     function _stopGranulator() {
-        if (isNull(gr)) {
+        if (isNull(gr) || !_isAudioInitialised) {
             logError("stopGranulator: Invalid granulator");
             return;
         }
@@ -336,7 +336,7 @@ var zsAudio = (function (u, gr, sp, win) {
         gr.stop();
     }
     function _resetGranulator() {
-        if (isNull(gr)) {
+        if (isNull(gr) || !_isAudioInitialised) {
             logError("stopGranulator: Invalid granulator");
             return;
         }

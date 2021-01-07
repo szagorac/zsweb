@@ -794,6 +794,24 @@ var zsUtil = (function (console, win, doc) {
         }
         return new Point(min,max);
     }
+    function _setConfig(config, paramsToSet) {
+        if (!_isObject(config) || !_isObject(paramsToSet)) {
+            _logError("_setConfig: Invalid config");
+            return;
+        }
+        for (var prop in paramsToSet) {
+            if (paramsToSet.hasOwnProperty(prop) && _hasNestedObjectKey(config, prop)) {
+                var value = paramsToSet[prop];
+                _log("_setConfig: " + prop + ": " + value);
+                var current = _getNestedObjectValue(config, prop);
+                if (current === value) {
+                    _log("_setConfig: value for param " + prop + " is identical to previous, ignoring...");
+                    continue;
+                }
+                _setNestedObjectValue(config, prop, value);
+            }
+        }
+    }
 
     // PUBLIC API
     return {
@@ -960,6 +978,9 @@ var zsUtil = (function (console, win, doc) {
         },
         secToMsec: function secToMsec(sec) {
             return _secToMsec(sec);
+        },
+        setConfig: function secToMsec(config, params) {
+            return _setConfig(config, params);
         },
         toCssIdQuery: function (id) {
             if (!_isString(id)) {
