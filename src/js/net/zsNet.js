@@ -19,6 +19,7 @@ var zsNet = (function (u, win) {
     const ERROR = "ERROR";
     const OK = "OK";
     const STATE = "STATE";
+    const STATE_DELTA = "STATE_DELTA";
     const SSE = "sse";
     const WEBSOCKET = "ws";
     const POLL = "poll";
@@ -469,8 +470,8 @@ var zsNet = (function (u, win) {
         var bag = jsonResponse.dataBag;
         var sendTime = bag.t;
         var message = bag.msg;
-        var state = bag.st;
         var type = bag.type;
+        var isDeltaUpdate = false;
         if (isNull(type)) {
             logError("_processResponse: invalid response type");
             return;
@@ -488,12 +489,17 @@ var zsNet = (function (u, win) {
                     log("_processResponse: time: " + sendTime + " type: " + type + " source: " + source + " message: " + message);
                     _processOkResponse(message)
                     break;
+                case STATE_DELTA:                    
+                    isDeltaUpdate = true;
                 case STATE:
+                    var state = bag.st;
                     // log("handleAjaxGetResponse: time: " + t + " type: " + type + " state: " + st);
                     log("_processResponse: time: " + sendTime + " type: " + type + " source: " + source);
                     _lastStateUpdateTime = sendTime;
-                    _processStateResponse(state);
+                    _processStateResponse(state, isDeltaUpdate);
                     break;
+                default:
+                    logError("Unknown server response type: " + type);    
             }
         } catch (error) {
             logError("_processResponse: failed to process type: " + type + " message: " + message);
@@ -505,7 +511,7 @@ var zsNet = (function (u, win) {
     function _processOkResponse(message) {
         log("processOkResponse: Received message: " + message);
     }
-    function _processStateResponse(serverState) {
+    function _processStateResponse(serverState, isDeltaUpdate) {
         if (isNull(serverState)) {
             return;
         }
@@ -513,8 +519,11 @@ var zsNet = (function (u, win) {
             logError("_processStateResponse: invalid state event callback, can not process server state");
             return;
         }
-        var out = u.parseJson(serverState);        
-        _stateEventCallback(out);
+        var out = u.parseJson(serverState);   
+        if(isDeltaUpdate && !isNull(out.delta) ) {
+            out = out.delta;
+        }     
+        _stateEventCallback(out, isDeltaUpdate);
     }
     function _handleAjaxPostResponse() {
         log("handleAjaxPostResponse: ");

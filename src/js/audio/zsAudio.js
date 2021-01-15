@@ -14,6 +14,7 @@ var zsAudio = (function (u, gr, sp, win) {
     var _audioFilesToLoad = [
         '/audio/violin-tuning.mp3',
     ];
+    var _activeAudioSources = [];
 
     //Class defs
     function ZsAudioException(msg) {
@@ -225,7 +226,7 @@ var zsAudio = (function (u, gr, sp, win) {
         audioSourceNode = null;
     }
     function _resetAudio() {
-        _resetGranulator();
+        // _resetGranulator();
     }
     //speech
     function _initSpeech() {

@@ -14,18 +14,18 @@ var zsGranulator = (function (u) {
         grain: { sizeMs: 100, pitchRate: 3.0, maxPositionOffsetRangeMs: 10, maxPitchRateRange: 0.00, timeOffsetStepMs: 10 },
     }
 
-    var grains = [];
-    var actions = [];
+    var _grains = [];
+    var _actions = [];
 
-    var audioCtx = null;
-    var buffer = null;
-    var masterGain = null;
-    var startTime = null;
-    var currentPosition = null;
-    var lastGrainTimeOffsetMs = null;
-    var isPlaying = false;
-    var isStop = false;
-    var isReady = false;
+    var _audioCtx = null;
+    var _buffer = null;
+    var _masterGain = null;
+    var _startTime = null;
+    var _currentPosition = null;
+    var _lastGrainTimeOffsetMs = null;
+    var _isPlaying = false;
+    var _isStop = false;
+    var _isReady = false;
 
     function ZsGranulatorException(msg) {
         this.message = msg;
@@ -44,42 +44,42 @@ var zsGranulator = (function (u) {
     Grain.prototype.play = function (playTime) {
         var theGrain = this;
 
-        if (!buffer) {
-            logError("Grain.play: Invalid buffer");
+        if (!_buffer) {
+            _logError("Grain.play: Invalid buffer");
             setTimeout(function () {
-                onGrainComplete(theGrain);
+                _onGrainComplete(theGrain);
             }, this.size);
             return;
         }
 
         var isValid = this.validate();
         if (!isValid) {
-            logError("Grain.play: Invalid grain");
+            _logError("Grain.play: Invalid grain");
             setTimeout(function () {
-                onGrainComplete(theGrain);
+                _onGrainComplete(theGrain);
             }, this.size);
             return;
         }
 
-        var gGainNode = createGainNode();
+        var gGainNode = _createGainNode();
         if (!gGainNode) {
-            logError("Grain.play: Invalid gain");
+            _logError("Grain.play: Invalid gain");
             setTimeout(function () {
-                onGrainComplete(theGrain);
+                _onGrainComplete(theGrain);
             }, this.size);
             return;
         }
 
-        var audioSourceNode = createBufferAudioSourceNode();
+        var audioSourceNode = _createBufferAudioSourceNode();
         if (!audioSourceNode) {
-            logError("Grain.play: Invalid audioSource");
+            _logError("Grain.play: Invalid audioSource");
             setTimeout(function () {
-                onGrainComplete(theGrain);
+                _onGrainComplete(theGrain);
             }, this.size);
             return;
         }
 
-        if (!isNull(this.playbackRate)) {
+        if (!_isNull(this.playbackRate)) {
             audioSourceNode.playbackRate.value = this.playbackRate;
         } else {
             this.playbackRate = 1.0;
@@ -87,31 +87,31 @@ var zsGranulator = (function (u) {
 
         var pannerNode = null;
         var isUsePanner = config.panner.isUsePanner;
-        if (isUsePanner && isPanGrain()) {
-            pannerNode = createPanner();
-            setRndPan(pannerNode);
+        if (isUsePanner && _isPanGrain()) {
+            pannerNode = _createPanner();
+            _setRndPan(pannerNode);
         }
 
         audioSourceNode.connect(gGainNode);
 
-        if (isNull(pannerNode)) {
-            gGainNode.connect(masterGain);
+        if (_isNull(pannerNode)) {
+            gGainNode.connect(_masterGain);
         } else {
             gGainNode.connect(pannerNode);
-            pannerNode.connect(masterGain);
+            pannerNode.connect(_masterGain);
         }
 
         if (this.envelope) {
-            this.envelope.applyTo(buffer, gGainNode, playTime, this.durationSec);
+            this.envelope.applyTo(_buffer, gGainNode, playTime, this.durationSec);
         } else {
             gGainNode.gain.setValueAtTime(1, playTime);
         }
 
         audioSourceNode.onended = function (event) {
-            onGrainComplete(theGrain, audioSourceNode);
+            _onGrainComplete(theGrain, audioSourceNode);
         }
 
-        log("Grain.play: start grain, playTime: " + playTime + " now: " + audioCtx.currentTime + " position: " + this.position + " duration: " + this.durationSec);
+        _log("Grain.play: start grain, playTime: " + playTime + " now: " + _audioCtx.currentTime + " position: " + this.position + " duration: " + this.durationSec);
         if (this.playbackRate === 1.0) {
             audioSourceNode.start(playTime, this.position, this.durationSec);
         } else {
@@ -120,31 +120,30 @@ var zsGranulator = (function (u) {
         }
     }
     Grain.prototype.validate = function () {
-        var bDuration = buffer.duration;
+        var bDuration = _buffer.duration;
 
-        if (isNull(this.position) || this.position < 0 || this.position > bDuration) {
-            logError("Grain.validate: invalid position: " + position);
+        if (_isNull(this.position) || this.position < 0 || this.position > bDuration) {
+            _logError("Grain.validate: invalid position: " + position);
             return false;
         }
 
         var gDuration = this.position + this.durationSec;
         if (gDuration > bDuration) {
-            log("Grain.validate: grain Duration: " + gDuration + " greater than buffer Duration: " + bDuration);
+            _log("Grain.validate: grain Duration: " + gDuration + " greater than buffer Duration: " + bDuration);
             return false;
         }
 
         return true;
     }
 
-
-    function resetConfig() {
-        if (isPlaying) {
-            log("resetConfig: granulator is playing, ignore reset config");
+    function _resetConfig() {
+        if (_isPlaying) {
+            _log("resetConfig: granulator is playing, ignore reset config");
             return;
         }
-
+        _log("resetConfig: GRANULATOR");
         config.masterGainVal = 1.0;
-        config.playDurationSec = 5;
+        config.playDurationSec = 30;
         config.playStartOffsetSec = 0.0;
         config.maxGrains = 12;
         config.bufferPositionPlayRate = 1.0;
@@ -164,77 +163,77 @@ var zsGranulator = (function (u) {
         config.grain.maxPitchRateRange = 0.0;
         config.grain.timeOffsetStepMs = 10;
     }
-    function initGranulator(audioContext, audioBuffer, destination) {
+    function _initGranulator(audioContext, audioBuffer, destination) {
         if (!u) {
             throw new ZsGranulatorException("Invalid libraries. Required: zsUtil");
         }
 
-        log("Init Granulator");
+        _log("Init Granulator");
 
         if (!audioContext || !audioBuffer) {
-            logError("initGranulator: invalid context of buffer");
-            setReady(false);
+            _logError("initGranulator: invalid context of buffer");
+            _setReady(false);
             return;
         }
-        audioCtx = audioContext;
-        buffer = audioBuffer;
+        _audioCtx = audioContext;
+        _buffer = audioBuffer;
 
-        if (isNull(destination)) {
-            destination = audioCtx.destination;
+        if (_isNull(destination)) {
+            destination = _audioCtx.destination;
         }
 
-        masterGain = createGainNode();
-        setMasterGain(config.masterGainVal);
+        _masterGain = _createGainNode();
+        _setMasterGain(config.masterGainVal);
 
-        masterGain.connect(destination);
-        setReady(true);
+        _masterGain.connect(destination);
+        _setReady(true);
     }
-    function playLinear() {
-        if (!audioCtx || !buffer) {
-            logError("playLinear: invalid context of buffer");
+    function _playLinear() {
+        if (!_audioCtx || !_buffer) {
+            _logError("playLinear: invalid context of buffer");
             return;
         }
-        if (!isReady) {
-            logError("playLinear: granulator is not ready, will not play");
-            return;
-        }
-
-        if (isPlaying) {
-            log("playLinear: granulator is already playing, ignore");
+        if (!_isReady) {
+            _logError("playLinear: granulator is not ready, will not play");
             return;
         }
 
-        log("playLinear: Playing GRANULATOR");
+        if (_isPlaying) {
+            _log("playLinear: granulator is already playing, ignore");
+            return;
+        }
 
-        isStop = false;
-        startTime = audioCtx.currentTime;
-        currentPosition = 0;
-        log("playLinear: startTime : " + startTime + " context.state: " + audioCtx.state);
-        isPlaying = true;
-        processGrains();
+        _log("playLinear: Playing GRANULATOR");
+
+        _isStop = false;
+        _startTime = _audioCtx.currentTime;
+        _currentPosition = 0;
+        _log("playLinear: startTime : " + _startTime + " context.state: " + _audioCtx.state);
+        _isPlaying = true;
+        _processGrains();
     }
-    function processGrains() {
-        if (!isReady) {
-            logError("processGrains: granulator is not ready, will not play");
+    function _processGrains() {
+        if (!_isReady) {
+            _logError("processGrains: granulator is not ready, will not play");
             return;
         }
 
-        if (isStop) {
+        if (_isStop) {
             return;
         }
 
-        validatePlayState();
+        _validatePlayState();
 
-        if (isStop) {
-            log("processGrains: STOPPING Granulator");
-            isPlaying = false;
+        if (_isStop) {
+            _log("processGrains: STOPPING Granulator");
+            _isPlaying = false;
             return;
         }
 
-        var now = audioCtx.currentTime;
-        currentPosition = calculateCurrentPosition(now);
+        var now = _audioCtx.currentTime;
+        _currentPosition = _calculateCurrentPosition(now);
 
-        processActions(now);
+        _processActions(now);
 
         var attackTime = config.envelope.attackTime;
         var decayTime = config.envelope.decayTime;
@@ -246,16 +245,16 @@ var zsGranulator = (function (u) {
         var pitchRate = config.grain.pitchRate;
         var maxGrains = config.maxGrains;
 
-        if (isNull(pitchRate) || pitchRate < 0.0) {
+        if (_isNull(pitchRate) || pitchRate < 0.0) {
             pitchRate = 1.0;
         }
 
-        setMasterGain(config.masterGainVal);
+        _setMasterGain(config.masterGainVal);
 
-        while (grains.length < maxGrains) {
-            var grainOffsetSec = calculateRndGrainOffsetSec(currentPosition);
-            var playTime = calculatePlayTime(now);
-            var playbackRate = calculateRndPlaybackRate(pitchRate);
+        while (_grains.length < maxGrains) {
+            var grainOffsetSec = _calculateRndGrainOffsetSec(_currentPosition);
+            var playTime = _calculatePlayTime(now);
+            var playbackRate = _calculateRndPlaybackRate(pitchRate);
             if (playbackRate < 0) {
                 playbackRate = pitchRate;
             }
@@ -265,57 +264,57 @@ var zsGranulator = (function (u) {
             //Grain
             var g = new Grain(adsr, sizeMs, grainOffsetSec, playbackRate);
 
-            grains.push(g);
+            _grains.push(g);
             g.play(playTime);
         }
     }
-    function processActions(now) {
-        if (!u.isArray(actions)) {
+    function _processActions(now) {
+        if (!u.isArray(_actions)) {
             return;
         }
 
-        for (var i = 0; i < actions.length; i++) {
-            var action = actions[i];
-            updateConfigValue(action, now);
+        for (var i = 0; i < _actions.length; i++) {
+            var action = _actions[i];
+            _updateConfigValue(action, now);
         }
 
-        purgeCompletedActions();
+        _purgeCompletedActions();
     }
-    function updateConfigValue(action, now) {
+    function _updateConfigValue(action, now) {
         if (!(u.isObjectInstanceOf(u.RampLinear, action) || u.isObjectInstanceOf(u.RampSin, action))) {
-            logError("updateConfigValue: invalid action: ");
+            _logError("updateConfigValue: invalid action: ");
             return;
         }
         var newVal = action.getValue(now);
-        if(!isNull(newVal)) {
+        if(!_isNull(newVal)) {
             u.setNestedObjectValue(config, action.paramName, newVal);
         } else {
-            log("updateConfigValue: action returned invalid value");
+            _log("updateConfigValue: action returned invalid value");
         }
         
         if(action.isScheduleReminder) {            
             var durationMs = u.secToMsec(action.reminderSec);            
-            addRampLinearAction(action.paramName, action.startValue, durationMs);
+            _addRampLinearAction(action.paramName, action.startValue, durationMs);
         }
     }
-    function calculatePlayTime(now) {
+    function _calculatePlayTime(now) {
         var timeStepMs = config.grain.timeOffsetStepMs;
         var maxOffsetMs = config.grain.sizeMs;
-        if (isNull(lastGrainTimeOffsetMs)) {
-            lastGrainTimeOffsetMs = -1 * timeStepMs;
+        if (_isNull(_lastGrainTimeOffsetMs)) {
+            _lastGrainTimeOffsetMs = -1 * timeStepMs;
         }
-        var offsetMs = lastGrainTimeOffsetMs + timeStepMs;
+        var offsetMs = _lastGrainTimeOffsetMs + timeStepMs;
         if (offsetMs >= maxOffsetMs) {
             offsetMs = 0;
         }
-        log("calculatePlayTime: offsetMs: " + offsetMs);
+        _log("calculatePlayTime: offsetMs: " + offsetMs);
         var offsetSec = u.msecToSec(offsetMs);
-        lastGrainTimeOffsetMs = offsetMs;
+        _lastGrainTimeOffsetMs = offsetMs;
         return now + offsetSec;
     }
-    function calculateRndPlaybackRate(pitchRate) {
+    function _calculateRndPlaybackRate(pitchRate) {
         var maxPitchRateRange = config.grain.maxPitchRateRange;
-        if (isNull(maxPitchRateRange) || maxPitchRateRange === 0) {
+        if (_isNull(maxPitchRateRange) || maxPitchRateRange === 0) {
             return pitchRate;
         }
         var halfOffset = maxPitchRateRange / 2.0;
@@ -323,10 +322,10 @@ var zsGranulator = (function (u) {
         var maxOffset = pitchRate + halfOffset;
         return u.getRandomFromRange(minOffset, maxOffset);
     }
-    function calculateRndGrainOffsetSec(positionSec) {
+    function _calculateRndGrainOffsetSec(positionSec) {
         var maxOffsetRangeMs = config.grain.maxPositionOffsetRangeMs;
         var maxOffsetRangeSec = u.msecToSec(maxOffsetRangeMs);
-        var bDuration = buffer.duration;
+        var bDuration = _buffer.duration;
         var halfOffsetSec = maxOffsetRangeSec / 2.0;
         var minOffsetSec = positionSec - halfOffsetSec;
         var maxOffsetSec = positionSec + halfOffsetSec;
@@ -338,9 +337,9 @@ var zsGranulator = (function (u) {
         }
         return u.getRandomFromRange(minOffsetSec, maxOffsetSec);
     }
-    function calculateCurrentPosition(now) {
-        var elapsed = now - startTime;
-        var bDuration = buffer.duration;
+    function _calculateCurrentPosition(now) {
+        var elapsed = now - _startTime;
+        var bDuration = _buffer.duration;
         var playRate = config.bufferPositionPlayRate;
         var position = config.grain.defaultOffsetSec;
 
@@ -361,18 +360,18 @@ var zsGranulator = (function (u) {
         return position;
 
     }
-    function onGrainComplete(grain, audioSourceNode) {
+    function _onGrainComplete(grain, audioSourceNode) {
         if (!grain) {
             return;
         }
         // log("onGrainComplete: " );
         grain.isFinished = true;
 
-        purgeCompletedGrains();
-        stopAudioSource(audioSourceNode);
-        processGrains();
+        _purgeCompletedGrains();
+        _stopAudioSource(audioSourceNode);
+        _processGrains();
     }
-    function stopAudioSource(audioSourceNode) {
+    function _stopAudioSource(audioSourceNode) {
         if (!audioSourceNode) {
             return;
         }
@@ -380,94 +379,94 @@ var zsGranulator = (function (u) {
         audioSourceNode.disconnect();
         audioSourceNode = null;
     }
-    function purgeCompletedGrains() {
+    function _purgeCompletedGrains() {
         var active = [];
-        for (var i = 0; i < grains.length; i++) {
-            var grain = grains[i];
-            if (!isObject(grain)) {
+        for (var i = 0; i < _grains.length; i++) {
+            var grain = _grains[i];
+            if (!_isObject(grain)) {
                 continue;
             }
             if (!grain.isFinished) {
                 active.push(grain);
             }
         }
-        grains = active;
+        _grains = active;
     }
-    function purgeCompletedActions() {
+    function _purgeCompletedActions() {
         var active = [];
-        for (var i = 0; i < actions.length; i++) {
-            var action = actions[i];
-            if (!isObject(action)) {
+        for (var i = 0; i < _actions.length; i++) {
+            var action = _actions[i];
+            if (!_isObject(action)) {
                 continue;
             }
             if (!action.isFinished) {
                 active.push(action);
             }
         }
-        actions = active;
+        _actions = active;
     }
-    function validatePlayState() {
-        if (!audioCtx || !buffer) {
-            isStop = true;
-            logError("validatePlayState: invalid context or buffer, stopping play");
+    function _validatePlayState() {
+        if (!_audioCtx || !_buffer) {
+            _isStop = true;
+            _logError("validatePlayState: invalid context or buffer, stopping play");
             return;
         }
-        var now = audioCtx.currentTime;
+        var now = _audioCtx.currentTime;
 
-        if (isNull(startTime)) {
-            isStop = true;
-            logError("validatePlayState: invalid startTime, stopping play");
+        if (_isNull(_startTime)) {
+            _isStop = true;
+            _logError("validatePlayState: invalid startTime, stopping play");
             return;
         }
 
-        var playTime = startTime + config.playDurationSec;
+        var playTime = _startTime + config.playDurationSec;
         if (now > playTime) {
-            isStop = true;
-            log("validatePlayState: stopping granulator, now: " + now + " is greater then allowed playtime: " + playTime);
+            _isStop = true;
+            _log("validatePlayState: stopping granulator, now: " + now + " is greater then allowed playtime: " + playTime);
             return;
         }
 
-        isStop = false;
+        _isStop = false;
     }
-    function setReady(isOk) {
-        if (isNull(isOk)) {
+    function _setReady(isOk) {
+        if (_isNull(isOk)) {
             return;
         }
-        log("setReady: " + isOk);
-        isReady = isOk;
+        _log("setReady: " + isOk);
+        _isReady = isOk;
     }
-    function setStop(isValue) {
-        if (isNull(isValue)) {
+    function _setStop(isValue) {
+        if (_isNull(isValue)) {
             return;
         }
-        log("setStop: " + isValue);
+        _log("setStop: " + isValue);
         if (isValue) {
-            isPlaying = false;
+            _isPlaying = false;
         }
-        isStop = isValue;
+        _isStop = isValue;
     }
-    function getReady() {
-        return isReady;
+    function _getReady() {
+        return _isReady;
     }
-    function setAudioBuffer(audioBuffer) {
-        if (!audioCtx) {
-            logError("setAudioBuffer: invalid audio context");
+    function _setAudioBuffer(audioBuffer) {
+        if (!_audioCtx) {
+            _logError("setAudioBuffer: invalid audio context");
             return;
         }
-        if (!isObject(audioBuffer)) {
-            logError("setAudioBuffer: invalid audio buffer");
+        if (!_isObject(audioBuffer)) {
+            _logError("setAudioBuffer: invalid audio buffer");
             return;
         }
-        if (isPlaying) {
-            log("setAudioBuffer: granulator is playing, can not change the buffer");
+        if (_isPlaying) {
+            _log("setAudioBuffer: granulator is playing, can not change the buffer");
             return;
         }
 
-        buffer = audioBuffer;
+        _buffer = audioBuffer;
     }
-    function setMasterGain(level, timeMs) {
-        if (!audioCtx || !masterGain) {
-            logError("setMasterGain: invalid context of master gain");
+    function _setMasterGain(level, timeMs) {
+        if (!_audioCtx || !_masterGain) {
+            _logError("setMasterGain: invalid context of master gain");
             return;
         }
         if (u.isString(level)) {
@@ -486,35 +485,35 @@ var zsGranulator = (function (u) {
         }
 
         config.masterGainVal = g;
-        var now = audioCtx.currentTime;
-        if (!isNull(timeMs) && u.isNumeric(timeMs)) {
+        var now = _audioCtx.currentTime;
+        if (!_isNull(timeMs) && u.isNumeric(timeMs)) {
             var timeSec = u.msecToSec(timeMs);
             var t = now + timeSec;
-            log("setMasterGain: " + g + " timeSec: " + timeSec);
-            masterGain.gain.linearRampToValueAtTime(g, t);
+            _log("setMasterGain: " + g + " timeSec: " + timeSec);
+            _masterGain.gain.linearRampToValueAtTime(g, t);
         } else {
-            log("setMasterGain: " + g);
-            masterGain.gain.setValueAtTime(g, now);
+            _log("setMasterGain: " + g);
+            _masterGain.gain.setValueAtTime(g, now);
         }
     }
-    function setMaxPlayDuration(durationSec) {
-        if (isNull(durationSec)) {
-            logError("setMaxPlayDuration: Invalid duration: " + durationSec);
+    function _setMaxPlayDuration(durationSec) {
+        if (_isNull(durationSec)) {
+            _logError("setMaxPlayDuration: Invalid duration: " + durationSec);
             return;
         }
         if (u.isString(durationSec)) {
             durationSec = u.toFloat(durationSec);
         }
         if (!u.isNumeric(durationSec)) {
-            logError("setMaxPlayDuration: Invalid duration: " + durationSec);
+            _logError("setMaxPlayDuration: Invalid duration: " + durationSec);
             return;
         }
-        log("setMaxPlayDuration: " + durationSec);
+        _log("setMaxPlayDuration: " + durationSec);
         config.playDurationSec = durationSec;
     }
-    function setEnvelopeConf(params) {
-        if (!isObject(params)) {
-            logError("setEnvelopeConf: Invalid envelope config");
+    function _setEnvelopeConf(params) {
+        if (!_isObject(params)) {
+            _logError("setEnvelopeConf: Invalid envelope config");
             return;
         }
 
@@ -522,68 +521,68 @@ var zsGranulator = (function (u) {
         for (var prop in params) {
             if (params.hasOwnProperty(prop) && envConfig.hasOwnProperty(prop)) {
                 envConfig[prop] = params[prop];
-                log("setEnvelopeConf: " + prop + ": " + params[prop]);
+                _log("setEnvelopeConf: " + prop + ": " + params[prop]);
             }
         }
     }
-    function addRampLinearAction(configParamName, rampEndValue, rampDurationMs) {
+    function _addRampLinearAction(configParamName, rampEndValue, rampDurationMs) {
         if (!u.isString(configParamName) || !u.isNumeric(rampEndValue) || !u.isNumeric(rampDurationMs)) {
-            logError("addRumpLinearAction: Invalid input parameters: configParamName : " + configParamName + " rampEndValue: " + rampEndValue + " rampDurationMs: " + rampDurationMs);
+            _logError("addRumpLinearAction: Invalid input parameters: configParamName : " + configParamName + " rampEndValue: " + rampEndValue + " rampDurationMs: " + rampDurationMs);
             return;
         }
 
-        for (var i = 0; i < actions.length; i++) {
-            var action = actions[i];
+        for (var i = 0; i < _actions.length; i++) {
+            var action = _actions[i];
             if (!u.isObjectInstanceOf(u.RampLinear, action) || !u.isObjectInstanceOf(u.RampSin, action)) {
                 continue;
             }
             if (action.paramName === configParamName && !action.isFinished) {
                 action.isFinished = true;
-                log("addRumpLinearAction: action already running for configParamName : " + configParamName + " stopping it...");
+                _log("addRumpLinearAction: action already running for configParamName : " + configParamName + " stopping it...");
             }
         }
 
-        var now = audioCtx.currentTime;
+        var now = _audioCtx.currentTime;
         var currentValue = u.getNestedObjectValue(config, configParamName);
-        log("addRampLinearAction: configParamName: " + configParamName + "  rampEndValue: " + rampEndValue + "  rampDurationMs: " + rampDurationMs + " now: " + now + " currentValue: " + currentValue);
+        _log("addRampLinearAction: configParamName: " + configParamName + "  rampEndValue: " + rampEndValue + "  rampDurationMs: " + rampDurationMs + " now: " + now + " currentValue: " + currentValue);
         var ramp = u.createRampLinear(configParamName, rampEndValue, rampDurationMs, now, currentValue);
-        actions.push(ramp);
+        _actions.push(ramp);
     }
 
-    function addRampSinAction(configParamName, rampAmplitude, rampFrequency, rampDurationMs) {
+    function _addRampSinAction(configParamName, rampAmplitude, rampFrequency, rampDurationMs) {
         if (!u.isString(configParamName) || !u.isNumeric(rampAmplitude) || !u.isNumeric(rampFrequency) || !u.isNumeric(rampDurationMs)) {
-            logError("addRampSinAction: Invalid input parameters: configParamName : " + configParamName + " rampAmplitude: " + rampAmplitude + " rampFrequency: " + rampFrequency + " rampDurationMs: " + rampDurationMs);
+            _logError("addRampSinAction: Invalid input parameters: configParamName : " + configParamName + " rampAmplitude: " + rampAmplitude + " rampFrequency: " + rampFrequency + " rampDurationMs: " + rampDurationMs);
             return;
         }
 
-        for (var i = 0; i < actions.length; i++) {
-            var action = actions[i];
+        for (var i = 0; i < _actions.length; i++) {
+            var action = _actions[i];
             if (!u.isObjectInstanceOf(u.RampLinear, action) || !u.isObjectInstanceOf(u.RampSin, action)) {
                 continue;
             }
             if (action.paramName === configParamName && !action.isFinished) {
                 action.isFinished = true;
-                log("addRampSinAction: action already running for configParamName : " + configParamName + " stopping it...");
+                _log("addRampSinAction: action already running for configParamName : " + configParamName + " stopping it...");
             }
         }
 
-        var now = audioCtx.currentTime;
+        var now = _audioCtx.currentTime;
         var currentValue = u.getNestedObjectValue(config, configParamName);
-        log("addRampSinAction: configParamName: " + configParamName + "  rampAmplitude: " + rampAmplitude + "  rampFrequency: " + rampFrequency + "  rampDurationMs: " + rampDurationMs + " now: " + now + " currentValue: " + currentValue);
+        _log("addRampSinAction: configParamName: " + configParamName + "  rampAmplitude: " + rampAmplitude + "  rampFrequency: " + rampFrequency + "  rampDurationMs: " + rampDurationMs + " now: " + now + " currentValue: " + currentValue);
         var ramp = u.createRampSin(configParamName, rampAmplitude, rampFrequency, rampDurationMs, now, currentValue);
-        actions.push(ramp);
+        _actions.push(ramp);
     }
-    function addConfigAction(action) {
-        if (!isObject(action)) {
-            logError("addConfigAction: Invalid action");
+    function _addConfigAction(action) {
+        if (!_isObject(action)) {
+            _logError("addConfigAction: Invalid action");
             return;
         }
 
-        actions.push(action);
+        _actions.push(action);
     }
-    function setGrainConf(params) {
-        if (!isObject(params)) {
-            logError("setGrainConf: Invalid grain config");
+    function _setGrainConf(params) {
+        if (!_isObject(params)) {
+            _logError("setGrainConf: Invalid grain config");
             return;
         }
 
@@ -591,46 +590,46 @@ var zsGranulator = (function (u) {
         for (var prop in params) {
             if (params.hasOwnProperty(prop) && grainConfig.hasOwnProperty(prop)) {
                 grainConfig[prop] = params[prop];
-                log("setGrainConf: " + prop + ": " + params[prop]);
+                _log("setGrainConf: " + prop + ": " + params[prop]);
             }
         }
     }
-    function setGranulatorConf(params) {
+    function _setGranulatorConf(params) {
         u.setConfig(config, params);
     }
-    function createBufferAudioSourceNode() {
-        if (!buffer) {
-            logError("createBufferAudioSource: invalid audio buffer");
+    function _createBufferAudioSourceNode() {
+        if (!_buffer) {
+            _logError("createBufferAudioSource: invalid audio buffer");
             return null;
         }
-        if (!audioCtx) {
-            logError("createBufferAudioSource: Audio context is not initialised!!");
+        if (!_audioCtx) {
+            _logError("createBufferAudioSource: Audio context is not initialised!!");
             return null;
         }
-        var audioSource = audioCtx.createBufferSource();
-        audioSource.buffer = buffer;
+        var audioSource = _audioCtx.createBufferSource();
+        audioSource.buffer = _buffer;
 
         return audioSource;
     }
-    function createPanner() {
-        if (!audioCtx) {
-            logError("createPanner: Audio context is not initialised!!");
+    function _createPanner() {
+        if (!_audioCtx) {
+            _logError("createPanner: Audio context is not initialised!!");
             return null;
         }
-        var panner = audioCtx.createPanner();
+        var panner = _audioCtx.createPanner();
         var pannerConfig = config.panner;
         panner.panningModel = pannerConfig.panningModel;
         panner.distanceModel = pannerConfig.distanceModel;
         return panner;
     }
-    function isPanGrain() {
+    function _isPanGrain() {
         //pan about half of grains;
         var panNo = u.getRandomIntFromRange(1, 2);
         return panNo === 1;
     }
-    function setRndPan(pannerNode) {
-        if (isNull(pannerNode)) {
-            logError("setRndPan: invalid panner");
+    function _setRndPan(pannerNode) {
+        if (_isNull(pannerNode)) {
+            _logError("setRndPan: invalid panner");
             return;
         }
         var pannerConfig = config.panner;
@@ -640,73 +639,73 @@ var zsGranulator = (function (u) {
 
         // x = u.getRandomFromRange(-0.9, 0.9);
 
-        log("setRndPan: x: " + x);
+        _log("setRndPan: x: " + x);
         pannerNode.setPosition(x, 0, x);
     }
-    function createGainNode() {
-        if (!audioCtx) {
-            logError("createBufferAudioSource: Audio context is not initialised!!");
+    function _createGainNode() {
+        if (!_audioCtx) {
+            _logError("createBufferAudioSource: Audio context is not initialised!!");
             return null;
         }
-        var gain = audioCtx.createGain();
+        var gain = _audioCtx.createGain();
         return gain;
     }
-    function logError(val) {
+    function _logError(val) {
         u.logError(val, LOG_ID);
     }
-    function log(val) {
+    function _log(val) {
         u.log(val, LOG_ID);
     }
-    function isNull(val) {
+    function _isNull(val) {
         return u.isNull(val);
     }
-    function isObject(obj) {
+    function _isObject(obj) {
         return u.isObject(obj);
     }
 
     // Public members
     return {
         init: function (audioContext, audioBuffer, destination) {
-            initGranulator(audioContext, audioBuffer, destination);
+            _initGranulator(audioContext, audioBuffer, destination);
         },
         play: function () {
-            playLinear();
+            _playLinear();
         },
         stop: function () {
-            setStop(true);
+            _setStop(true);
         },
         reset: function () {
-            resetConfig();
+            _resetConfig();
         },
         setGain: function (level, timeMs) {
-            setMasterGain(level, timeMs);
+            _setMasterGain(level, timeMs);
         },
         setBuffer: function (audioBuffer) {
-            setAudioBuffer(audioBuffer);
+            _setAudioBuffer(audioBuffer);
         },
         setPlayDuration: function (durationSec) {
-            setMaxPlayDuration(durationSec);
+            _setMaxPlayDuration(durationSec);
         },
         setGrainEnvelope: function (config) {
-            setEnvelopeConf(config);
+            _setEnvelopeConf(config);
         },
         setGrainConfig: function (config) {
-            setGrainConf(config);
+            _setGrainConf(config);
         },
         setGranulatorConfig: function (config) {
-            setGranulatorConf(config);
+            _setGranulatorConf(config);
         },
         addAction: function (action) {
-            addConfigAction(action);
+            _addConfigAction(action);
         },
         addRampLinear: function (configParamName, rampEndValue, rampDurationMs) {
-            addRampLinearAction(configParamName, rampEndValue, rampDurationMs);
+            _addRampLinearAction(configParamName, rampEndValue, rampDurationMs);
         },
         addRampSin: function (configParamName, rampAmplitude, rampFrequency, rampDurationMs) {
-            addRampSinAction(configParamName, rampAmplitude, rampFrequency, rampDurationMs);
+            _addRampSinAction(configParamName, rampAmplitude, rampFrequency, rampDurationMs);
         },
         isReady: function () {
-            return getReady();
+            return _getReady();
         },
     }
 }(zsUtil));

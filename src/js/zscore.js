@@ -33,7 +33,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         '/audio/UnionRoseE3.mp3',
         '/audio/UnionRoseE4.mp3',
         '/audio/UnionRoseE5.mp3',
-        '/audio/ligetiS1-1.mp3',
+        '/audio/UnionRose_w1.mp3',
     ];
 
     var isTouch = null;
@@ -1632,6 +1632,57 @@ var zscore = (function (u, n, s, a, win, doc) {
                 log("resetElements: unknown target: " + target);
         }
     }
+    function stop(actionId, targets, params) {
+        if (u.isArray(targets)) {
+            for (var i = 0; i < targets.length; i++) {
+                runStop(actionId, targets[i], params);
+            }
+        } else {
+            runStop(actionId, targets, params);
+        }
+    }
+    function runStop(actionId, target, params) {
+        if (!u.isString(actionId)) {
+            return;
+        }
+
+        log("stop: actionId: " + actionId + BLANK + target);
+
+        switch (actionId) {
+            case 'stop':
+                runStopAction(target, params);
+                break;
+            default:
+                logError("Unknown stop actionId: " + actionId);
+                return;
+        }
+    }
+    function runStopAction(target, params) {
+        if (isNull(target)) {
+            return;
+        }
+
+        log("runStopAction: target: " + target);
+
+        switch (target) {
+            case 'all':
+                runStopAll(params);
+                break;
+            case 'granulator':
+                runAudioStopGranulator(params);
+                break;
+            case 'speechSynth':
+                runStopSpeechSynth(params);    
+                break;
+        }
+    }
+    function runStopAll(params) {
+        log("runStopAll: ");
+        if (!isNull(a) && a.isReady()) {
+            runAudioStopGranulator(params);
+            runStopSpeechSynth(params);
+        }
+    }
     function processZoomLevel(zoomLevel) {
         if (isNull(zoomLevel)) {
             return;
@@ -1899,16 +1950,20 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
         if (isNotNull(event.data)) {
             var serverState = u.parseJson(serverData);
-            processSeverState(serverState);
+            processSeverState(serverState, false);
         }
 
     }
-    function processSeverState(serverState) {
+    function processSeverState(serverState, isDeltaUpdate) {
         if (isNull(serverState)) {
             return;
         }
         if (isNotNull(serverState.tiles)) {
-            processSeverTilesState(serverState.tiles);
+            if(isDeltaUpdate) {
+                processSeverTilesStateDelta(serverState.tiles);
+            } else {
+                processSeverTilesState(serverState.tiles);
+            }
         }
         if (isNotNull(serverState.centreShape)) {
             processSeverShapeState(serverState.centreShape, state.centreShape, 'centreShape');
@@ -1936,6 +1991,35 @@ var zscore = (function (u, n, s, a, win, doc) {
 
         clientShapeState.isVisible = serverShapeState.isVisible;
         setShapeStyle(clientShapeState, shapeId);
+    }
+    function processSeverTilesStateDelta(serverTiles) {
+        if(!u.isArray(serverTiles)) {
+            return;
+        }
+        var toUpdate = [];
+        for (var i = 0; i < serverTiles.length; i++) {
+            var serverTile = serverTiles[i];
+            if(!u.isObject(serverTile)) {
+                logError("processSeverTilesStateDelta: invalid server tile")
+                continue;
+            }
+            var serverTileState = serverTile.state;
+            var clientTileState = getTileIdState(serverTileState.id);
+            var serverTileText = serverTile.tileText;
+            var clientTileText = clientTileState.txt;
+            clientTileState.isActive = serverTileState.isActive;
+            clientTileState.isVisible = serverTileState.isVisible;
+            clientTileState.isPlaying = serverTileState.isPlaying;
+            clientTileState.isPlayingNext = serverTileState.isPlayingNext;
+            clientTileState.isPlayed = serverTileState.isPlayed;
+            clientTileState.clickCount = serverTileState.clickCount;
+
+            clientTileText.value = serverTileText.value;
+            clientTileText.isVisible = serverTileText.isVisible;
+
+            toUpdate.push(clientTileState);
+        }
+        processTileUpdates(toUpdate);
     }
     function processSeverTilesState(serverTileStates) {
         if (!u.isArray(serverTileStates) || !u.isArray(serverTileStates[0])) {
@@ -1971,7 +2055,10 @@ var zscore = (function (u, n, s, a, win, doc) {
                     toUpdate.push(clientTileState);
                 }
             }
-        }
+        }        
+        processTileUpdates(toUpdate);
+    }
+    function processTileUpdates(toUpdate) {
         log("Have " + toUpdate.length + " tile changes");
         for (var i = 0; i < toUpdate.length; i++) {
             var tileState = toUpdate[i]
@@ -2041,6 +2128,11 @@ var zscore = (function (u, n, s, a, win, doc) {
             case "RESET":
                 reset(id, elementIds, params);
                 break;
+            case "STOP":
+                stop(id, elementIds, params);
+                break;    
+            default: 
+                logError("doAction: Unknown actionType: " + actionType);    
         }
     }
     function makeInvisible(elementIds) {
