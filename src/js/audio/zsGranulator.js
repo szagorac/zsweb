@@ -111,7 +111,7 @@ var zsGranulator = (function (u) {
             _onGrainComplete(theGrain, audioSourceNode);
         }
 
-        _log("Grain.play: start grain, playTime: " + playTime + " now: " + _audioCtx.currentTime + " position: " + this.position + " duration: " + this.durationSec);
+        // _log("Grain.play: start grain, playTime: " + playTime + " now: " + _audioCtx.currentTime + " position: " + this.position + " duration: " + this.durationSec);
         if (this.playbackRate === 1.0) {
             audioSourceNode.start(playTime, this.position, this.durationSec);
         } else {
@@ -307,7 +307,7 @@ var zsGranulator = (function (u) {
         if (offsetMs >= maxOffsetMs) {
             offsetMs = 0;
         }
-        _log("calculatePlayTime: offsetMs: " + offsetMs);
+        // _log("calculatePlayTime: offsetMs: " + offsetMs);
         var offsetSec = u.msecToSec(offsetMs);
         _lastGrainTimeOffsetMs = offsetMs;
         return now + offsetSec;
@@ -489,10 +489,10 @@ var zsGranulator = (function (u) {
         if (!_isNull(timeMs) && u.isNumeric(timeMs)) {
             var timeSec = u.msecToSec(timeMs);
             var t = now + timeSec;
-            _log("setMasterGain: " + g + " timeSec: " + timeSec);
+            // _log("setMasterGain: " + g + " timeSec: " + timeSec);
             _masterGain.gain.linearRampToValueAtTime(g, t);
         } else {
-            _log("setMasterGain: " + g);
+            // _log("setMasterGain: " + g);
             _masterGain.gain.setValueAtTime(g, now);
         }
     }

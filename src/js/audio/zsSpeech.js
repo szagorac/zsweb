@@ -288,6 +288,20 @@ var zsSpeech = (function (u, win) {
         _log("setSupported: " + isOk);
         _isSupported = isOk;
     }
+    function _onGsapRampLinearUpdate(grl) {
+        // _log("_onGsapRampLinearUpdate: volume: " + config.volume);
+        // _log("_onGsapRampLinearUpdate: param: " + grl.propName + " value: " + grl.currentValue);
+    }
+    function _onGsapRampLinearComplete(grl) {
+        // _log("_onGsapRampLinearUpdate: volume: " + config.volume);
+        // _log("_onGsapRampLinearUpdate: param: " + grl.propName + " value: " + grl.currentValue);
+    }
+    function _rampLinearConfigParam(param, endValue, duration) {
+        if(!u.isString(param) || _isNull(config[param]) || _isNull(endValue) || _isNull(duration)) {
+            return;
+        } 
+        u.runGsapRampLinear(config, param, config[param], endValue, duration, _onGsapRampLinearUpdate, _onGsapRampLinearComplete);        
+    }
     function _setSpeechConfig(params) {
         u.setConfig(config, params);
     }
@@ -357,6 +371,9 @@ var zsSpeech = (function (u, win) {
         },
         setSpeechConfig: function (params) {
             _setSpeechConfig(params);
+        }, 
+        rampLinearConfigParam: function (param, endValue, duration) {
+            _rampLinearConfigParam(param, endValue, duration);
         },        
     }
 }(zsUtil, window));

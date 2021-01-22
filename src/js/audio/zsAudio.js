@@ -407,6 +407,9 @@ var zsAudio = (function (u, gr, sp, win) {
         setSpeechConfig: function (params) {
             return sp.setSpeechConfig(params);
         },
+        rumpLinearSpeechParam: function (param, endValue, duration) {
+            return sp.rampLinearConfigParam(param, endValue, duration);
+        },
         reset: function () {
             _resetAudio();
         },

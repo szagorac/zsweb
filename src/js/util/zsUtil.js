@@ -336,6 +336,27 @@ var zsUtil = (function (console, win, doc) {
         return newVal;
     }
     // ----- RampSin END
+    // ----- RampSin END
+    function GsapRampLinear(parentObj, propName, startValue, endValue, onUpdateCallback, onCompleteCallback) {
+        this.currentValue = startValue;
+        this.parentObj = parentObj;
+        this.propName = propName;
+        this.startValue = startValue;
+        this.endValue = endValue;
+        this.onUpdateCallback = onUpdateCallback;
+        this.onCompleteCallback = onCompleteCallback;
+    }
+    GsapRampLinear.prototype.onUpdate = function (grl) {
+        grl.parentObj[grl.propName] = grl.currentValue;
+        if(_isFunction(grl.onUpdateCallback)) {
+            grl.onUpdateCallback(grl);
+        }
+    }
+    GsapRampLinear.prototype.onComplete = function (grl) {
+        if(_isFunction(grl.onCompleteCallback)) {
+            grl.onCompleteCallback(grl);
+        }
+    }
     // ----- Class defs END
 
     // ----- private functions
@@ -812,6 +833,22 @@ var zsUtil = (function (console, win, doc) {
             }
         }
     }
+    function _runGsapRampLinear(parentObj, propName, startValue, endValue, dur, onUpdateCallback, onCompleteCallback) {
+        if(!_isObject(parentObj) || !_isString(propName) || _isNull(endValue) || _isNull(dur)) {
+            _logError("_runGsapRampLinear: invalid input params");
+            return;
+        }
+
+        var gRumpLinear = new GsapRampLinear(parentObj, propName, startValue, endValue, onUpdateCallback, onCompleteCallback);
+        gsap.to(gRumpLinear, {
+            currentValue: endValue,
+            duration: dur,
+            onComplete: gRumpLinear.onComplete,  
+            onCompleteParams: [gRumpLinear],
+            onUpdate: gRumpLinear.onUpdate,
+            onUpdateParams: [gRumpLinear],
+        });
+    }
 
     // PUBLIC API
     return {
@@ -819,6 +856,7 @@ var zsUtil = (function (console, win, doc) {
         runMode: _mode,
         RampLinear: RampLinear,
         RampSin: RampSin,
+        GsapRampLinear: GsapRampLinear,
         Point: Point,
         
         arrMinMax: function (arr) {
@@ -853,6 +891,12 @@ var zsUtil = (function (console, win, doc) {
         },
         createRampSin: function (configParamName, rampAmplitude, rampFrequency, rampDurationMs, now, currentValue) {
             return new RampSin(configParamName, rampAmplitude, rampFrequency, rampDurationMs, now, currentValue);
+        },
+        createGsapRampLinear: function (parentObj, propName, startValue, endValue) {
+            return new GsapRampLinear(parentObj, propName, startValue, endValue);
+        },
+        runGsapRampLinear: function (parentObj, propName, startValue, endValue, duration, onUpdateCallback, onCompleteCallback) {
+            _runGsapRampLinear(parentObj, propName, startValue, endValue, duration, onUpdateCallback, onCompleteCallback);
         },
         wrapInSpanElement: function (str, spanId) {
             return  _wrapInSpanElement(str, spanId);

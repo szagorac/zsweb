@@ -1323,6 +1323,9 @@ var zscore = (function (u, n, s, a, win, doc) {
             case 'state':
                 setSpeechState(params);                
                 break;
+            case 'rampLinear':
+                rampLinearSpeechParam(params);                
+                break;                
             default:
                 logError("runSpeechSynth: Unknown actionId: " + actionId);
                 return;
@@ -1408,6 +1411,25 @@ var zscore = (function (u, n, s, a, win, doc) {
         if (!isNull(params.speechIsInterrupt)) {
             speechState.speechIsInterrupt = params.speechIsInterrupt;
         }        
+    }
+    function rampLinearSpeechParam(params) {
+        if (!u.isObject(params)) {
+            logError("setSpeechState: Invalid params");
+            return;
+        }
+        var paramName = null;
+        if (!isNull(params.paramName)) {
+            paramName = params.paramName;
+        }
+        var endValue = null;
+        if (!isNull(params.endValue)) {
+            endValue = params.endValue;
+        }
+        var durationSec = null;
+        if (!isNull(params.duration)) {
+            durationSec = params.duration;
+        }
+        a.rumpLinearSpeechParam(paramName, endValue, durationSec);
     }
     function runAudioPlayBuffer(params) {
         if (isNull(a)) {
