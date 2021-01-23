@@ -212,6 +212,9 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
         a.init(AUDIO_FLIES, 5);
     }
+    function resetTweens() {
+        tween.reset
+    }
     function resetAudio() {
         if (isNull(a)) {
             logError("resetAudio: invalid zsAudio lib");
@@ -281,6 +284,9 @@ var zscore = (function (u, n, s, a, win, doc) {
         shapeState.isVisible = false;
         if (u.isFunction(shapeState.gsapTimeline.pause)) {
             shapeState.gsapTimeline.pause(0);
+        }
+        if (u.isFunction(shapeState.gsapTimeline.progress)) {
+            shapeState.gsapTimeline.progress(1, true);
         }
     }
     function resetZoom() {
@@ -893,10 +899,11 @@ var zscore = (function (u, n, s, a, win, doc) {
         n.sendEvent(EVENT_ELEMENT_SELECTED, evParams);
     }
     function playSelectedTileAudio(tileState) {
-        if(!state.isPlaySpeechSynthOnClick || !a.isSpeachReady() || !u.isString(state.speechText)) {
+        var speechState = state.speech;
+        if(!speechState.isPlaySpeechSynthOnClick || !a.isSpeachReady() || !u.isString(speechState.speechText)) {
             return;
         }
-        playSpeechText(state.speechText, state.speechVoice, state.speechIsInterrupt, tileState);
+        playSpeechText(speechState.speechText, speechState.speechVoice, speechState.speechIsInterrupt, tileState);
     }
     function onWindowResize(event) {
         if (!u.isObject(this)) {
@@ -1215,6 +1222,9 @@ var zscore = (function (u, n, s, a, win, doc) {
             case 'rampSin':
                 runAudioGranulatorRampSin(params);
                 break;
+            case 'volume':
+                setGranulatorVolume(params);
+                break;                
             default:
                 logError("runAudioGranulator: Unknown actionId: " + actionId);
                 return;
@@ -1258,6 +1268,25 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
 
         a.setGranulatorRampLinear(configParamName, rampEndValue, rampDurationMs);
+    }    
+    function setGranulatorVolume(params) {
+        if (isNull(a)) {
+            logError("runAudioPlayGranulator: Invalid zsAudio lib");
+            return;
+        }
+        if (!u.isObject(params)) {
+            return;
+        } 
+        var level = null;
+        var timeMs = null;
+
+        if (!isNull(params.level)) {
+            level = params.level;
+        }
+        if (!isNull(params.timeMs)) {
+            timeMs = params.timeMs;
+        }
+        a.setGranulatorGain(level, timeMs);
     }
     function runAudioGranulatorRampSin(params) {
         if (isNull(a)) {
@@ -1371,8 +1400,8 @@ var zscore = (function (u, n, s, a, win, doc) {
             if(!isNull(tileState)) {
                 tileText = tileState.txt;
             }
-            if(u.isString(tileText)) {
-                text = u.replace(text, TILE_TEXT_TOKEN, tileText);
+            if(u.isString(tileText.value)) {
+                text = u.replace(text, TILE_TEXT_TOKEN, tileText.value);
             } else {
                 text = u.replace(text, TILE_TEXT_TOKEN, EMPTY);
             }
@@ -1979,6 +2008,9 @@ var zscore = (function (u, n, s, a, win, doc) {
     function processSeverState(serverState, isDeltaUpdate) {
         if (isNull(serverState)) {
             return;
+        }
+        if(!isDeltaUpdate) {
+            resetAll();
         }
         if (isNotNull(serverState.tiles)) {
             if(isDeltaUpdate) {

@@ -249,7 +249,7 @@ var zsGranulator = (function (u) {
             pitchRate = 1.0;
         }
 
-        _setMasterGain(config.masterGainVal);
+        // _setMasterGain(config.masterGainVal);
 
         while (_grains.length < maxGrains) {
             var grainOffsetSec = _calculateRndGrainOffsetSec(_currentPosition);
@@ -476,6 +476,9 @@ var zsGranulator = (function (u) {
         var g = config.masterGainVal;
         if (u.isNumeric(level)) {
             g = level;
+        } else {
+            _logError("_setMasterGain: Invalid gain level: " + level);
+            return;
         }
 
         if (g < 0.0) {
@@ -485,15 +488,15 @@ var zsGranulator = (function (u) {
         }
 
         config.masterGainVal = g;
-        var now = _audioCtx.currentTime;
         if (!_isNull(timeMs) && u.isNumeric(timeMs)) {
             var timeSec = u.msecToSec(timeMs);
-            var t = now + timeSec;
-            // _log("setMasterGain: " + g + " timeSec: " + timeSec);
+            var now = _audioCtx.currentTime; 
+            var t = _audioCtx.currentTime + timeSec;
+            _log("setMasterGain: " + g + " timeSec: " + timeSec + " actualTime: " + t + " now: " + now);
             _masterGain.gain.linearRampToValueAtTime(g, t);
         } else {
-            // _log("setMasterGain: " + g);
-            _masterGain.gain.setValueAtTime(g, now);
+            _log("setMasterGain: " + g);
+            _masterGain.gain.setValueAtTime(g, _audioCtx.currentTime);
         }
     }
     function _setMaxPlayDuration(durationSec) {
