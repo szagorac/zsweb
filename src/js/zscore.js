@@ -33,7 +33,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         '/audio/UnionRoseE3.mp3',
         '/audio/UnionRoseE4.mp3',
         '/audio/UnionRoseE5.mp3',
-        '/audio/UnionRose_w1.mp3',
+        '/audio/UnionRose-m1.mp3',
     ];
 
     var isTouch = null;
@@ -700,8 +700,38 @@ var zscore = (function (u, n, s, a, win, doc) {
 
         return config.tileStyleActive;
     }
-    function modifyFillOnClickCount(tileObj, tileState) {
-        if (!tileState.isActive || tileState.isSelected) {
+    function setActiveTileFillOnClickCount() {
+        var rowRangeConfigs = u.initArray(state.tiles.length, null);
+        for (var i = 0; i < state.tiles.length; i++) {
+            var cols = state.tiles[i];
+            for (var j = 0; j < cols.length; j++) {
+                var tileState = state.tiles[i][j];
+                if (!tileState.isActive) {
+                    continue;
+                }
+                var tileObj = u.getElement(tileState.id);
+                var rangeConfig = rowRangeConfigs[i];
+                if(isNull(rangeConfig)) {
+                    rangeConfig = createRangeConfig(i);
+                    rowRangeConfigs[i] = rangeConfig;
+                }
+                modifyFillOnClickCount(tileObj, tileState, rangeConfig);
+            }
+        }
+    }
+    function createRangeConfig(row) {
+        var clickCounts = getPlayableRowClickCounts(row);
+        if(isNull(clickCounts)) {
+            return null;
+        }
+        var nonZeroArr = u.arrSortedNonZeroElem(clickCounts);
+        if(nonZeroArr.length < 1) {
+            return null;
+        }
+        return [0, nonZeroArr[0], 0, config.maxColModPerClick];
+    }
+    function modifyFillOnClickCount(tileObj, tileState, rangeConfig) {
+        if (!tileState.isActive) {
             return;
         }
         var fill = FILL_ACTIVE;
@@ -709,44 +739,25 @@ var zscore = (function (u, n, s, a, win, doc) {
         if (clickCount <= 0) {
             return;
         }
-        var mod = getTileFillMod(tileState);
+        var mod = getTileFillMod(tileState, rangeConfig);
         // config.colModPerClick * clickCount;
-        log("fill before: " + fill);
+        // log("fill before: " + fill);
         fill = u.modColour(fill, mod);
-        log("fill after: " + fill + " clickCount: " + clickCount);
+        // log("fill after: " + fill + " clickCount: " + clickCount);
         tileObj.setAttribute(ATTR_FILL, fill);
     }
-    function getTileFillMod(tileState) {
+    function getTileFillMod(tileState, rangeConfig) {
         var tileCount = tileState.clickCount;
         var mod = config.colModPerClick * tileCount;
-        if(isNull(tileState)) {
+        if(!u.isArray(rangeConfig) || rangeConfig.length != 4) {
             return mod;
         }
-        var rowCol = getTileRowCol(tileState.id);
-        if(isNull(rowCol)) {
-            return mod;
-        }
-        
-        var row = rowCol.x;
-        var col = rowCol.y;
-        var clickCounts = getRowClickCounts(row);
-        if(isNull(clickCounts)) {
-            return mod;
-        }
-        var nonZeroArr = u.arrSortedNonZeroElem(clickCounts);
-        if(nonZeroArr.length < 1) {
-            return mod;
-        }
-        var maxMod = config.maxColModPerClick;
-        var minMod = 0;
-        var maxVal = nonZeroArr[0];
-        var minVal = 0;
-        var mod = u.mapRange(tileCount, minVal, maxVal, minMod, maxMod);
+        var mod = u.mapRange(tileCount, rangeConfig[0], rangeConfig[1], rangeConfig[2], rangeConfig[3]);
 
-        log("getTileFillMod: mod: " + mod);
+        // log("getTileFillMod: mod: " + mod + " tile: " + tileState.id + " clickCount: " + tileCount);
         return mod;
     }
-    function getRowClickCounts(row) {
+    function getPlayableRowClickCounts(row) {
         var clickCounts = u.initArray(state.tiles[0].length, 0);
         if(row < 0 || row >= state.tiles.length) {
             return clickCounts;
@@ -754,8 +765,12 @@ var zscore = (function (u, n, s, a, win, doc) {
         var rows = state.tiles[row];
         for (var j = 0; j < rows.length; j++) {
             var tileState = state.tiles[row][j];
-            clickCounts[j] = tileState.clickCount;
-        }
+            var clickCount = tileState.clickCount;
+            if(tileState.isPlayed) {
+                clickCount = 0;
+            }
+            clickCounts[j] = clickCount;
+        }        
         return clickCounts;
     }
     function getMinMaxRowClickCount() {
@@ -1077,8 +1092,6 @@ var zscore = (function (u, n, s, a, win, doc) {
     function setTileStyle(tileState, tileObj) {
         var tileStyle = getTileStyle(tileState);
         setElementAttributes(tileObj, tileStyle);
-
-        modifyFillOnClickCount(tileObj, tileState);
 
         var tileTextElementId = config.tileTextElementPrefix + tileState.id;
         var tileTextElement = u.getElement(tileTextElementId);
@@ -1805,6 +1818,9 @@ var zscore = (function (u, n, s, a, win, doc) {
             case "reverse":
                 reverseTimeline(tl);
                 break;
+            case "resume":
+                resumeTimeline(tl, params);
+                break;    
             default:
                 logError("runTimeline: invalid actionId: " + actionId);
                 return;
@@ -1853,6 +1869,30 @@ var zscore = (function (u, n, s, a, win, doc) {
             return;
         }
         timeline.pause(0);
+    }    
+    function resumeTimeline(timeline, params) {
+        if (isNull(timeline)) {
+            logError("resumeTimeline: invalid timeline");
+            return;
+        }
+
+        if(timeline.isActive()) {
+            return;
+        }
+        var dur = timeline.totalDuration();
+        if (!isNull(params)) {
+            if (!isNull(params.duration)) {
+                var dur = params.duration;
+            }
+        }
+
+        var progress = timeline.progress();
+        if(progress == 1.0 || progress == 0.0) {
+            timeline.totalDuration(dur);
+            timeline.restart();
+        } else {
+            timeline.resume();
+        }
     }
     function reverseTimeline(timeline) {
         if (isNull(timeline)) {
@@ -2124,6 +2164,7 @@ var zscore = (function (u, n, s, a, win, doc) {
                 state.playingTileId = tileState.id;
             }
         }
+        setActiveTileFillOnClickCount();
     }
     function processSeverActions(actions) {
         var id = null;

@@ -4,6 +4,7 @@ var zsAudio = (function (u, gr, sp, win) {
     //static members
     const LOG_ID = "zsAudio: ";
     const CTX_MAX_RETRY_COUNT = 3;
+    const OSCILATOR_TYPES = ['SAWTOOTH','SINE','SQUARE','TRIANGLE','RANDOM'];
 
     // private vars
     var _ctx = null;
@@ -14,7 +15,6 @@ var zsAudio = (function (u, gr, sp, win) {
     var _audioFilesToLoad = [
         '/audio/violin-tuning.mp3',
     ];
-    var _activeAudioSources = [];
 
     //Class defs
     function ZsAudioException(msg) {
@@ -148,17 +148,32 @@ var zsAudio = (function (u, gr, sp, win) {
         //     // setGranulatorGain(0.0, 10000);
         // }, 5000);
 
-        // setTimeout(function () {
-        //     setGranulatorRampLinear('masterGainVal', 0.1, 5000);
-        //     // setGranulatorGain(0.0, 10000);
-        // }, 15000);
-
-        // setTimeout(function () {
-        //     setGranulatorRampLinear('masterGainVal', 0.0, 10000);
-        //     // setGranulatorGain(0.0, 10000);
-        // }, 20000);
-
         // playGranulator();
+
+        // var name = "testParam" 
+        // var startTime = _getCurrentTime(); 
+        // var minValue = 10; 
+        // var maxValue = 20; 
+        // var oscillatorType = "DOWN"; 
+        // var frequancy = 1;
+        // var osc = new u.ParamOscillator(name, startTime, minValue, maxValue, oscillatorType, frequancy);
+        // setTimeout(function () {
+        //     _checkOscillator(osc);
+        // }, 100);
+    }
+    // function _checkOscillator(osc) {
+    //     var time = _getCurrentTime();
+    //     var val = osc.getValue(time);
+    //     log("_checkOscillator: got value: " + val + " time: " + time);
+    //     setTimeout(function () {
+    //         _checkOscillator(osc);
+    //     }, 100);
+    // }
+    function _getCurrentTime() {
+        if(isNull(_ctx)) {
+            return 0;
+        }
+        return _ctx.currentTime;
     }
     function _createBufferAudioSource(buffer) {
         if (!buffer) {
@@ -412,6 +427,9 @@ var zsAudio = (function (u, gr, sp, win) {
         },
         reset: function () {
             _resetAudio();
+        },
+        getCurrentTime: function () {
+           return _getCurrentTime();
         },
     }
 

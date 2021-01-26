@@ -1,17 +1,29 @@
 var zsGranulator = (function (u) {
     "use strict";
     const LOG_ID = "ZsGranulator: ";
+    const POSITION_OSCILLATOR_ID = "ZsGranulator_PositionOscillator";
+    const POSITION_FREQ_LFO_ID = "ZsGranulator_PositionFreqLFO";
+    const POSITION_START_LFO_ID = "ZsGranulator_PositionStartLFO";
+    const POSITION_END_LFO_ID = "ZsGranulator_PositionEndLFO";
+    const SIZE_OSCILLATOR_ID = "ZsGranulator_SizeOscillator";
 
     var config = {
         masterGainVal: 0.1,
         playDurationSec: 30,
         playStartOffsetSec: 0.0,
         maxGrains: 16,
-        bufferPositionPlayRate: 0.22,
+        bufferPositionPlayRate: 0.5,
         audioStopToleranceMs: 5,
+        isUsePositionOscilator: true,
+        isUseSizeOscilator: true,
         panner: { isUsePanner: false, panningModel: "equalpower", distanceModel: "linear", maxPanAngle: 45 },
         envelope: { attackTime: 0.5, decayTime: 0.0, sustainTime: 0.0, releaseTime: 0.5, sustainLevel: 1.0 },
-        grain: { sizeMs: 100, pitchRate: 3.0, maxPositionOffsetRangeMs: 10, maxPitchRateRange: 0.00, timeOffsetStepMs: 10 },
+        grain: { sizeMs: 100, pitchRate: 1.0, maxPositionOffsetRangeMs: 100, maxPitchRateRange: 0.03, timeOffsetStepMs: 10 },
+        positionOscillator: {startTimeMs: 500, endTimeMs: 4500, type: "TRIANGLE", frequency: 0.2, isUseFreqencyMod: true, isUsePositionMod: true, 
+                            frequencyLFO: {minValue: -0.1, maxValue: 0.0, type: "TRIANGLE", frequency: 0.02},
+                            startLFO: {minValue: -500, maxValue: 500, type: "TRIANGLE", frequency: 0.1},
+                            endLFO: {minValue: -500, maxValue: 500, type: "TRIANGLE", frequency: 0.1}},
+        sizeOscillator: {minDelta: -30, maxDelta: 500, type: "TRIANGLE", frequency: 0.1},                            
     }
 
     var _grains = [];
@@ -26,6 +38,8 @@ var zsGranulator = (function (u) {
     var _isPlaying = false;
     var _isStop = false;
     var _isReady = false;
+    var _positionOscillator = null;
+    var _sizeOscillator = null;
 
     function ZsGranulatorException(msg) {
         this.message = msg;
@@ -178,6 +192,13 @@ var zsGranulator = (function (u) {
         _audioCtx = audioContext;
         _buffer = audioBuffer;
 
+        if(config.isUsePositionOscilator) {
+            _positionOscillator = _createPositionOscillator();
+        }
+        if(config.isUseSizeOscilator) {
+            _sizeOscillator = _createSizeOscillator();
+        }
+
         if (_isNull(destination)) {
             destination = _audioCtx.destination;
         }
@@ -188,27 +209,59 @@ var zsGranulator = (function (u) {
         _masterGain.connect(destination);
         _setReady(true);
     }
-    function _playLinear() {
+    function _createPositionOscillator() {
+        var cnf = config.positionOscillator;        
+        var now = _getNow();
+        var osc = new u.ParamOscillator(POSITION_OSCILLATOR_ID, now, cnf.startTimeMs, cnf.endTimeMs, cnf.type, cnf.frequency);
+        if(cnf.isUseFreqencyMod) {
+            var lfoConfig = cnf.frequencyLFO;
+            var freqLFO = new u.ParamOscillator(POSITION_FREQ_LFO_ID, now, lfoConfig.minValue, lfoConfig.maxValue, lfoConfig.type, lfoConfig.frequency);
+            osc.setFrequencyLFO(freqLFO);
+        }
+        if(cnf.isUsePositionMod) {
+            var pConf = cnf.startLFO;
+            var startLFO = new u.ParamOscillator(POSITION_START_LFO_ID, now, pConf.minValue, pConf.maxValue, pConf.type, pConf.frequency);
+            osc.setMinValueLFO(startLFO);
+        }
+        if(cnf.isUsePositionMod) {
+            var pConf = cnf.endLFO;
+            var endLFO = new u.ParamOscillator(POSITION_END_LFO_ID, now, pConf.minValue, pConf.maxValue, pConf.type, pConf.frequency);
+            osc.setMaxValueLFO(endLFO);
+        }
+        return osc;
+    }
+    function _createSizeOscillator() {
+        var cnf = config.sizeOscillator;        
+        var now = _getNow();
+        var osc = new u.ParamOscillator(SIZE_OSCILLATOR_ID, now, cnf.minDelta, cnf.maxDelta, cnf.type, cnf.frequency);
+        return osc;
+    }
+    function _play() {
         if (!_audioCtx || !_buffer) {
-            _logError("playLinear: invalid context of buffer");
+            _logError("_play: invalid context of buffer");
             return;
         }
         if (!_isReady) {
-            _logError("playLinear: granulator is not ready, will not play");
+            _logError("_play: granulator is not ready, will not play");
             return;
         }
 
         if (_isPlaying) {
-            _log("playLinear: granulator is already playing, ignore");
+            _log("_play: granulator is already playing, ignore");
             return;
         }
 
-        _log("playLinear: Playing GRANULATOR");
-
+        _log("_play: Playing GRANULATOR");
         _isStop = false;
         _startTime = _audioCtx.currentTime;
         _currentPosition = 0;
-        _log("playLinear: startTime : " + _startTime + " context.state: " + _audioCtx.state);
+        if(!_isNull(_positionOscillator)) {
+            _positionOscillator.setStartTime(_startTime);
+        }
+        if(!_isNull(_sizeOscillator)) {
+            _sizeOscillator.setStartTime(_startTime);
+        }
+        _log("_play: startTime : " + _startTime + " context.state: " + _audioCtx.state);
         _isPlaying = true;
         _processGrains();
     }
@@ -241,7 +294,7 @@ var zsGranulator = (function (u) {
         var sustainTime = config.envelope.sustainTime;
         var releaseTime = config.envelope.releaseTime;
 
-        var sizeMs = config.grain.sizeMs;
+        var sizeMs = _calculateSize(now);
         var pitchRate = config.grain.pitchRate;
         var maxGrains = config.maxGrains;
 
@@ -249,7 +302,7 @@ var zsGranulator = (function (u) {
             pitchRate = 1.0;
         }
 
-        // _setMasterGain(config.masterGainVal);
+        _setMasterGain(config.masterGainVal);
 
         while (_grains.length < maxGrains) {
             var grainOffsetSec = _calculateRndGrainOffsetSec(_currentPosition);
@@ -338,6 +391,39 @@ var zsGranulator = (function (u) {
         return u.getRandomFromRange(minOffsetSec, maxOffsetSec);
     }
     function _calculateCurrentPosition(now) {
+        if(_isNull(_positionOscillator)) {
+            return _calculateCurrentPositionLinear(now);
+        }
+        var bufferDuration = _buffer.duration;
+        var positionMs = _positionOscillator.getValue(now);
+        var position = u.msecToSec(positionMs);
+        if (position > bufferDuration) {
+            position = bufferDuration;
+        }
+        if (position < 0.0) {
+            position = 0.0;
+        }
+        // _log("Current position: " + position);
+        return position;
+    }
+    function _calculateSize(now) {
+        var size = config.grain.sizeMs;
+        if(_isNull(_sizeOscillator)) {
+            return size;
+        }
+        var mod = _sizeOscillator.getValue(now);        
+        var out = size + mod;
+        var bufferDurationMs = u.secToMsec(_buffer.duration);
+        if (out > bufferDurationMs) {
+            return size;
+        }
+        if (out < 0.0) {
+            return size;
+        }
+        // _log("Current size: " + out);
+        return out;
+    }
+    function _calculateCurrentPositionLinear(now) {
         var elapsed = now - _startTime;
         var bDuration = _buffer.duration;
         var playRate = config.bufferPositionPlayRate;
@@ -346,19 +432,14 @@ var zsGranulator = (function (u) {
         if (playRate !== 0.0) {
             position = elapsed * playRate;
         }
-
         if (position > bDuration) {
             var reminder = (position * 100.0) % (bDuration * 100.0) / 100.0;
-            // log("calculateCurrentPosition: position: " + position + " bDuration: " + bDuration + " reminder: " + reminder);
             position = reminder;
         }
-
         if (position < 0.0 || position > bDuration) {
             position = 0.0;
         }
-
         return position;
-
     }
     function _onGrainComplete(grain, audioSourceNode) {
         if (!grain) {
@@ -487,17 +568,31 @@ var zsGranulator = (function (u) {
             g = 1.0;
         }
 
-        config.masterGainVal = g;
+        var currentConfig = config.masterGainVal;
+        var currentValue = _masterGain.gain.value;
+        if(currentConfig !== g) {
+            config.masterGainVal = g;
+        }
+        if(currentValue === g) {
+            return;
+        }
+
         if (!_isNull(timeMs) && u.isNumeric(timeMs)) {
             var timeSec = u.msecToSec(timeMs);
-            var now = _audioCtx.currentTime; 
+            var now = _getNow(); 
             var t = _audioCtx.currentTime + timeSec;
-            _log("setMasterGain: " + g + " timeSec: " + timeSec + " actualTime: " + t + " now: " + now);
+            // _log("setMasterGain: " + g + " timeSec: " + timeSec + " actualTime: " + t + " now: " + now);
             _masterGain.gain.linearRampToValueAtTime(g, t);
         } else {
-            _log("setMasterGain: " + g);
-            _masterGain.gain.setValueAtTime(g, _audioCtx.currentTime);
+            // _log("setMasterGain: " + g);
+            _masterGain.gain.setValueAtTime(g, _getNow());
         }
+    }
+    function _getNow() {
+        if(_isNull(_audioCtx)) {
+            return 0;
+        }
+        return _audioCtx.currentTime;
     }
     function _setMaxPlayDuration(durationSec) {
         if (_isNull(durationSec)) {
@@ -545,7 +640,7 @@ var zsGranulator = (function (u) {
             }
         }
 
-        var now = _audioCtx.currentTime;
+        var now = _getNow();
         var currentValue = u.getNestedObjectValue(config, configParamName);
         _log("addRampLinearAction: configParamName: " + configParamName + "  rampEndValue: " + rampEndValue + "  rampDurationMs: " + rampDurationMs + " now: " + now + " currentValue: " + currentValue);
         var ramp = u.createRampLinear(configParamName, rampEndValue, rampDurationMs, now, currentValue);
@@ -672,7 +767,7 @@ var zsGranulator = (function (u) {
             _initGranulator(audioContext, audioBuffer, destination);
         },
         play: function () {
-            _playLinear();
+            _play();
         },
         stop: function () {
             _setStop(true);

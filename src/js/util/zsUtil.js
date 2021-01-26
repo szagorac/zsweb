@@ -246,7 +246,7 @@ var zsUtil = (function (console, win, doc) {
         }
 
         var newVal = _mapRange(now, this.startTimeSec, this.endTimeSec, this.startValue, this.endValue);
-        _log("RampLinear.getValue: param " + this.paramName + " new Value: " + newVal + " time: " + now);
+        // _log("RampLinear.getValue: param " + this.paramName + " new Value: " + newVal + " time: " + now);
         return newVal;
     }
     // ----- RampLinear END
@@ -329,14 +329,13 @@ var zsUtil = (function (console, win, doc) {
         }
 
         var timeDiff = now - this.startTimeSec;
-        var sinVal = _oscillator(timeDiff, this.freq, this.amplitude);
+        var sinVal = _sineOscillator(timeDiff, this.freq, this.amplitude);
         var newVal = this.startValue + sinVal;
-
-        _log("RampSin.getValue: param " + this.paramName + " new Value: " + newVal + " time: " + now);
+        // _log("RampSin.getValue: param " + this.paramName + " new Value: " + newVal + " time: " + now);
         return newVal;
     }
     // ----- RampSin END
-    // ----- RampSin END
+    // ----- GsapRampLinear
     function GsapRampLinear(parentObj, propName, startValue, endValue, onUpdateCallback, onCompleteCallback) {
         this.currentValue = startValue;
         this.parentObj = parentObj;
@@ -357,6 +356,136 @@ var zsUtil = (function (console, win, doc) {
             grl.onCompleteCallback(grl);
         }
     }
+    // ----- GsapRampLinear END
+    // ----- Oscillator 
+    function Oscillator(type, freq) {
+        this.type = type;
+        this.freq = freq;
+        this.freqMod = null;
+    }
+    Oscillator.prototype.compute = function (time) {
+        //oscillator functions return value 0 -> 1 in time domain (seconds)
+        if(_isNull(time) || !_isNumeric(time)) {
+            _logError("Oscillator.computeValue invalid time: " + time);
+            return;
+        }
+        var frequency = this.freq;
+        if(!_isNull(this.freqMod)) {
+            frequency += this.freqMod;
+        }
+        switch (this.type) {
+            case 'SAWTOOTH':  
+                return _sawtooth(time, frequency);
+            case 'SINE':
+                return _cosine(time, frequency);
+            case 'SQUARE':
+                return _square(time, frequency);
+            case 'TRIANGLE':
+                return _triangle(time, frequency);
+            case 'UP':
+                return _sawtooth(time, frequency);
+            case 'DOWN':
+                return _sawtoothInverted(time, frequency);
+            case 'RANDOM':
+                return _random();
+            default:
+                _logError("Oscillator.computeValue  invalid Oscillator type: " + this.type);
+        }
+        return null;
+    }
+    Oscillator.prototype.setFrequency = function (value) {
+        if(!_isNumeric(value)) {
+            return;
+        }
+        this.freq = value;
+    }
+    Oscillator.prototype.setFrequencyMod = function (mod) {
+        if(!_isNumeric(mod)) {
+            return;
+        }
+        this.freqMod = mod;
+    }
+    // ----- Oscillator END
+    // ----- ParamOscillator 
+    function ParamOscillator(name, startTime, minValue, maxValue, oscillatorType, frequency) {
+        this.name = name;
+        this.startTime = startTime;
+        this.minValue = minValue;
+        this.maxValue = maxValue;
+        this.oscillator = new Oscillator(oscillatorType, frequency);
+        this.freqLFO = null;
+        this.minValLFO = null;
+        this.maxValLFO = null;
+    }
+    ParamOscillator.prototype.getValue = function (now) {
+        if (!_isNumeric(now)) {
+            _logError("ParamOscillator.getValue: invalid input params: now: " + now);
+            return this.minValue;
+        }
+        if (now < this.startTime) {
+            return this.minValue;
+        }
+        var timeDelta = now - this.startTime;
+        var oscValue = this.oscillator.compute(timeDelta);
+        if(_isNull(oscValue)) {
+            oscValue = 0.0;
+        }
+        if(!_isNull(this.freqLFO)) {
+            var freqMod = this.freqLFO.getValue(now);
+            if(!_isNull(freqMod)) {
+                this.oscillator.setFrequencyMod(freqMod);
+            }
+        }
+        var min = this.minValue;
+        if(!_isNull(this.minValLFO)) {
+            var minMod = this.minValLFO.getValue(now);
+            if(!_isNull(minMod)) {
+                min += minMod;
+            }
+        }
+        var max = this.maxValue;
+        if(!_isNull(this.maxValLFO)) {
+            var maxMod = this.maxValLFO.getValue(now);
+            if(!_isNull(maxMod)) {
+                max += maxMod;
+            }
+        }
+
+        var out = _mapRange(oscValue, 0.0, 1.0, min, max);
+        // _log("ParamOscillator.getValue: calculated val: " + out + " oscType: " + this.oscillator.type + " timeDelta: " + timeDelta + " oscValue: " + oscValue + " minValue: " + this.minValue + " maxValue: " + this.maxValue + " now: " + now);
+        return out;
+    }
+    ParamOscillator.prototype.setStartTime = function (startTime) {
+        this.startTime = startTime;
+        if(!_isNull(this.freqLFO)) {
+            this.freqLFO.setStartTime(startTime);
+        }
+        if(!_isNull(this.minValLFO)) {
+            this.minValLFO.setStartTime(startTime);
+        }
+        if(!_isNull(this.maxValLFO)) {
+            this.maxValLFO.setStartTime(startTime);
+        }
+    }
+    ParamOscillator.prototype.setFrequencyLFO = function (lfo) {
+        if(!_isObjectInstanceOf(ParamOscillator, lfo)) {
+            return;
+        }
+        this.freqLFO = lfo;
+    }
+    ParamOscillator.prototype.setMinValueLFO = function (lfo) {
+        if(!_isObjectInstanceOf(ParamOscillator, lfo)) {
+            return;
+        }
+        this.minValLFO = lfo;
+    }
+    ParamOscillator.prototype.setMaxValueLFO = function (lfo) {
+        if(!_isObjectInstanceOf(ParamOscillator, lfo)) {
+            return;
+        }
+        this.maxValLFO = lfo;
+    }
+    // ----- ParamOscillator END
     // ----- Class defs END
 
     // ----- private functions
@@ -762,8 +891,31 @@ var zsUtil = (function (console, win, doc) {
         }
         schema[pList[len - 1]] = value;
     }
-    function _oscillator(time, frequency = 1, amplitude = 1, phase = 0, offset = 0) {
+    function _sineOscillator(time, frequency = 1, amplitude = 1, phase = 0, offset = 0) {
         return Math.sin(time * frequency * Math.PI * 2 + phase * Math.PI * 2) * amplitude + offset;
+    }
+    //----  Oscillator functions return value 0 -> 1 in time domain [0,1]
+    function _sawtooth(time, freq) {
+        var p = 1.0/freq;
+        return ((2.0 * (time % p)/p - 1.0) + 1.0)/2.0;
+    }
+    function _sawtoothInverted(time, freq) {
+        var p = 1.0/freq;
+        return Math.abs(((2.0 * (time % p)/p - 1.0) - 1.0)/2.0);
+    }
+    function _cosine(time, freq) {
+        return Math.abs(1.0 - (Math.cos(2.0 * Math.PI * time * freq) + 1.0) / 2.0);
+    }
+    function _square(time, freq) {
+        var out = _cosine(time, freq);
+        return (out < 0.5) ? 0.0 : 1.0; 
+    }
+    function _triangle(time, freq) {
+        var p = 1.0/freq;
+        return 1.0 - Math.abs(2.0 * (time % p)/p - 1.0);
+    }
+    function _random() {
+        return Math.random();
     }
     function _modColour(col, amt) {  
         var usePound = false;      
@@ -858,7 +1010,9 @@ var zsUtil = (function (console, win, doc) {
         RampSin: RampSin,
         GsapRampLinear: GsapRampLinear,
         Point: Point,
-        
+        Oscillator: Oscillator,
+        ParamOscillator: ParamOscillator,
+
         arrMinMax: function (arr) {
             return _arrMinMax(arr);
         },
@@ -992,7 +1146,7 @@ var zsUtil = (function (console, win, doc) {
             _setNestedObjectValue(parentObj, path, value);
         },
         oscillator: function (atime, frequency, amplitude, phase, offset) {
-            _oscillator(time, frequency, amplitude, phase, offset);
+            _sineOscillator(time, frequency, amplitude, phase, offset);
         },
         mapRange: function (value, minVal, maxVal, minValNew, maxValNew) {
             return _mapRange(value, minVal, maxVal, minValNew, maxValNew);
