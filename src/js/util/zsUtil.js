@@ -1174,10 +1174,10 @@ var zsUtil = (function (console, win, doc) {
         msecToSec: function (msec) {
             return _msecToSec(msec);
         },
-        secToMsec: function secToMsec(sec) {
+        secToMsec: function (sec) {
             return _secToMsec(sec);
         },
-        setConfig: function secToMsec(config, params) {
+        setConfig: function (config, params) {
             return _setConfig(config, params);
         },
         toCssIdQuery: function (id) {

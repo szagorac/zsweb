@@ -14,16 +14,18 @@ var zsGranulator = (function (u) {
         maxGrains: 16,
         bufferPositionPlayRate: 0.5,
         audioStopToleranceMs: 5,
-        isUsePositionOscilator: true,
-        isUseSizeOscilator: true,
+        isUsePositionOscillator: true,
+        isUseSizeOscillator: true,
+        isUsePositionFrequencyMod: true, 
+        isUsePositionRangeMod: true, 
         panner: { isUsePanner: false, panningModel: "equalpower", distanceModel: "linear", maxPanAngle: 45 },
         envelope: { attackTime: 0.5, decayTime: 0.0, sustainTime: 0.0, releaseTime: 0.5, sustainLevel: 1.0 },
         grain: { sizeMs: 100, pitchRate: 1.0, maxPositionOffsetRangeMs: 100, maxPitchRateRange: 0.03, timeOffsetStepMs: 10 },
-        positionOscillator: {startTimeMs: 500, endTimeMs: 4500, type: "TRIANGLE", frequency: 0.2, isUseFreqencyMod: true, isUsePositionMod: true, 
+        positionOscillator: {minValue: 500, maxValue: 4500, type: "TRIANGLE", frequency: 0.2, 
                             frequencyLFO: {minValue: -0.1, maxValue: 0.0, type: "TRIANGLE", frequency: 0.02},
                             startLFO: {minValue: -500, maxValue: 500, type: "TRIANGLE", frequency: 0.1},
                             endLFO: {minValue: -500, maxValue: 500, type: "TRIANGLE", frequency: 0.1}},
-        sizeOscillator: {minDelta: -30, maxDelta: 500, type: "TRIANGLE", frequency: 0.1},                            
+        sizeOscillator: {minValue: -30, maxValue: 500, type: "TRIANGLE", frequency: 0.1},                            
     }
 
     var _grains = [];
@@ -192,10 +194,10 @@ var zsGranulator = (function (u) {
         _audioCtx = audioContext;
         _buffer = audioBuffer;
 
-        if(config.isUsePositionOscilator) {
+        if(config.isUsePositionOscillator) {
             _positionOscillator = _createPositionOscillator();
         }
-        if(config.isUseSizeOscilator) {
+        if(config.isUseSizeOscillator) {
             _sizeOscillator = _createSizeOscillator();
         }
 
@@ -212,18 +214,18 @@ var zsGranulator = (function (u) {
     function _createPositionOscillator() {
         var cnf = config.positionOscillator;        
         var now = _getNow();
-        var osc = new u.ParamOscillator(POSITION_OSCILLATOR_ID, now, cnf.startTimeMs, cnf.endTimeMs, cnf.type, cnf.frequency);
-        if(cnf.isUseFreqencyMod) {
+        var osc = new u.ParamOscillator(POSITION_OSCILLATOR_ID, now, cnf.minValue, cnf.maxValue, cnf.type, cnf.frequency);
+        if(config.isUsePositionFrequencyMod) {
             var lfoConfig = cnf.frequencyLFO;
             var freqLFO = new u.ParamOscillator(POSITION_FREQ_LFO_ID, now, lfoConfig.minValue, lfoConfig.maxValue, lfoConfig.type, lfoConfig.frequency);
             osc.setFrequencyLFO(freqLFO);
         }
-        if(cnf.isUsePositionMod) {
+        if(config.isUsePositionRangeMod) {
             var pConf = cnf.startLFO;
             var startLFO = new u.ParamOscillator(POSITION_START_LFO_ID, now, pConf.minValue, pConf.maxValue, pConf.type, pConf.frequency);
             osc.setMinValueLFO(startLFO);
         }
-        if(cnf.isUsePositionMod) {
+        if(config.isUsePositionRangeMod) {
             var pConf = cnf.endLFO;
             var endLFO = new u.ParamOscillator(POSITION_END_LFO_ID, now, pConf.minValue, pConf.maxValue, pConf.type, pConf.frequency);
             osc.setMaxValueLFO(endLFO);
@@ -233,7 +235,7 @@ var zsGranulator = (function (u) {
     function _createSizeOscillator() {
         var cnf = config.sizeOscillator;        
         var now = _getNow();
-        var osc = new u.ParamOscillator(SIZE_OSCILLATOR_ID, now, cnf.minDelta, cnf.maxDelta, cnf.type, cnf.frequency);
+        var osc = new u.ParamOscillator(SIZE_OSCILLATOR_ID, now, cnf.minValue, cnf.maxValue, cnf.type, cnf.frequency);
         return osc;
     }
     function _play() {
