@@ -2,6 +2,11 @@ var zsSpeech = (function (u, win) {
     "use strict";
     const LOG_ID = "ZsSpeech: ";
     const EMPTY = "";
+    const UNDERSCORE = "_";
+    const HYPHEN = "-";
+    const RANDOM = "random";
+    const DEFAULT = "default";
+    const ENGLISH_PREFIX = "en";
 
     var config = {
         volume: 1.0, //0 (lowest) and 1 (highest) 
@@ -11,11 +16,6 @@ var zsSpeech = (function (u, win) {
         maxVoiceLoadAttempts: 10,
         maxUtterances: 5,
         utteranceTimeoutSec: 30,
-        underscore: "_",
-        hyphen: "-",
-        englishPrefix: "en",
-        random: "random",
-        default: "default",
         isInterrupt: false,
         interruptTimeout: 250,
     }
@@ -104,10 +104,10 @@ var zsSpeech = (function (u, win) {
             var isDefault = voice.default;
             var lang = voice.lang;
             var isLocal = voice.localService;
-            if(u.contains(lang, config.underscore)) {
-                lang = u.replace(lang, config.underscore, config.hyphen);
+            if(u.contains(lang, UNDERSCORE)) {
+                lang = u.replace(lang, UNDERSCORE, HYPHEN);
             }
-            if(u.startsWith(lang, config.englishPrefix) && isLocal)  {                
+            if(u.startsWith(lang, ENGLISH_PREFIX) && isLocal)  {                
                 out.push(voice);
                 if(_isNull(_voice) && lang === config.lang) {
                     _setVoice(voice);
@@ -129,7 +129,7 @@ var zsSpeech = (function (u, win) {
             return;
         }
         if(_isNull(voiceName)) {
-            voiceName = config.random;
+            voiceName = RANDOM;
         }
         if(_isNull(isInterrupt)) {
             isInterrupt = config.isInterrupt;
@@ -143,10 +143,10 @@ var zsSpeech = (function (u, win) {
         } 
         var voice = null;
         switch (voiceName) {
-            case config.default:
+            case DEFAULT:
                 voice = _voice;
                 break;
-            case config.random:
+            case RANDOM:
                 voice = _findRandomVoice();
                 break;
             default:
