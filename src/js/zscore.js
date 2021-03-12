@@ -11,6 +11,7 @@ var zscore = (function (u, n, s, a, win, doc) {
     const EVENT_PARAM_SELECTED = "selected";
     const ATTR_FILL = "fill";
     const COL_WHITE = "#FFFFFF";
+    const COL_BLACK = "#000000";
     const COL_LAVANDER_BLUSH = "#FFF0F5";
     const COL_LIGHT_BLUE = "#ADD8E6";
     const COL_PALE_TURQOISE = "#AFEEEE";
@@ -20,6 +21,7 @@ var zscore = (function (u, n, s, a, win, doc) {
     const FILL_PLAYING = COL_LAVANDER_BLUSH;
     const FILL_VISIBLE = COL_WHITE;
     const FILL_INACTIVE = COL_WHITE;
+    const FILL_OUTER_FRAME = COL_WHITE;
     const FILL_POINTER_ENTRY = COL_LIGHT_BLUE;
     const FILL_SELECTED = COL_LIGHT_PURPLE;
     const FILL_PLAY_NEXT = COL_LIGHT_GREEN;
@@ -61,6 +63,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         connectionPreference: "ws,poll",
         centre: { x: 762, y: 762 },
         circleRadii: [55, 92, 125, 194, 291, 401, 552, 750],
+        outerFrameRadius: 2000, 
         lineEnd: { x: 762, y: 12 },
         lineLen: 750,
         lineAngles: [0, 45, 90, 135, 180, 225, 270, 315],
@@ -74,11 +77,14 @@ var zscore = (function (u, n, s, a, win, doc) {
         tileTextPathElementPrefix: "px",
         tileTextElementPathPrefix: "hx",
         tileTextSpanPrefix: "sp",
+        frameParentId: "frame",
+        outerFrameId: "outerFrame",
         elementIdDelimiter: "-",
         svgArcs: [null, null, null, null, null, null, null, null],
         gridParentId: "grid",
         gridStyle: { "fill": "none", "stroke": "aqua", "stroke-width": "2px" },
         tilesParentId: "tiles",
+        frameStyle: { "fill": FILL_OUTER_FRAME, "stroke-width": "0px", "stroke-opacity": "0", "visibility": "visible", "opacity": 1 },
         tileStyleVisible: { "fill": FILL_VISIBLE, "stroke": "silver", "stroke-width": "2px", "pointer-events": "all", "visibility": "visible", "opacity": 1 },
         tileStyleActive: { "fill": FILL_ACTIVE, "stroke": "silver", "stroke-width": "2px", "pointer-events": "all", "visibility": "visible", "opacity": 1 },
         tileStyleInActive: { "fill": FILL_INACTIVE, "stroke": "silver", "stroke-width": "2px", "pointer-events": "all", "visibility": "visible", "opacity": 1 },
@@ -189,6 +195,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         initInstructions();
         // createGrid();
         createTiles();
+        createOuterFrame();
 
         // get server state and initialise
         getServerState();
@@ -395,6 +402,31 @@ var zscore = (function (u, n, s, a, win, doc) {
                 createSvgTile(centre.x, centre.y, radius, startAngle, endAngle, i + 1, j);
             }
         }
+    }
+    function createOuterFrame() {  
+        var tiles = state.tiles;
+        if(!u.isArray(tiles)) {
+            logError("createOuterFrame: invalid tiles");
+            return;
+        }
+
+        var centre = config.centre;
+        var cX = centre.x;
+        var cY = centre.y;
+        var inR = config.circleRadii[config.circleRadii.length - 1] + 1;
+        var outR = config.outerFrameRadius;
+   
+        var frameParentId = config.frameParentId;
+        var frameId = config.outerFrameId;
+        var frameElement = s.createPathElement(frameId);       
+        var frameStyle = config.frameStyle;
+        setElementAttributes(frameElement, frameStyle);
+
+        var tilePath = s.createTorusPath(cX, cY, inR, outR);
+        if (isNotNull(tilePath)) {
+            frameElement.setAttribute("d", tilePath);
+        }
+        u.addChildToParentId(frameParentId, frameElement);
     }
     function initInstructions() {
         var inst = getInstructionsElement();

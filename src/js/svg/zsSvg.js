@@ -35,7 +35,10 @@ var zsSvg = (function (u, doc) {
     const SVG_PATH_ABS_M = "M";
     const SVG_PATH_ABS_A = "A";
     const SVG_PATH_ABS_L = "L";
-
+    const SVG_PATH_REL_M = "m";
+    const SVG_PATH_REL_A = "a";
+    const SVG_PATH_Z = "z";
+    
 
     //Class defs
     function ZsSvgException(msg) {
@@ -179,7 +182,7 @@ var zsSvg = (function (u, doc) {
         var d = [
             SVG_PATH_ABS_M, cX, cY,
             SVG_PATH_ABS_L, arc.startX, arc.startY,
-            SVG_PATH_ABS_A, arc.rX, arc.rY, arc.xAxisRotation, arc.largeArcFlag, arc.sweepFlag, arc.endX, arc.endY, "z"
+            SVG_PATH_ABS_A, arc.rX, arc.rY, arc.xAxisRotation, arc.largeArcFlag, arc.sweepFlag, arc.endX, arc.endY, SVG_PATH_Z
         ].join(" ");
 
         return d;
@@ -196,9 +199,22 @@ var zsSvg = (function (u, doc) {
             SVG_PATH_ABS_A, previousArc.rX, previousArc.rY, previousArc.xAxisRotation, previousArc.largeArcFlag,
             previousArc.sweepFlag, previousArc.endX, previousArc.endY,
             SVG_PATH_ABS_L, iArc.startX, iArc.startY,
-            SVG_PATH_ABS_A, iArc.rX, iArc.rY, iArc.xAxisRotation, iArc.largeArcFlag, iArc.sweepFlag, iArc.endX, iArc.endY, "z"
+            SVG_PATH_ABS_A, iArc.rX, iArc.rY, iArc.xAxisRotation, iArc.largeArcFlag, iArc.sweepFlag, iArc.endX, iArc.endY, SVG_PATH_Z
         ].join(" ");
 
+        return d;
+    }
+    function _createTorusPath(cX, cY, inR, outR) {    
+        var d = [
+            SVG_PATH_ABS_M, cX, cY,
+            SVG_PATH_REL_M, (-1.0 * outR), 0,
+            SVG_PATH_REL_A, outR, outR, 0, 1, 0, (2.0 * outR), 0,
+            SVG_PATH_REL_A, outR, outR, 0, 1, 0, (-2.0 * outR), 0, SVG_PATH_Z, 
+            SVG_PATH_ABS_M, cX, cY,
+            SVG_PATH_REL_M, -1 * inR, 0,
+            SVG_PATH_REL_A, inR, inR, 0, 0, 1, (2.0 * inR), 0,
+            SVG_PATH_REL_A, inR, inR, 0, 0, 1, (-2.0 * inR), 0, SVG_PATH_Z
+        ].join(" ");
         return d;
     }
     function _invertArc(arc) {
@@ -286,6 +302,8 @@ var zsSvg = (function (u, doc) {
         rotateElement: function (element, angle, originX, originY) {
             return _rotateElement(element, angle, originX, originY);
         },
-
+        createTorusPath: function (cX, cY, inR, outR) {
+            return  _createTorusPath(cX, cY, inR, outR);
+        },       
     }
 }(zsUtil, document));
