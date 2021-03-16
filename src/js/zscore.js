@@ -22,6 +22,7 @@ var zscore = (function (u, n, s, a, win, doc) {
     const FILL_VISIBLE = COL_WHITE;
     const FILL_INACTIVE = COL_WHITE;
     const FILL_OUTER_FRAME = COL_WHITE;
+    const FILL_STAGE_CIRCLE = COL_BLACK;
     const FILL_POINTER_ENTRY = COL_LIGHT_BLUE;
     const FILL_SELECTED = COL_LIGHT_PURPLE;
     const FILL_PLAY_NEXT = COL_LIGHT_GREEN;
@@ -49,9 +50,9 @@ var zscore = (function (u, n, s, a, win, doc) {
     var state = {
         tiles: [],
         tileCircles: [],
-        centreShape: { isVisible: false, gsapTimeline: {} },
-        innerCircle: { isVisible: false, gsapTimeline: {} },
-        outerCircle: { isVisible: false, gsapTimeline: {} },
+        centreShape: { isVisible: false, gsapTimeline: {}, gsapExplodeTimeline: {} },
+        innerCircle: { isVisible: false, gsapTimeline: {}, gsapExplodeTimeline: {} },
+        outerCircle: { isVisible: false, gsapTimeline: {}, gsapExplodeTimeline: {} },
         instructions: { isVisible: false, l1: EMPTY, l2: EMPTY, l3: EMPTY, bckgCol: "rgba(225, 225, 225, 0.85)" },
         selectedTileId: null,
         playingTileId: null,
@@ -68,6 +69,8 @@ var zscore = (function (u, n, s, a, win, doc) {
         lineLen: 750,
         lineAngles: [0, 45, 90, 135, 180, 225, 270, 315],
         tileAngles: [0, 45, 90, 135, 180, 225, 270, 315, 360],
+        viewMinPoint: 0,
+        viewMaxPoint: 1525,
         circlePrefix: "c",
         linePrefix: "l",
         tilePrefix: "t",
@@ -77,12 +80,15 @@ var zscore = (function (u, n, s, a, win, doc) {
         tileTextPathElementPrefix: "px",
         tileTextElementPathPrefix: "hx",
         tileTextSpanPrefix: "sp",
+        stageParentId: "stage", 
+        stageId: "stageCircle", 
         frameParentId: "frame",
         outerFrameId: "outerFrame",
         elementIdDelimiter: "-",
         svgArcs: [null, null, null, null, null, null, null, null],
         gridParentId: "grid",
         gridStyle: { "fill": "none", "stroke": "aqua", "stroke-width": "2px" },
+        stageStyle: { "fill": FILL_STAGE_CIRCLE, "stroke-width": "0px", "stroke-opacity": "0", "visibility": "visible", "opacity": 1, "pointer-events": "none" },
         tilesParentId: "tiles",
         frameStyle: { "fill": FILL_OUTER_FRAME, "stroke-width": "0px", "stroke-opacity": "0", "visibility": "visible", "opacity": 1 },
         tileStyleVisible: { "fill": FILL_VISIBLE, "stroke": "silver", "stroke-width": "2px", "pointer-events": "all", "visibility": "visible", "opacity": 1 },
@@ -106,6 +112,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         shapeStyleInvisible: { "visibility": "hidden" },
         shapeStyleVisible: { "visibility": "visible" },
         shapeTimelineDuration: 60,
+        shapeExplodeDuration: 5,
         instructionTxtElementId: "instructionTxt",
         textLineBreak: "<br/>",
         textStyleInvisible: { "visibility": "hidden" },
@@ -196,6 +203,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         // createGrid();
         createTiles();
         createOuterFrame();
+        createStageCover();
 
         // get server state and initialise
         getServerState();
@@ -295,6 +303,9 @@ var zscore = (function (u, n, s, a, win, doc) {
         if (u.isFunction(shapeState.gsapTimeline.progress)) {
             shapeState.gsapTimeline.progress(1, true);
         }
+        if (u.isFunction(shapeState.gsapExplodeTimeline.pause)) {
+            shapeState.gsapExplodeTimeline.pause(0);
+        }
     }
     function resetZoom() {
         processZoomLevel("centreShape");
@@ -327,21 +338,28 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
     }
     function initShapes() {
-        initShape("centreShape", state.centreShape, config.shapeTimelineDuration, config.circleRadii[1])
-        initShape("innerCircle", state.innerCircle, config.shapeTimelineDuration, config.circleRadii[4])
-        initShape("outerCircle", state.outerCircle, config.shapeTimelineDuration, config.circleRadii[7])
+        initShape("centreShape", state.centreShape, config.circleRadii[1], config.circleRadii[7], true);
+        initShape("innerCircle", state.innerCircle, config.circleRadii[4], config.viewMaxPoint, false);
+        initShape("outerCircle", state.outerCircle, config.circleRadii[7], config.viewMaxPoint, false);
     }
-    function initShape(shapeId, shapeState, dur, radius) {
-        var timeline = gsap.timeline({ paused: true, ease: "power4.inOut", onComplete: onShapeTimelineComplete, onCompleteParams: [shapeState] });
-        shapeState.gsapTimeline = timeline;
-
+    function initShape(shapeId, shapeState, radius, explodeRad, isExplodeInRadius) {
         var shape = u.getElement(shapeId);
         if (isNull(shape)) {
             logError("Failed to find shape: " + shapeId);
             return;
         }
+        log("initShape: shapeId: " + shapeId);
 
         setObjectVisibility(shape, shapeState.isVisible);
+
+        var dur = config.shapeTimelineDuration;
+        initShapeTimeline(shape, shapeState, dur, radius);
+        dur = config.shapeExplodeDuration;
+        initShapeExplodeTimeline(shape, shapeState, dur, explodeRad, isExplodeInRadius);
+    }
+    function initShapeTimeline(shape, shapeState, dur, radius) {
+        var timeline = gsap.timeline({ paused: true, ease: "power4.inOut", onComplete: onShapeTimelineComplete, onCompleteParams: [shapeState] });
+        shapeState.gsapTimeline = timeline;
 
         var xc = config.centre.x;
         var yc = config.centre.y;
@@ -351,6 +369,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         if (isNull(children)) {
             return;
         }
+        log("initShapeTimeline: have : " + children.length + " children");
         for (var i = 0; i < children.length; i++) {
             var child = children[i];
             if (u.isEmptyString(child.id)) {
@@ -361,7 +380,7 @@ var zscore = (function (u, n, s, a, win, doc) {
             var objX = bbox.x;
             var objY = bbox.y;
 
-            var rndPoint = getRandomPointInsideCircle(xc, yc, radius)
+            var rndPoint = getRandomPointInsideCircle(xc, yc, radius);
             var angle = u.randomIntFromInterval(0, 360) * direction;
             direction *= -1;
             var scale = u.randomFloatFromInterval(0.1, 2.0);
@@ -374,6 +393,52 @@ var zscore = (function (u, n, s, a, win, doc) {
                 y: yt,
                 rotation: angle,
                 scale: scale,
+            });
+
+            timeline.add(tween, 0);
+        }
+
+        timeline.totalDuration(dur);
+    }
+    function initShapeExplodeTimeline(shape, shapeState, dur, radius, isExplodeInRadius) {
+        var timeline = gsap.timeline({ paused: true, ease: "slow", onComplete: onShapeExplodeTimelineComplete, onCompleteParams: [shapeState] });
+        shapeState.gsapExplodeTimeline = timeline;
+
+        var xc = config.centre.x;
+        var yc = config.centre.y;
+
+        var children = shape.children;
+        if (isNull(children)) {
+            return;
+        }
+        log("initShapeExplodeTimeline: have : " + children.length + " children");
+        for (var i = 0; i < children.length; i++) {
+            var child = children[i];
+            if (u.isEmptyString(child.id)) {
+                child.id = "csh" + i;
+            }
+
+            var id = child.id;
+            var bbox = child.getBBox();
+            var objX = bbox.x;
+            var objY = bbox.y;
+            var objWidth = bbox.width;
+            var objHeight = bbox.height;
+            var rndPoint = null;
+            if(isExplodeInRadius) {
+                rndPoint = getRandomPointInsideCircle(xc, yc, radius);
+            } else {
+                rndPoint = getPointOutsideCircle(xc, yc, objX, objY, objWidth, objHeight, radius);
+            }
+            if(isNull(rndPoint)) {
+                logError("initShapeExplodeTimeline: calculated invalid random point")
+                return;
+            }
+            var xt = rndPoint.x - objX;
+            var yt = rndPoint.y - objY;
+            var tween = gsap.to(u.toCssIdQuery(id), {
+                x: xt,
+                y: yt,
             });
 
             timeline.add(tween, 0);
@@ -427,6 +492,15 @@ var zscore = (function (u, n, s, a, win, doc) {
             frameElement.setAttribute("d", tilePath);
         }
         u.addChildToParentId(frameParentId, frameElement);
+    }
+    function createStageCover() {  
+        var radius = config.circleRadii[7] + 2;
+        var centre = config.centre;
+        var stageParentId = config.stageParentId;
+
+        var circleElement = s.createSvgCircle(centre.x, centre.y, radius, "stage");
+        u.setElementAttributes(circleElement, config.stageStyle);
+        u.addChildToParentId(stageParentId, circleElement);
     }
     function initInstructions() {
         var inst = getInstructionsElement();
@@ -1154,7 +1228,7 @@ var zscore = (function (u, n, s, a, win, doc) {
             paused: true
         });
     }
-    function createDissolve(objId, dur) {
+    function createAlpha(objId, dur, val) {
         if (isNull(objId)) {
             logError("dissolve: Invalid objectId: " + objId);
             return;
@@ -1162,7 +1236,7 @@ var zscore = (function (u, n, s, a, win, doc) {
 
         return gsap.to(u.toCssIdQuery(objId), {
             duration: dur,
-            opacity: 0,
+            autoAlpha: val,
             onComplete: onAnimationComplete,
             onCompleteParams: [objId],
             paused: true
@@ -1181,10 +1255,32 @@ var zscore = (function (u, n, s, a, win, doc) {
 
         return u.createPoint(x, y);
     }
+    function getPointOutsideCircle(xc, yc, objX, objY, objWidth, objHeight, radius) { 
+        var xlen = objX - xc;
+        var ylen = objY - yc;
+        
+        // Determine hypotenuse length
+        var hypoLen = Math.sqrt(Math.pow(xlen, 2) + Math.pow(ylen, 2));
+        var objHypoLen = Math.sqrt(Math.pow(objWidth, 2) + Math.pow(objHeight, 2));
+        
+        var newLen = radius + 2 * objHypoLen;        
+        var ratio = newLen / hypoLen;
+        
+        var newXLen = xlen * ratio;
+        var newYLen = ylen * ratio;
+        
+        var x = u.round(objX + newXLen, 0);
+        var y = u.round(objY + newYLen, 0);
+
+        // log("getPointOutsideTheView: objX objY x y : " + u.round(objX, 0) + " " + u.round(objY, 0) + " " + x + " " + y + " xlen: " + xlen + " ylen: " + ylen + " hypoLen: " + hypoLen + " objHypoLen: " + objHypoLen + " newLen: " + newLen + " ratio: " + ratio + " newXLen: " + newXLen + " newYLen: " + newYLen);
+
+        return u.createPoint(x, y);
+    }
     function onShapeTimelineComplete(shapeState) {
         log("onShapeTimelineComplete: progress: " + shapeState.gsapTimeline.progress());
-        // shapeState.gsapTimeline.totalDuration(20);
-        // shapeState.gsapTimeline.reverse();
+    }    
+    function onShapeExplodeTimelineComplete(shapeState) {
+        log("onShapeExplodeTimelineComplete: progress: " + shapeState.gsapExplodeTimeline.progress());
     }
     function zoom(targets) {
         if (u.isArray(targets)) {
@@ -1620,41 +1716,47 @@ var zscore = (function (u, n, s, a, win, doc) {
             state.tiles
         }
     }
-    function dissolve(actionId, targets, params) {
+    function alpha(actionId, targets, params) {
         if (u.isArray(targets)) {
             for (var i = 0; i < targets.length; i++) {
-                runDissolve(actionId, targets[i], params);
+                runAlpha(actionId, targets[i], params);
             }
         } else {
-            runDissolve(actionId, targets, params);
+            runAlpha(actionId, targets, params);
         }
     }
-    function runDissolve(actionId, target, params) {
+    function runAlpha(actionId, target, params) {
         if (!u.isString(actionId) || !u.isObject(params)) {
             return;
         }
 
-        log("runDissolve: " + target);
+        log("runAlpha: " + target);
 
         switch (actionId) {
             case 'start':
-                runDissolveStart(target, params);
+                runAlphaStart(target, params);
                 break;
             default:
-                logError("Unknown dissolve actionId: " + actionId);
+                logError("Unknown aplha actionId: " + actionId);
                 return;
         }
     }
-    function runDissolveStart(target, params) {
+    function runAlphaStart(target, params) {
         var dur = 0;
         if (!isNull(params.duration)) {
             dur = params.duration;
+        }
+        var val = 1;
+        if (!isNull(params.value)) {
+            val = params.value;
         }
 
         var tween = null;
         if (isTileId(target)) {
             var tGroupId = config.tileGroupPrefix + target;
-            tween = createDissolve(tGroupId, dur);
+            tween = createAlpha(tGroupId, dur, val);
+        } else {
+            tween = createAlpha(target, dur, val); 
         }
 
         playOrRestartTween(tween);
@@ -1808,6 +1910,8 @@ var zscore = (function (u, n, s, a, win, doc) {
                 return "660 660 204 204";
             case "innerCircle":
                 return "471 471 582 582";
+            case "outerCircleSmall":
+                return "350 350 824 824";    
             case "outerCircle":
             default:
                 return "0 0 1525 1525";
@@ -1828,7 +1932,16 @@ var zscore = (function (u, n, s, a, win, doc) {
                 break;
             case "outerCircle":
                 tl = state.outerCircle.gsapTimeline;
+                break;           
+            case "centreShapeExplode":
+                tl = state.centreShape.gsapExplodeTimeline;
                 break;
+            case "innerCircleExplode":
+                tl = state.innerCircle.gsapExplodeTimeline;
+                break;
+            case "outerCircleExplode":
+                tl = state.outerCircle.gsapExplodeTimeline;
+                break;                      
             default:
                 logError("runTimeline: invalid target: " + target);
                 return;
@@ -1848,7 +1961,7 @@ var zscore = (function (u, n, s, a, win, doc) {
                 resetTimeline(tl);
                 break;
             case "reverse":
-                reverseTimeline(tl);
+                reverseTimeline(tl, params);
                 break;
             case "resume":
                 resumeTimeline(tl, params);
@@ -1926,12 +2039,21 @@ var zscore = (function (u, n, s, a, win, doc) {
             timeline.resume();
         }
     }
-    function reverseTimeline(timeline) {
+    function reverseTimeline(timeline, params) {
         if (isNull(timeline)) {
             logError("reverseTimeline: invalid timeline");
             return;
         }
-
+        var progress = timeline.progress();
+        if (progress < 1) {
+            endTimeline(timeline);
+        }  
+        if (!isNull(params)) {
+            if (!isNull(params.duration)) {
+                var dur = params.duration;
+                timeline.totalDuration(dur);
+            }
+        }      
         timeline.reverse();
     }
     function onAnimationComplete(rotationObjId) {
@@ -2246,8 +2368,8 @@ var zscore = (function (u, n, s, a, win, doc) {
             case "ROTATE":
                 rotate(id, elementIds, params);
                 break;
-            case "DISSOLVE":
-                dissolve(id, elementIds, params);
+            case "ALPHA":
+                alpha(id, elementIds, params);
                 break;
             case "AUDIO":
                 audio(id, elementIds, params);
