@@ -653,6 +653,22 @@ var zsUtil = (function (console, win, doc) {
         var parent = _getElement(parentId);
         _addChildToParent(parent, child);
     }
+    function _removeElement(elementId) {
+        var elm = _getElement(elementId);
+        if(_isNull(elm)) {
+            return;
+        }
+        elm.remove();
+    }
+    function _clone(elm, elmId) {
+        if(_isNull(elm) || _isNull(elmId)) {
+            logError("_cloneAndAddElement: invalid element");
+            return;
+        }
+        var out = elm.cloneNode();
+        out.id = elmId;
+        return out;
+    }    
     function _initArray(elNo1, initValue) {
         var a1 = [];
         for (var i = 0; i < elNo1; ++i) {
@@ -935,8 +951,8 @@ var zsUtil = (function (console, win, doc) {
     function _validateCol(col) {  
         if (col > 255) {
             return 255;
-        } else if (col < 50) {
-            return 50;
+        } else if (col < 0) {
+            return 0;
         }
         return col;
     }
@@ -1111,6 +1127,12 @@ var zsUtil = (function (console, win, doc) {
         },
         addChildToParentId: function (parentId, child) {
             _addChildToParentId(parentId, child);
+        },
+        removeElement: function (elementId) {
+            _removeElement(elementId);
+        },
+        cloneElement: function (elm, elmId) {
+            return _clone(elm, elmId);
         },
         getElement: function (elementId) {
             return _getElement(elementId);
