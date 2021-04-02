@@ -113,7 +113,8 @@ var zscore = (function (u, n, s, a, win, doc) {
         tileStyleOverlayPlayingNext: { "fill": "none", "stroke": STROKE_PLAYING_NEXT, "stroke-width": "1px", "visibility": "visible", "opacity": 1, "pointer-events": "none" },
         tileStyleOverlayPlaying: { "fill": "none", "stroke": STROKE_PLAYING, "stroke-width": "1px", "visibility": "visible", "opacity": 1, "pointer-events": "none" },
         tileStyleOverlaySelected: { "fill": "none", "stroke": STROKE_SELECTED, "stroke-width": "2px", "visibility": "visible", "opacity": 1, "pointer-events": "none" },
-        tileStyleSelectedPath: { "fill": "none", "stroke": STROKE_SELECTED, "stroke-width": "4px", "visibility": "visible", "opacity": 1, "pointer-events": "none" },
+        tileStyleSelectedPath: { "fill": "none", "stroke": STROKE_SELECTED, "stroke-width": "7px", "visibility": "visible", "opacity": 1, "pointer-events": "none" },
+        tileStyleConnectorPath: { "fill": "none", "stroke": STROKE_SELECTED, "stroke-width": "2px", "visibility": "visible", "opacity": 1, "pointer-events": "none" },
         tileStyleVisible: { "fill": FILL_VISIBLE, "stroke": STROKE_GRID, "stroke-width": "2px", "pointer-events": "all", "visibility": "visible", "opacity": 1 },
         tileStyleActive: { "fill": FILL_ACTIVE, "stroke": STROKE_GRID, "stroke-width": "2px", "pointer-events": "all", "visibility": "visible", "opacity": 1 },
         tileStyleInActive: { "fill": FILL_INACTIVE, "stroke": STROKE_GRID, "stroke-width": "2px", "pointer-events": "all", "visibility": "visible", "opacity": 1 },
@@ -161,6 +162,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         testTextElementId: "testTxt",
         colModPerClick: -20,
         maxColModPerClick: -150,
+        overlayInDuration: 12,
     }
 
     function ZScoreException(message) {
@@ -643,7 +645,6 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
     }
     function createPieTileSvgText(cX, cY, r, startAngle, endAngle, tileNo, tileId, tileGroupId, txtState) {
-
         var textPathId = config.tileTextPathElementPrefix + tileId;
         var textPathDef = s.createPathElement(textPathId);
         var textPathStyle = config.tileStylePieTextPathElement;
@@ -664,6 +665,16 @@ var zscore = (function (u, n, s, a, win, doc) {
         txtState.sizeMultiplier = config.tileTextSizeMultiplier.pie;
 
         createTileTextElement(txtState, textPathDef, textPathId, tileGroupId, tileId, textPathStyle);
+    }
+    function createTileConnectionSvgLine(startX, startY, endX, endY, tileId, prevTileId) {
+        var linePathId = config.selectedPrefix + tileId + prevTileId;
+        var linePathDef = s.createPathElement(linePathId);
+        var linePathStyle = config.shapeStyleInvisible;
+  
+        var linePath = s.createLinePath(startX, startY, endX, endY);
+        linePathDef.setAttribute("d", linePath);      
+        setElementAttributes(linePathDef, linePathStyle);
+        return linePathDef;
     }
     function createTorusTileSvgText(cX, cY, startAngle, endAngle, tileNo, previousArc, arc, tileId, tileGroupId, txtState) {
         var rd = previousArc.rX + (arc.rX - previousArc.rX) / 2.0;
@@ -1267,7 +1278,19 @@ var zscore = (function (u, n, s, a, win, doc) {
         setElementAttributes(tileOverlay, overlayStyle);
         u.addChildToParentId(config.overlayParentId, tileOverlay);
     }
-    function displaySelectedTilesOverlay() {
+    function displaySelectedTilesOverlay() {       
+        //todo REMOVE
+        state.tileCircles[0].selectedId = "t1-2";
+        state.tileCircles[1].selectedId = "t2-5";
+        state.tileCircles[4].selectedId = "t5-7";
+        state.tileCircles[6].selectedId = "t7-3";
+        state.tileCircles[7].selectedId = "t8-7";
+
+        var overlayElements = [];
+        var connectorElements = [];
+        var firstTileState = null;
+        var lastTileState = null;
+
         for (var i = 0; i < state.tileCircles.length; i++) {
             var tileCircleState = state.tileCircles[i];
             var selectedTileId = tileCircleState.selectedId;
@@ -1282,14 +1305,127 @@ var zscore = (function (u, n, s, a, win, doc) {
             var tileOverlayId = config.selectedPrefix + selectedTileId;
             var tileOverlay = u.getElement(tileOverlayId);
             if (!isNull(tileOverlay)) {
-                //already exists, do nothing;
                 continue;
             }    
-            var overlayStyle = config.tileStyleSelectedPath;    
             tileOverlay = u.cloneElement(tileObj, tileOverlayId);
-            setElementAttributes(tileOverlay, overlayStyle);
+            setElementAttributes(tileOverlay, config.shapeStyleInvisible);
             u.addChildToParentId(config.overlayParentId, tileOverlay);
+            overlayElements.push(tileOverlay);
+            
+            if(i > 0) {
+                var tileState = getTileIdState(selectedTileId);
+                lastTileState = tileState;
+                var prevTileState = getPrevCircleTileSelectionState(i);
+                if(isNull(firstTileState)) {
+                    firstTileState = prevTileState;
+                }
+                var connector = createSelectedTileConnectionLines(tileState, prevTileState);
+                if(isNull(connector)) {
+                    continue;
+                }
+                var connectorOverlay = u.getElement(connector.id);
+                if(!isNull(connectorOverlay)) {
+                    continue;
+                }
+                u.addChildToParentId(config.overlayParentId, connector);
+                connectorElements.push(connector);
+            }
         }        
+        var connector = createSelectedTileConnectionLines(firstTileState, lastTileState);       
+        var connectorOverlay = u.getElement(connector.id);
+        if(isNull(connectorOverlay)) {
+            u.addChildToParentId(config.overlayParentId, connector);
+            connectorElements.push(connector);
+        }
+    
+        var overlays = u.getElement(config.overlayParentId);
+        var timeline = createSelectedTileTimeline(overlays, config.overlayInDuration, config.outerFrameRadius);
+        timeline.play();
+        
+        for (var i = 0; i < overlayElements.length; i++) {
+            var elm = overlayElements[i];         
+            setElementAttributes(elm, config.tileStyleSelectedPath);
+        } 
+        for (var i = 0; i < connectorElements.length; i++) {
+            var elm = connectorElements[i];         
+            setElementAttributes(elm, config.tileStyleConnectorPath);
+        }        
+    }
+    function createSelectedTileConnectionLines(tileState, prevTileState) {       
+        if(isNull(tileState) || isNull(prevTileState)) {
+            return null;
+        }            
+        var currentArc = tileState.arc;
+        var prevArc = prevTileState.arc;
+        if(isNull(currentArc) || isNull(prevArc)) {
+            return null;
+        }
+        var curStartX = currentArc.startX;
+        var curStartY = currentArc.startY;
+        var prevEndX = prevArc.endX;
+        var prevEndY = prevArc.endY;
+        return createTileConnectionSvgLine(prevEndX, prevEndY, curStartX, curStartY, tileState.id, prevTileState.id);
+    }
+    function getPrevCircleTileSelectionState(currentIndex) {
+        if(currentIndex <= 0) {
+            return null;
+        }
+        if(currentIndex >= state.tileCircles.length) {
+            return state.tileCircles[state.tileCircles.length - 1];
+        }
+        for (var i = currentIndex - 1; i >= 0; i--) {
+            var prevTileCircleState = state.tileCircles[i];
+            var prevSelectedTileId = prevTileCircleState.selectedId;
+            if(!isNull(prevSelectedTileId)) {
+                return getTileIdState(prevSelectedTileId);
+            }               
+        }
+        return null;
+    }
+    function createSelectedTileTimeline(overlays, dur, radius) {
+        var timeline = gsap.timeline({ paused: true, ease: "power4.inOut"});
+        
+        var xc = config.centre.x;
+        var yc = config.centre.y;
+        var direction = 1;
+
+        var children = overlays.children;
+        if (isNull(children)) {
+            return;
+        }
+        log("createSelectedTileTimeline: have : " + children.length + " children");
+        for (var i = 0; i < children.length; i++) {
+            var child = children[i];
+            if (u.isEmptyString(child.id)) {
+                child.id = "csh" + i;
+            }
+
+            var bbox = child.getBBox();
+            var objX = bbox.x;
+            var objY = bbox.y;
+            var objWidth = bbox.width;
+            var objHeight = bbox.height;
+
+            var rndPoint = getPointOutsideCircle(xc, yc, objX, objY, objWidth, objHeight, radius);
+            var angle = u.randomIntFromInterval(0, 360) * direction;
+            direction *= -1;
+            var scale = u.randomFloatFromInterval(0.1, 2.0);
+            var xt = rndPoint.x - objX;
+            var yt = rndPoint.y - objY;
+
+            var id = child.id;
+            var tween = gsap.from(u.toCssIdQuery(id), {
+                x: xt,
+                y: yt,
+                rotation: angle,
+                scale: scale,
+            });
+
+            timeline.add(tween, 0);
+        }
+
+        timeline.totalDuration(dur);
+        return timeline;
     }
     function removeSelectedTilesOverlay() {
         for (var i = 0; i < state.tileCircles.length; i++) {
