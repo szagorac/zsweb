@@ -660,6 +660,15 @@ var zsUtil = (function (console, win, doc) {
         }
         elm.remove();
     }
+    function _removeChildren(parentId) {
+        var elm = _getElement(parentId);
+        if(_isNull(elm)) {
+            return;
+        }
+        while (elm.firstChild) {
+            elm.removeChild(elm.firstChild);
+        }
+    }
     function _clone(elm, elmId) {
         if(_isNull(elm) || _isNull(elmId)) {
             logError("_cloneAndAddElement: invalid element");
@@ -1130,6 +1139,9 @@ var zsUtil = (function (console, win, doc) {
         },
         removeElement: function (elementId) {
             _removeElement(elementId);
+        },
+        removeChildren: function (parentId) {
+            _removeChildren(parentId);
         },
         cloneElement: function (elm, elmId) {
             return _clone(elm, elmId);

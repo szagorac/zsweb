@@ -40,6 +40,7 @@ var zscore = (function (u, n, s, a, win, doc) {
     const STROKE_PLAYING_NEXT = COL_ORANGE;
     const STROKE_GRID = COL_SILVER;
     const TILE_TEXT_TOKEN = "@TILE_TEXT@";
+    const ALPHA_TOKEN = "@ALPHA@";
     const TILE_TEXT_FAMILY = "Arial";
     // const TILE_TEXT_FAMILY = "Garamond";    
     
@@ -75,6 +76,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         fontCanvas: null,
         canvasCtx: null,
         speech: { isPlaySpeechSynthOnClick: false, speechText: "I, I clicked on " + TILE_TEXT_TOKEN, speechVoice: "random", speechIsInterrupt: true },
+        stageAlpha: 1,
     }
     var config = {
         connectionPreference: "ws,poll",
@@ -107,7 +109,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         svgArcs: [null, null, null, null, null, null, null, null],
         gridParentId: "grid",
         gridStyle: { "fill": "none", "stroke": "aqua", "stroke-width": "2px" },
-        stageStyle: { "fill": FILL_STAGE_CIRCLE, "stroke-width": "0px", "stroke-opacity": "0", "visibility": "visible", "opacity": 1, "pointer-events": "none" },
+        stageStyle: { "fill": FILL_STAGE_CIRCLE, "stroke-width": "0px", "stroke-opacity": "0", "visibility": "visible", "opacity": state.stageAlpha, "pointer-events": "none" },
         tilesParentId: "tiles",
         frameStyle: { "fill": FILL_OUTER_FRAME, "stroke-width": "0px", "stroke-opacity": "0", "visibility": "visible", "opacity": 1 },
         tileStyleOverlayPlayingNext: { "fill": "none", "stroke": STROKE_PLAYING_NEXT, "stroke-width": "1px", "visibility": "visible", "opacity": 1, "pointer-events": "none" },
@@ -524,9 +526,20 @@ var zscore = (function (u, n, s, a, win, doc) {
         var centre = config.centre;
         var stageParentId = config.stageParentId;
 
-        var circleElement = s.createSvgCircle(centre.x, centre.y, radius, "stage");
+        var circleElement = s.createSvgCircle(centre.x, centre.y, radius, stageParentId);
+        config.stageStyle['opacity'] = state.stageAlpha;
         u.setElementAttributes(circleElement, config.stageStyle);
         u.addChildToParentId(stageParentId, circleElement);
+    }
+    function setStageCoverStyle() {        
+        var stageParentId = config.stageParentId;
+        var circleId = "c" + stageParentId;
+        var circleElement = u.getElement(circleId);
+        if(isNull(circleElement)) {
+            return;
+        }
+        config.stageStyle['opacity'] = state.stageAlpha;
+        u.setElementAttributes(circleElement, config.stageStyle);
     }
     function initInstructions() {
         var inst = getInstructionsElement();
@@ -1278,14 +1291,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         setElementAttributes(tileOverlay, overlayStyle);
         u.addChildToParentId(config.overlayParentId, tileOverlay);
     }
-    function displaySelectedTilesOverlay() {       
-        //todo REMOVE
-        state.tileCircles[0].selectedId = "t1-2";
-        state.tileCircles[1].selectedId = "t2-5";
-        state.tileCircles[4].selectedId = "t5-7";
-        state.tileCircles[6].selectedId = "t7-3";
-        state.tileCircles[7].selectedId = "t8-7";
-
+    function displaySelectedTilesOverlay(durationSec) {       
         var overlayElements = [];
         var connectorElements = [];
         var firstTileState = null;
@@ -1339,7 +1345,11 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
     
         var overlays = u.getElement(config.overlayParentId);
-        var timeline = createSelectedTileTimeline(overlays, config.overlayInDuration, config.outerFrameRadius);
+        var duration = config.overlayInDuration;
+        if(!isNull(durationSec)) {
+            duration = durationSec;
+        }
+        var timeline = createSelectedTileTimeline(overlays, duration, config.outerFrameRadius);
         timeline.play();
         
         for (var i = 0; i < overlayElements.length; i++) {
@@ -1427,23 +1437,11 @@ var zscore = (function (u, n, s, a, win, doc) {
         timeline.totalDuration(dur);
         return timeline;
     }
-    function removeSelectedTilesOverlay() {
-        for (var i = 0; i < state.tileCircles.length; i++) {
-            var tileCircleState = state.tileCircles[i];
-            var selectedTileId = tileCircleState.selectedId;
-            if(isNull(selectedTileId)) {
-                continue;
-            }
-            var tileOverlayId = config.selectedPrefix + selectedTileId;
-            var tileOverlay = u.getElement(tileOverlayId);
-            if (isNull(tileOverlay)) {
-                continue;
-            }    
-            tileOverlay.remove();
-        }      
+    function removeOverlays() {
+        u.removeChildren(config.overlayParentId);
     }
     function resetSelectedTilesState() {
-        removeSelectedTilesOverlay();
+        removeOverlays();
         for (var i = 0; i < state.tileCircles.length; i++) {
             var tileCircleState = state.tileCircles[i];
             tileCircleState.selectedId = null;
@@ -1490,8 +1488,8 @@ var zscore = (function (u, n, s, a, win, doc) {
 
         return gsap.to(u.toCssIdQuery(objId), {
             duration: dur,
-            autoAlpha: val,
-            onComplete: onAnimationComplete,
+            opacity: val,
+            onComplete: onAlphaComplete,
             onCompleteParams: [objId],
             paused: true
         });
@@ -2013,7 +2011,23 @@ var zscore = (function (u, n, s, a, win, doc) {
             var tGroupId = config.tileGroupPrefix + target;
             tween = createAlpha(tGroupId, dur, val);
         } else {
-            tween = createAlpha(target, dur, val);
+            switch(target) {
+               case config.stageParentId:
+                   if(state.stageAlpha === val) {
+                       return;
+                   }
+                   state.stageAlpha = val;
+                   if(val > 0.0) {
+                       var obj = u.getElement("c" + config.stageParentId);
+                       if(!isNull(obj)) {
+                           setObjectVisibility(obj, true);
+                       }
+                   }
+                   break;
+             
+            }
+            tween = createAlpha(target, dur, val);                       
+            log("runAlphaStart: tween: " + target);
         }
 
         playOrRestartTween(tween);
@@ -2130,7 +2144,11 @@ var zscore = (function (u, n, s, a, win, doc) {
     }
     function runDisplaySelectedTiles(params) {
         log("runDisplaySelectedTiles: ");
-        displaySelectedTilesOverlay();
+        var durationSec = null;
+        if (!isNull(params) && !isNull(params.duration)) {
+            durationSec = params.duration;
+        }
+        displaySelectedTilesOverlay(durationSec);
     }
     function deActivate(actionId, targets, params) {
         if (u.isArray(targets)) {
@@ -2165,14 +2183,10 @@ var zscore = (function (u, n, s, a, win, doc) {
         log("runDeActivateDisplayAction: target: " + target);
 
         switch (target) {
-            case 'selectedTiles':
-                runRemoveSelectedTilesDisplay(params);
+            case 'overlays':
+                removeOverlays();
                 break;
         }
-    }
-    function runRemoveSelectedTilesDisplay(params) {
-        log("runRemoveSelectedTiles: ");
-        removeSelectedTilesOverlay();
     }
     function stop(actionId, targets, params) {
         if (u.isArray(targets)) {
@@ -2224,6 +2238,13 @@ var zscore = (function (u, n, s, a, win, doc) {
             runAudioStopGranulator(params);
             runStopSpeechSynth(params);
         }
+    }
+    function processStageAlpha(stageAlpha) {
+        if (isNull(stageAlpha)) {
+            return;
+        }
+        state.stageAlpha = stageAlpha;
+        setStageCoverStyle();
     }
     function processZoomLevel(zoomLevel) {
         if (isNull(zoomLevel)) {
@@ -2404,6 +2425,10 @@ var zscore = (function (u, n, s, a, win, doc) {
         var obj = u.getElement(rotationObjId);
         // log("onAnimationComplete: " + rotationObjId);
     }
+    function onAlphaComplete(objId) {
+        var obj = u.getElement(objId);
+        log("onAlphaComplete: " + objId + "  opacity: " + obj.style.opacity + "  visiblility: " + obj.style.visibility);
+    }
     function getObjectTweens(obj) {
         if (!u.isObject(obj)) {
             return [];
@@ -2574,6 +2599,9 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
         if (isNotNull(serverState.instructions)) {
             processInstructions(serverState.instructions);
+        }
+        if (isNotNull(serverState.stageAlpha)) {
+            processStageAlpha(serverState.stageAlpha);
         }
     }
     function processSeverShapeState(serverShapeState, clientShapeState, shapeId) {
