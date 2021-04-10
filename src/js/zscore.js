@@ -1839,7 +1839,7 @@ var zscore = (function (u, n, s, a, win, doc) {
     }
     function rampLinearSpeechParam(params) {
         if (!u.isObject(params)) {
-            logError("setSpeechState: Invalid params");
+            logError("rampLinearSpeechParam: Invalid params");
             return;
         }
         var paramName = null;
