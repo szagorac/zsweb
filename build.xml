@@ -1,0 +1,38 @@
+<project name="ZsWeb" default="main" basedir=".">
+    <description>
+        ZScore Web Client
+    </description>
+
+    <property name="src" location="src"/>
+    <property name="dist" location="dist"/>
+
+    <fileset id="distFileSet" dir="${src}" casesensitive="yes">
+        <include name="index.html"/>
+        <include name="test.html"/>
+        <include name="audio/*.mp3"/>
+        <include name="css/zscore.css"/>
+        <include name="img/*.*"/>
+        <include name="js/audio/*.js"/>
+        <include name="js/gsap/minified/gsap.min*"/>
+        <include name="js/net/zsNet.js"/>
+        <include name="js/svg/zsSvg.js"/>
+        <include name="js/util/zsUtil.js"/>
+        <include name="js/zscore.js"/>
+    </fileset>
+
+    <target name="init">
+        <mkdir dir="${dist}"/>
+    </target>
+
+    <target name="dist" depends="init" description="generate the distribution">
+        <copy todir="${dist}" overwrite="true">
+            <fileset refid="distFileSet"/>
+        </copy>
+    </target>
+
+    <target name="clean" description="clean up">
+        <delete dir="${dist}"/>
+    </target>
+
+    <target name="main" depends="clean, dist"/>
+</project>

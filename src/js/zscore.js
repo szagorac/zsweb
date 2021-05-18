@@ -9,7 +9,41 @@ var zscore = (function (u, n, s, a, win, doc) {
     const EVENT_ELEMENT_SELECTED = "ELEMENT_SELECTED";
     const EVENT_PARAM_ELEMENT_ID = "elementId";
     const EVENT_PARAM_SELECTED = "selected";
-
+    const ATTR_FILL = "fill";
+    const COL_WHITE = "#FFFFFF";
+    const COL_BLACK = "#000000";
+    const COL_LAVANDER_BLUSH = "#FFF0F5";
+    const COL_LIGHT_BLUE = "#ADD8E6";
+    const COL_PALE_TURQOISE = "#AFEEEE";
+    const COL_LIGHT_GREEN = "#CCFFCC";
+    const COL_LIGHT_PURPLE = "#CCCCFF";
+    const COL_LIGHT_GRAY = "#DCDCDC";
+    const COL_SILVER = "#C0C0C0";
+    const COL_TEAL_GRAY = "#2F4F4F"; 
+    const COL_DIM_GRAY = "#696969"; 
+    const COL_DARK_GRAY = "#4B4B4B"; 
+    const COL_ORANGE = "#FFA500";
+    const COL_CRYMSON = "#DC143C";    	
+    const FILL_CLICK_COUNT = COL_DIM_GRAY;
+    const FILL_ACTIVE = COL_DARK_GRAY;
+    const FILL_PLAYING = COL_DARK_GRAY;
+    const FILL_VISIBLE = COL_DARK_GRAY;
+    const FILL_INACTIVE = COL_WHITE;
+    const FILL_POINTER_ENTRY = COL_TEAL_GRAY;
+    const FILL_SELECTED = COL_TEAL_GRAY;
+    const FILL_TEXT = COL_WHITE;
+    const FILL_PLAY_NEXT = COL_LIGHT_GREEN;
+    const FILL_OUTER_FRAME = COL_WHITE;
+    const FILL_STAGE_CIRCLE = COL_BLACK;
+    const STROKE_SELECTED = COL_CRYMSON;
+    const STROKE_PLAYING = COL_LIGHT_GREEN;
+    const STROKE_PLAYING_NEXT = COL_ORANGE;
+    const STROKE_GRID = COL_SILVER;
+    const TILE_TEXT_TOKEN = "@TILE_TEXT@";
+    const ALPHA_TOKEN = "@ALPHA@";
+    const TILE_TEXT_FAMILY = "Arial";
+    // const TILE_TEXT_FAMILY = "Garamond";    
+    
     // const RUN_MODE = "DEV";
     // const RUN_MODE = "PROD";
 
@@ -19,7 +53,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         '/audio/UnionRoseE3.mp3',
         '/audio/UnionRoseE4.mp3',
         '/audio/UnionRoseE5.mp3',
-        '/audio/ligetiS1-1.mp3',
+        '/audio/UnionRose-m1.mp3',
     ];
 
     var isTouch = null;
@@ -33,57 +67,78 @@ var zscore = (function (u, n, s, a, win, doc) {
     var state = {
         tiles: [],
         tileCircles: [],
-        centreShape: { isVisible: false, gsapTimeline: {} },
-        innerCircle: { isVisible: false, gsapTimeline: {} },
-        outerCircle: { isVisible: false, gsapTimeline: {} },
-        instructions: { isVisible: false, l1: EMPTY, l2: EMPTY, l3: EMPTY, bckgCol: "rgba(225, 225, 225, 0.65)" },
+        centreShape: { isVisible: false, gsapTimeline: {}, gsapExplodeTimeline: {} },
+        innerCircle: { isVisible: false, gsapTimeline: {}, gsapExplodeTimeline: {} },
+        outerCircle: { isVisible: false, gsapTimeline: {}, gsapExplodeTimeline: {} },
+        instructions: { isVisible: false, l1: EMPTY, l2: EMPTY, l3: EMPTY, bckgCol: "rgba(225, 225, 225, 0.85)" },
         selectedTileId: null,
+        playingTileId: null,
         fontCanvas: null,
         canvasCtx: null,
+        speech: { isPlaySpeechSynthOnClick: false, speechText: "I, I clicked on " + TILE_TEXT_TOKEN, speechVoice: "random", speechIsInterrupt: true },
+        stageAlpha: 1,
     }
     var config = {
         connectionPreference: "ws,poll",
         centre: { x: 762, y: 762 },
         circleRadii: [55, 92, 125, 194, 291, 401, 552, 750],
+        outerFrameRadius: 2000,
         lineEnd: { x: 762, y: 12 },
         lineLen: 750,
         lineAngles: [0, 45, 90, 135, 180, 225, 270, 315],
         tileAngles: [0, 45, 90, 135, 180, 225, 270, 315, 360],
+        viewMinPoint: 0,
+        viewMaxPoint: 1525,
         circlePrefix: "c",
         linePrefix: "l",
         tilePrefix: "t",
+        overlayPrefix: "o",
+        selectedPrefix: "s",
         tileCircleGroupPrefix: "ctg",
         tileGroupPrefix: "g",
         tileTextElementPrefix: "x",
         tileTextPathElementPrefix: "px",
         tileTextElementPathPrefix: "hx",
         tileTextSpanPrefix: "sp",
+        stageParentId: "stage",
+        overlayParentId: "overlay",
+        stageId: "stageCircle",
+        frameParentId: "frame",
+        outerFrameId: "outerFrame",
         elementIdDelimiter: "-",
         svgArcs: [null, null, null, null, null, null, null, null],
         gridParentId: "grid",
         gridStyle: { "fill": "none", "stroke": "aqua", "stroke-width": "2px" },
+        stageStyle: { "fill": FILL_STAGE_CIRCLE, "stroke-width": "0px", "stroke-opacity": "0", "visibility": "visible", "opacity": state.stageAlpha, "pointer-events": "none" },
         tilesParentId: "tiles",
-        tileStyleVisible: { "fill": "white", "stroke": "silver", "stroke-width": "2px", "pointer-events": "all", "visibility": "visible", "opacity": 1 },
-        tileStyleActive: { "fill": "lavenderblush", "stroke": "silver", "stroke-width": "2px", "pointer-events": "all", "visibility": "visible", "opacity": 1 },
-        tileStyleInActive: { "fill": "white", "stroke": "silver", "stroke-width": "2px", "pointer-events": "all", "visibility": "visible", "opacity": 1 },
+        frameStyle: { "fill": FILL_OUTER_FRAME, "stroke-width": "0px", "stroke-opacity": "0", "visibility": "visible", "opacity": 1 },
+        tileStyleOverlayPlayingNext: { "fill": "none", "stroke": STROKE_PLAYING_NEXT, "stroke-width": "1px", "visibility": "visible", "opacity": 1, "pointer-events": "none" },
+        tileStyleOverlayPlaying: { "fill": "none", "stroke": STROKE_PLAYING, "stroke-width": "1px", "visibility": "visible", "opacity": 1, "pointer-events": "none" },
+        tileStyleOverlaySelected: { "fill": "none", "stroke": STROKE_SELECTED, "stroke-width": "2px", "visibility": "visible", "opacity": 1, "pointer-events": "none" },
+        tileStyleSelectedPath: { "fill": "none", "stroke": STROKE_SELECTED, "stroke-width": "7px", "visibility": "visible", "opacity": 1, "pointer-events": "none" },
+        tileStyleConnectorPath: { "fill": "none", "stroke": STROKE_SELECTED, "stroke-width": "2px", "visibility": "visible", "opacity": 1, "pointer-events": "none" },
+        tileStyleVisible: { "fill": FILL_VISIBLE, "stroke": STROKE_GRID, "stroke-width": "2px", "pointer-events": "all", "visibility": "visible", "opacity": 1 },
+        tileStyleActive: { "fill": FILL_ACTIVE, "stroke": STROKE_GRID, "stroke-width": "2px", "pointer-events": "all", "visibility": "visible", "opacity": 1 },
+        tileStyleInActive: { "fill": FILL_INACTIVE, "stroke": STROKE_GRID, "stroke-width": "2px", "pointer-events": "all", "visibility": "visible", "opacity": 1 },
         tileStyleInvisible: { "visibility": "hidden" },
-        tileStyleOnPonterEntry: { "fill": "lightblue" },
-        tileStyleSelected: { "fill": "paleturquoise", "stroke": "silver", "stroke-width": "2px", "visibility": "visible", "opacity": 1 },
+        tileStyleOnPonterEntry: { "fill": FILL_POINTER_ENTRY },
+        tileStyleSelected: { "fill": FILL_SELECTED, "stroke": STROKE_GRID, "stroke-width": "2px", "visibility": "visible", "opacity": 1 },
         tileStylePlayed: { "visibility": "hidden" },
-        tileStylePlaying: { "fill": "lavenderblush", "stroke": "aqua", "stroke-width": "1px", "visibility": "visible", "opacity": 1 },
-        tileStylePlayingNext: { "fill": "lightgreen", "stroke": "silver", "stroke-width": "2px", "visibility": "visible", "opacity": 1 },
+        tileStylePlaying: { "fill": FILL_PLAYING, "stroke": STROKE_GRID, "stroke-width": "1px", "visibility": "visible", "opacity": 1 },
+        tileStylePlayingNext: { "stroke": STROKE_GRID, "stroke-width": "2px", "visibility": "visible", "opacity": 1 },
         tileStyleTextPathDef: { "fill": "none", "stroke": "none" },
         tileStyleTextElement: { "visibility": "visible", "opacity": 1 },
         tileStyleTextElementInvisible: { "visibility": "hidden" },
-        tileStyleTorusTextPathElement: { "startOffset": "50%", "text-anchor": "middle", "fill": "black", "stroke": "none"},
-        tileStylePieTextPathElement: { "startOffset": "90%", "text-anchor": "end", "fill": "black", "stroke": "none"},
-        tileStyleInvertedPieTextPathElement: { "startOffset": "10%", "text-anchor": "start", "fill": "black", "stroke": "none"},
-        tileStyleTextSpan: { "font-family": "Arial", "dominant-baseline": "middle"},
-        tileTextMinLength: 4,
-        tileTextSizeMultiplier: {torus: 0.8, pie: 0.7},
+        tileStyleTorusTextPathElement: { "startOffset": "50%", "text-anchor": "middle", "fill": FILL_TEXT, "stroke": "none" },
+        tileStylePieTextPathElement: { "startOffset": "90%", "text-anchor": "end", "fill": FILL_TEXT, "stroke": "none" },
+        tileStyleInvertedPieTextPathElement: { "startOffset": "10%", "text-anchor": "start", "fill": FILL_TEXT, "stroke": "none" },
+        tileStyleTextSpan: { "font-family": TILE_TEXT_FAMILY, "dominant-baseline": "middle" },
+        tileTextMinLength: 5,
+        tileTextSizeMultiplier: { torus: 0.8, pie: 0.7 },
         shapeStyleInvisible: { "visibility": "hidden" },
         shapeStyleVisible: { "visibility": "visible" },
         shapeTimelineDuration: 60,
+        shapeExplodeDuration: 5,
         instructionTxtElementId: "instructionTxt",
         textLineBreak: "<br/>",
         textStyleInvisible: { "visibility": "hidden" },
@@ -107,6 +162,9 @@ var zscore = (function (u, n, s, a, win, doc) {
         zoomDuration: 3,
         all: "ALL",
         testTextElementId: "testTxt",
+        colModPerClick: -20,
+        maxColModPerClick: -150,
+        overlayInDuration: 12,
     }
 
     function ZScoreException(message) {
@@ -137,6 +195,7 @@ var zscore = (function (u, n, s, a, win, doc) {
     function TileCircleState(id) {
         this.id = id;
         this.tweens = [];
+        this.selectedId = null;
     }
 
     // ---------  API -----------
@@ -171,6 +230,8 @@ var zscore = (function (u, n, s, a, win, doc) {
         initInstructions();
         // createGrid();
         createTiles();
+        createOuterFrame();
+        createStageCover();
 
         // get server state and initialise
         getServerState();
@@ -181,10 +242,10 @@ var zscore = (function (u, n, s, a, win, doc) {
         resetZoom();
         resetAudio();
     }
-    function initNet() {        
-        n.init(config.connectionPreference,  config.appUrlSse, config.appUrlWebsockets, config.appUrlHttp, onServerEventReceived, processSeverState);
+    function initNet() {
+        n.init(config.connectionPreference, config.appUrlSse, config.appUrlWebsockets, config.appUrlHttp, onServerEventReceived, processSeverState);
     }
-    function getServerState() {        
+    function getServerState() {
         n.getServerState();
     }
     function initAudio() {
@@ -194,6 +255,9 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
         a.init(AUDIO_FLIES, 5);
     }
+    function resetTweens() {
+        tween.reset
+    }
     function resetAudio() {
         if (isNull(a)) {
             logError("resetAudio: invalid zsAudio lib");
@@ -201,7 +265,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
         a.reset();
     }
-    function initSvg() {        
+    function initSvg() {
         s.init();
     }
     function initTiles() {
@@ -228,6 +292,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
     }
     function resetTileState(tileState) {
+        resetTileGroup(tileState.id);
         tileState.isSelected = false;
         tileState.isActive = false;
         tileState.isVisible = true;
@@ -246,6 +311,13 @@ var zscore = (function (u, n, s, a, win, doc) {
         var tileObj = u.getElement(tileState.id);
         setTileStyle(tileState, tileObj);
     }
+    function resetTileGroup(tileId) {
+        var tileGroupId = config.tileGroupPrefix + tileId;
+        var tileGroup = u.getElement(tileGroupId);
+        if (!isNull(tileGroup)) {
+            tileGroup.style.opacity = "1";
+        }
+    }
     function resetShapes() {
         resetShape(state.centreShape);
         resetShape(state.innerCircle);
@@ -255,6 +327,12 @@ var zscore = (function (u, n, s, a, win, doc) {
         shapeState.isVisible = false;
         if (u.isFunction(shapeState.gsapTimeline.pause)) {
             shapeState.gsapTimeline.pause(0);
+        }
+        if (u.isFunction(shapeState.gsapTimeline.progress)) {
+            shapeState.gsapTimeline.progress(1, true);
+        }
+        if (u.isFunction(shapeState.gsapExplodeTimeline.pause)) {
+            shapeState.gsapExplodeTimeline.pause(0);
         }
     }
     function resetZoom() {
@@ -284,25 +362,32 @@ var zscore = (function (u, n, s, a, win, doc) {
             var angle = arr[i];
             var lineElement = s.createSvgLine(centre.x, centre.y, lineEnd.x, lineEnd.y, angle, i + 1);
             u.setElementAttributes(lineElement, config.gridStyle);
-            u.addChildToParentId(config.gridParentId, lineElement);    
+            u.addChildToParentId(config.gridParentId, lineElement);
         }
     }
     function initShapes() {
-        initShape("centreShape", state.centreShape, config.shapeTimelineDuration, config.circleRadii[1])
-        initShape("innerCircle", state.innerCircle, config.shapeTimelineDuration, config.circleRadii[4])
-        initShape("outerCircle", state.outerCircle, config.shapeTimelineDuration, config.circleRadii[7])
+        initShape("centreShape", state.centreShape, config.circleRadii[1], config.circleRadii[7], true);
+        initShape("innerCircle", state.innerCircle, config.circleRadii[4], config.viewMaxPoint, false);
+        initShape("outerCircle", state.outerCircle, config.circleRadii[7], config.viewMaxPoint, false);
     }
-    function initShape(shapeId, shapeState, dur, radius) {
-        var timeline = gsap.timeline({ paused: true, ease: "power4.inOut", onComplete: onShapeTimelineComplete, onCompleteParams: [shapeState] });
-        shapeState.gsapTimeline = timeline;
-
+    function initShape(shapeId, shapeState, radius, explodeRad, isExplodeInRadius) {
         var shape = u.getElement(shapeId);
         if (isNull(shape)) {
             logError("Failed to find shape: " + shapeId);
             return;
         }
+        log("initShape: shapeId: " + shapeId);
 
         setObjectVisibility(shape, shapeState.isVisible);
+
+        var dur = config.shapeTimelineDuration;
+        initShapeTimeline(shape, shapeState, dur, radius);
+        dur = config.shapeExplodeDuration;
+        initShapeExplodeTimeline(shape, shapeState, dur, explodeRad, isExplodeInRadius);
+    }
+    function initShapeTimeline(shape, shapeState, dur, radius) {
+        var timeline = gsap.timeline({ paused: true, ease: "power4.inOut", onComplete: onShapeTimelineComplete, onCompleteParams: [shapeState] });
+        shapeState.gsapTimeline = timeline;
 
         var xc = config.centre.x;
         var yc = config.centre.y;
@@ -312,6 +397,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         if (isNull(children)) {
             return;
         }
+        log("initShapeTimeline: have : " + children.length + " children");
         for (var i = 0; i < children.length; i++) {
             var child = children[i];
             if (u.isEmptyString(child.id)) {
@@ -322,7 +408,7 @@ var zscore = (function (u, n, s, a, win, doc) {
             var objX = bbox.x;
             var objY = bbox.y;
 
-            var rndPoint = getRandomPointInsideCircle(xc, yc, radius)
+            var rndPoint = getRandomPointInsideCircle(xc, yc, radius);
             var angle = u.randomIntFromInterval(0, 360) * direction;
             direction *= -1;
             var scale = u.randomFloatFromInterval(0.1, 2.0);
@@ -335,6 +421,52 @@ var zscore = (function (u, n, s, a, win, doc) {
                 y: yt,
                 rotation: angle,
                 scale: scale,
+            });
+
+            timeline.add(tween, 0);
+        }
+
+        timeline.totalDuration(dur);
+    }
+    function initShapeExplodeTimeline(shape, shapeState, dur, radius, isExplodeInRadius) {
+        var timeline = gsap.timeline({ paused: true, ease: "slow", onComplete: onShapeExplodeTimelineComplete, onCompleteParams: [shapeState] });
+        shapeState.gsapExplodeTimeline = timeline;
+
+        var xc = config.centre.x;
+        var yc = config.centre.y;
+
+        var children = shape.children;
+        if (isNull(children)) {
+            return;
+        }
+        log("initShapeExplodeTimeline: have : " + children.length + " children");
+        for (var i = 0; i < children.length; i++) {
+            var child = children[i];
+            if (u.isEmptyString(child.id)) {
+                child.id = "csh" + i;
+            }
+
+            var id = child.id;
+            var bbox = child.getBBox();
+            var objX = bbox.x;
+            var objY = bbox.y;
+            var objWidth = bbox.width;
+            var objHeight = bbox.height;
+            var rndPoint = null;
+            if (isExplodeInRadius) {
+                rndPoint = getRandomPointInsideCircle(xc, yc, radius);
+            } else {
+                rndPoint = getPointOutsideCircle(xc, yc, objX, objY, objWidth, objHeight, radius);
+            }
+            if (isNull(rndPoint)) {
+                logError("initShapeExplodeTimeline: calculated invalid random point")
+                return;
+            }
+            var xt = rndPoint.x - objX;
+            var yt = rndPoint.y - objY;
+            var tween = gsap.to(u.toCssIdQuery(id), {
+                x: xt,
+                y: yt,
             });
 
             timeline.add(tween, 0);
@@ -364,6 +496,51 @@ var zscore = (function (u, n, s, a, win, doc) {
             }
         }
     }
+    function createOuterFrame() {
+        var tiles = state.tiles;
+        if (!u.isArray(tiles)) {
+            logError("createOuterFrame: invalid tiles");
+            return;
+        }
+
+        var centre = config.centre;
+        var cX = centre.x;
+        var cY = centre.y;
+        var inR = config.circleRadii[config.circleRadii.length - 1] + 1;
+        var outR = config.outerFrameRadius;
+
+        var frameParentId = config.frameParentId;
+        var frameId = config.outerFrameId;
+        var frameElement = s.createPathElement(frameId);
+        var frameStyle = config.frameStyle;
+        setElementAttributes(frameElement, frameStyle);
+
+        var tilePath = s.createTorusPath(cX, cY, inR, outR);
+        if (isNotNull(tilePath)) {
+            frameElement.setAttribute("d", tilePath);
+        }
+        u.addChildToParentId(frameParentId, frameElement);
+    }
+    function createStageCover() {
+        var radius = config.circleRadii[7] + 2;
+        var centre = config.centre;
+        var stageParentId = config.stageParentId;
+
+        var circleElement = s.createSvgCircle(centre.x, centre.y, radius, stageParentId);
+        config.stageStyle['opacity'] = state.stageAlpha;
+        u.setElementAttributes(circleElement, config.stageStyle);
+        u.addChildToParentId(stageParentId, circleElement);
+    }
+    function setStageCoverStyle() {        
+        var stageParentId = config.stageParentId;
+        var circleId = "c" + stageParentId;
+        var circleElement = u.getElement(circleId);
+        if(isNull(circleElement)) {
+            return;
+        }
+        config.stageStyle['opacity'] = state.stageAlpha;
+        u.setElementAttributes(circleElement, config.stageStyle);
+    }
     function initInstructions() {
         var inst = getInstructionsElement();
         if (isNull(inst)) {
@@ -379,25 +556,48 @@ var zscore = (function (u, n, s, a, win, doc) {
         if (isNull(instructionsElement)) {
             return;
         }
+
+        var isUpdate = false;
+
         if (!isNull(l1)) {
-            state.instructions.l1 = l1;
+            var val = l1.trim();
+            if (state.instructions.l1 != val) {
+                state.instructions.l1 = val;
+                isUpdate = true;
+            }
         }
         if (!isNull(l2)) {
-            state.instructions.l2 = l2;
+            var val = l2.trim();
+            if (state.instructions.l2 != val) {
+                state.instructions.l2 = val;
+                isUpdate = true;
+            }
         }
         if (!isNull(l3)) {
-            state.instructions.l3 = l3;
+            var val = l3.trim();
+            if (state.instructions.l3 != val) {
+                state.instructions.l3 = val;
+                isUpdate = true;
+            }
         }
         if (!isNull(colour)) {
             state.instructions.bckgCol = colour;
         }
         if (isVisible) {
-            displayInstructions();
+            if (isUpdate) {
+                displayInstructions();
+            }
         } else {
             hideInstructions();
         }
     }
-   
+    function updateInstruction(inst, val) {
+        if (inst === val) {
+            return false;
+        }
+        inst = val;
+        return true;
+    }
     function createSvgTile(cX, cY, r, startAngle, endAngle, circleNo, tileNo) {
         var tileId = config.tilePrefix + u.toStr(circleNo) + config.elementIdDelimiter + u.toStr(tileNo);
 
@@ -438,10 +638,10 @@ var zscore = (function (u, n, s, a, win, doc) {
         setTileStyle(tileState, tileElement)
 
         var txtState = null;
-        if(!isNull(tileState.txt)) {
+        if (!isNull(tileState.txt)) {
             txtState = tileState.txt;
         }
-        
+
         var tilePath = null;
         if (circleNo <= 1) {
             tilePath = s.createPieTilePath(cX, cY, arc);
@@ -458,27 +658,36 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
     }
     function createPieTileSvgText(cX, cY, r, startAngle, endAngle, tileNo, tileId, tileGroupId, txtState) {
-
         var textPathId = config.tileTextPathElementPrefix + tileId;
         var textPathDef = s.createPathElement(textPathId);
         var textPathStyle = config.tileStylePieTextPathElement;
-        var angle = startAngle + u.round((endAngle - startAngle)/2, 1);
+        var angle = startAngle + u.round((endAngle - startAngle) / 2, 1);
 
         var lineEndX = cX;
-        var lineEndY = cY - r;        
-        var linePath = null;        
+        var lineEndY = cY - r;
+        var linePath = null;
         if (tileNo > 4 && tileNo < 9) {
             linePath = s.createLinePath(lineEndX, lineEndY, cX, cY);
             textPathStyle = config.tileStyleInvertedPieTextPathElement;
         } else {
-            linePath = s.createLinePath(cX, cY, lineEndX, lineEndY);            
+            linePath = s.createLinePath(cX, cY, lineEndX, lineEndY);
         }
         textPathDef.setAttribute("d", linePath);
         s.rotateElement(textPathDef, angle, cX, cY);
-        
+
         txtState.sizeMultiplier = config.tileTextSizeMultiplier.pie;
 
         createTileTextElement(txtState, textPathDef, textPathId, tileGroupId, tileId, textPathStyle);
+    }
+    function createTileConnectionSvgLine(startX, startY, endX, endY, tileId, prevTileId) {
+        var linePathId = config.selectedPrefix + tileId + prevTileId;
+        var linePathDef = s.createPathElement(linePathId);
+        var linePathStyle = config.shapeStyleInvisible;
+  
+        var linePath = s.createLinePath(startX, startY, endX, endY);
+        linePathDef.setAttribute("d", linePath);      
+        setElementAttributes(linePathDef, linePathStyle);
+        return linePathDef;
     }
     function createTorusTileSvgText(cX, cY, startAngle, endAngle, tileNo, previousArc, arc, tileId, tileGroupId, txtState) {
         var rd = previousArc.rX + (arc.rX - previousArc.rX) / 2.0;
@@ -499,7 +708,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         createTileTextElement(txtState, textPathDef, textPathId, tileGroupId, tileId, textPathStyle);
     }
     function createTileTextElement(txtState, textPathDef, textPathId, tileGroupId, tileId, textPathStyle) {
-        
+
         setElementAttributes(textPathDef, config.tileStyleTextPathDef);
         u.addFirstChildToParent(getSvg(), textPathDef);
 
@@ -523,7 +732,7 @@ var zscore = (function (u, n, s, a, win, doc) {
 
         var txt = EMPTY;
         var textSizeMultiplier = 1.0;
-        if(!u.isObjectInstanceOf(TileText, txtState)) {
+        if (!u.isObjectInstanceOf(TileText, txtState)) {
             txt = txtState.value;
             textSizeMultiplier = txtState.sizeMultiplier;
         }
@@ -534,16 +743,16 @@ var zscore = (function (u, n, s, a, win, doc) {
         if (isNull(textSpanElement) || isNull(textPath)) {
             return;
         }
-        
+
         var textNode = textSpanElement;
-        
+
         if (isNull(textNode)) {
             return;
         }
 
-        var oldVal = textNode.textContent;        
+        var oldVal = textNode.textContent;
         var newVal = EMPTY;
-        if(u.isString(txt) && EMPTY !== txt) {
+        if (u.isString(txt) && EMPTY !== txt) {
             newVal = txt;
         }
         if (oldVal === newVal) {
@@ -552,7 +761,7 @@ var zscore = (function (u, n, s, a, win, doc) {
 
         var testValue = newVal;
         var len = testValue.length;
-        if(len < config.tileTextMinLength) {
+        if (len < config.tileTextMinLength) {
             var diff = config.tileTextMinLength - len;
             for (var i = 0; i < diff; i++) {
                 testValue += SPACER;
@@ -562,30 +771,29 @@ var zscore = (function (u, n, s, a, win, doc) {
         var pathLen = textPath.getTotalLength();
         var fontSizeMultiplier = textSizeMultiplier;
 
-        var testElement = u.getElement(config.testTextElementId);        
+        var testElement = u.getElement(config.testTextElementId);
         testElement.textContent = testValue;
-        
+
         var fs = 10;
         var fontSize = EMPTY + fs + "px";
-        
+
         testElement.setAttribute("font-size", fontSize);
-        var testTextLen = testElement.getComputedTextLength();        
-        
+        var testTextLen = testElement.getComputedTextLength();
+
         if (0 === testTextLen) {
             testTextLen = pathLen;
         }
-        
-        var ratio = pathLen / testTextLen;            
+
+        var ratio = pathLen / testTextLen;
 
         fs *= ratio * fontSizeMultiplier;
         fs = Math.floor(fs);
         fontSize = EMPTY + fs + "px";
 
         log("setTileText: text: " + newVal + " pathLen: " + pathLen + " testTextLen: " + testTextLen + " ratio: " + ratio + " fontSize: " + fontSize);
-        textNode.setAttribute("font-size", fontSize);                
+        textNode.setAttribute("font-size", fontSize);
         textNode.textContent = newVal;
     }
-    
     function getShapeStyle(shapeState) {
         if (isNull(shapeState)) {
             return null;
@@ -614,6 +822,25 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
 
         return config.textStyleVisible;
+    }
+    function getTileOverlayStyle(tileState) {
+        if (isNull(tileState)) {
+            return null;
+        }
+
+        if (tileState.isPlaying) {
+            return config.tileStyleOverlayPlaying;
+        }
+
+        if (tileState.isPlayingNext) {
+            return config.tileStyleOverlayPlayingNext;
+        }
+
+        if (tileState.isSelected) {
+            return config.tileStyleOverlaySelected;
+        }
+
+        return null;
     }
     function getTileStyle(tileState) {
         if (isNull(tileState)) {
@@ -645,7 +872,82 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
 
         return config.tileStyleActive;
-    }    
+    }
+    function setActiveTileFillOnClickCount() {
+        var rowRangeConfigs = u.initArray(state.tiles.length, null);
+        for (var i = 0; i < state.tiles.length; i++) {
+            var cols = state.tiles[i];
+            for (var j = 0; j < cols.length; j++) {
+                var tileState = state.tiles[i][j];
+                if (!tileState.isActive) {
+                    continue;
+                }
+                var tileObj = u.getElement(tileState.id);
+                var rangeConfig = rowRangeConfigs[i];
+                if (isNull(rangeConfig)) {
+                    rangeConfig = createRangeConfig(i);
+                    rowRangeConfigs[i] = rangeConfig;
+                }
+                modifyFillOnClickCount(tileObj, tileState, rangeConfig);
+            }
+        }
+    }
+    function createRangeConfig(row) {
+        var clickCounts = getPlayableRowClickCounts(row);
+        if (isNull(clickCounts)) {
+            return null;
+        }
+        var nonZeroArr = u.arrSortedNonZeroElem(clickCounts);
+        if (nonZeroArr.length < 1) {
+            return null;
+        }
+        return [0, nonZeroArr[0], 0, config.maxColModPerClick];
+    }
+    function modifyFillOnClickCount(tileObj, tileState, rangeConfig) {
+        if (!tileState.isActive) {
+            return;
+        }
+        var fill = FILL_CLICK_COUNT;
+        var clickCount = tileState.clickCount;
+        if (clickCount <= 0) {
+            return;
+        }
+        var mod = getTileFillMod(tileState, rangeConfig);
+        // config.colModPerClick * clickCount;
+        // log("fill before: " + fill);
+        fill = u.modColour(fill, mod);
+        // log("fill after: " + fill + " clickCount: " + clickCount + " mod: " + mod);
+        tileObj.setAttribute(ATTR_FILL, fill);
+    }
+    function getTileFillMod(tileState, rangeConfig) {
+        var tileCount = tileState.clickCount;
+        var mod = config.colModPerClick * tileCount;
+        if (!u.isArray(rangeConfig) || rangeConfig.length != 4) {
+            return mod;
+        }
+        var mod = u.mapRange(tileCount, rangeConfig[0], rangeConfig[1], rangeConfig[2], rangeConfig[3]);
+
+        // log("getTileFillMod: mod: " + mod + " tile: " + tileState.id + " clickCount: " + tileCount);
+        return mod;
+    }
+    function getPlayableRowClickCounts(row) {
+        var clickCounts = u.initArray(state.tiles[0].length, 0);
+        if (row < 0 || row >= state.tiles.length) {
+            return clickCounts;
+        }
+        var rows = state.tiles[row];
+        for (var j = 0; j < rows.length; j++) {
+            var tileState = state.tiles[row][j];
+            var clickCount = tileState.clickCount;
+            if (tileState.isPlayed) {
+                clickCount = 0;
+            }
+            clickCounts[j] = clickCount;
+        }
+        return clickCounts;
+    }
+    function getMinMaxRowClickCount() {
+    }
     function onTileClick() {
         log("onTileClick: ");
     }
@@ -696,8 +998,8 @@ var zscore = (function (u, n, s, a, win, doc) {
 
         var tile = selectedObj;
         var elementId = selectedObj.id;
-        log("onPointerEntry: " + elementId);
-        isTileGroupId
+        // log("onPointerEntry: " + elementId);
+
         if (isTileGroupId(elementId)) {
             elementId = getTileIdFromGroupId(elementId);
             tile = u.getElement(elementId);
@@ -718,7 +1020,7 @@ var zscore = (function (u, n, s, a, win, doc) {
             return;
         }
 
-        log("onPointerLeave: " + selectedObj.id);
+        // log("onPointerLeave: " + selectedObj.id);
 
         var tile = getTileObject(selectedObj);
         if (isNull(tile)) {
@@ -743,11 +1045,21 @@ var zscore = (function (u, n, s, a, win, doc) {
             log("processSelectedTile: invalid selected tile");
             return;
         }
+        onTileSelected(tileState, selectedObj);
+    }
+    function onTileSelected(tileState, selectedObj) {
+        playSelectedTileAudio(tileState);
 
         var tileId = tileState.id;
-        if (!tileState.isActive && tileState.isVisible) {
-            var rowColPoint = getTileRowCol(tileId);
-            var tileCircleState = state.tileCircles[rowColPoint.x];
+        var tileObj = u.getElement(tileId);
+        if(isNull(tileObj)) {
+            return;
+        }
+
+        var selectedTileRowColPoint = getTileRowCol(tileId);
+        var tileCircleState = state.tileCircles[selectedTileRowColPoint.x];
+
+        if (!tileState.isActive && tileState.isVisible) {                        
             var tweens = tileCircleState.tweens;
             for (var i = 0; i < tweens.length; i++) {
                 var tween = tweens[i];
@@ -762,23 +1074,34 @@ var zscore = (function (u, n, s, a, win, doc) {
 
         if (tileId !== state.selectedTileId) {
             if (isNotNull(state.selectedTileId)) {
-                var rowColPoint = getTileRowCol(state.selectedTileId);
-                var prevSelectedState = state.tiles[rowColPoint.x][rowColPoint.y];
+                var prevSelectedState = getTileIdState(state.selectedTileId);
                 prevSelectedState.isSelected = false;
                 var prevSelectedObj = u.getElement(state.selectedTileId);
                 setTileStyle(prevSelectedState, prevSelectedObj);
+                setTileOverlay(prevSelectedState, prevSelectedObj);
             }
         }
 
-        tileState.isSelected = !tileState.isSelected;
-        state.selectedTileId = tileId;
-        var tileObj = u.getElement(tileId);
+        tileState.isSelected = !tileState.isSelected;        
+        if(tileState.isSelected) {
+            state.selectedTileId = tileId;
+            tileCircleState.selectedId = tileId;
+        }
+
         setTileStyle(tileState, tileObj);
+        setTileOverlay(tileState, tileObj);
 
         var evParams = {};
         evParams[EVENT_PARAM_ELEMENT_ID] = tileState.id;
         evParams[EVENT_PARAM_SELECTED] = tileState.isSelected;
         n.sendEvent(EVENT_ELEMENT_SELECTED, evParams);
+    }
+    function playSelectedTileAudio(tileState) {
+        var speechState = state.speech;
+        if (!speechState.isPlaySpeechSynthOnClick || !a.isSpeachReady() || !u.isString(speechState.speechText)) {
+            return;
+        }
+        playSpeechText(speechState.speechText, speechState.speechVoice, speechState.speechIsInterrupt, tileState);
     }
     function onWindowResize(event) {
         if (!u.isObject(this)) {
@@ -806,7 +1129,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         var column = u.toInt(tileInfoArr[1]) - 1;
         return u.createPoint(row, column);
     }
-    
+
     function getTileObject(element) {
         if (!u.isObject(element)) {
             return null;
@@ -861,6 +1184,12 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
         return u.startsWith(id, config.tilePrefix);
     }
+    function isCircleGroupId(id) {
+        if (isNull(id) || !u.isString(id)) {
+            return false;
+        }
+        return u.startsWith(id, config.tileCircleGroupPrefix);
+    }
     function isTileTextId(id) {
         if (isNull(id) || !u.isString(id)) {
             return false;
@@ -893,6 +1222,18 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
         return tileId;
     }
+    function getCircleGroup(id) {
+        if (isNull(id) || !u.isString(id)) {
+            return false;
+        }
+        var groupId = id.substring(config.tileCircleGroupPrefix.length, id.length);
+        var groupIdIndex = u.toInt(groupId) - 1;
+        if (groupIdIndex < 0 || groupIdIndex >= state.tileCircles.length) {
+            logError("getCircleGroupIndexFromId: Invalid circle group index: " + groupIdIndex);
+            return;
+        }
+        return state.tileCircles[groupIdIndex];
+    }
     function setTileStyleText(tileState, tileObj) {
         if (isNull(tileState) || isNull(tileObj)) {
             return;
@@ -912,7 +1253,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
 
         var txtState = EMPTY;
-        if(!isNull(tileState) && !isNull(tileState.txt)) {
+        if (!isNull(tileState) && !isNull(tileState.txt)) {
             txtState = tileState.txt;
         }
 
@@ -924,12 +1265,187 @@ var zscore = (function (u, n, s, a, win, doc) {
 
         var txt = EMPTY;
         var textSizeMultipler = 1.0;
-        if(!u.isObjectInstanceOf(TileText, txtState)) {
+        if (!u.isObjectInstanceOf(TileText, txtState)) {
             txt = txtState.value;
             textSizeMultipler = txtState.sizeMultiplier;
         }
 
         setTileText(txt, textPath, tspanElement, textSizeMultipler);
+    }
+    function setTileOverlay(tileState, tileObj) {
+        var tileId = tileState.id;
+        var tileOverlayId = config.overlayPrefix + tileId;
+        var tileOverlay = u.getElement(tileOverlayId);
+
+        var overlayStyle = getTileOverlayStyle(tileState);
+        if (isNull(overlayStyle)) {
+            if (!isNull(tileOverlay)) {
+                tileOverlay.remove();
+            }
+            return;
+        }
+
+        if (isNull(tileOverlay)) {
+            tileOverlay = u.cloneElement(tileObj, tileOverlayId);
+        }
+        setElementAttributes(tileOverlay, overlayStyle);
+        u.addChildToParentId(config.overlayParentId, tileOverlay);
+    }
+    function displaySelectedTilesOverlay(durationSec) {       
+        var overlayElements = [];
+        var connectorElements = [];
+        var firstTileState = null;
+        var lastTileState = null;
+
+        for (var i = 0; i < state.tileCircles.length; i++) {
+            var tileCircleState = state.tileCircles[i];
+            var selectedTileId = tileCircleState.selectedId;
+            if(isNull(selectedTileId)) {
+                continue;
+            }
+            var tileObj = u.getElement(selectedTileId);
+            if(isNull(tileObj)) {
+                logError("setSelectedTilesOverlay: can not find tile for selected id: " + selectedTileId);
+                continue;
+            }
+            var tileOverlayId = config.selectedPrefix + selectedTileId;
+            var tileOverlay = u.getElement(tileOverlayId);
+            if (!isNull(tileOverlay)) {
+                continue;
+            }    
+            tileOverlay = u.cloneElement(tileObj, tileOverlayId);
+            setElementAttributes(tileOverlay, config.shapeStyleInvisible);
+            u.addChildToParentId(config.overlayParentId, tileOverlay);
+            overlayElements.push(tileOverlay);
+            
+            if(i > 0) {
+                var tileState = getTileIdState(selectedTileId);
+                lastTileState = tileState;
+                var prevTileState = getPrevCircleTileSelectionState(i);
+                if(isNull(firstTileState)) {
+                    firstTileState = prevTileState;
+                }
+                var connector = createSelectedTileConnectionLines(tileState, prevTileState);
+                if(isNull(connector)) {
+                    continue;
+                }
+                var connectorOverlay = u.getElement(connector.id);
+                if(!isNull(connectorOverlay)) {
+                    continue;
+                }
+                u.addChildToParentId(config.overlayParentId, connector);
+                connectorElements.push(connector);
+            }
+        }        
+        var connector = createSelectedTileConnectionLines(firstTileState, lastTileState);       
+        var connectorOverlay = u.getElement(connector.id);
+        if(isNull(connectorOverlay)) {
+            u.addChildToParentId(config.overlayParentId, connector);
+            connectorElements.push(connector);
+        }
+    
+        var overlays = u.getElement(config.overlayParentId);
+        var duration = config.overlayInDuration;
+        if(!isNull(durationSec)) {
+            duration = durationSec;
+        }
+        var timeline = createSelectedTileTimeline(overlays, duration, config.outerFrameRadius);
+        timeline.play();
+        
+        for (var i = 0; i < overlayElements.length; i++) {
+            var elm = overlayElements[i];         
+            setElementAttributes(elm, config.tileStyleSelectedPath);
+        } 
+        for (var i = 0; i < connectorElements.length; i++) {
+            var elm = connectorElements[i];         
+            setElementAttributes(elm, config.tileStyleConnectorPath);
+        }        
+    }
+    function createSelectedTileConnectionLines(tileState, prevTileState) {       
+        if(isNull(tileState) || isNull(prevTileState)) {
+            return null;
+        }            
+        var currentArc = tileState.arc;
+        var prevArc = prevTileState.arc;
+        if(isNull(currentArc) || isNull(prevArc)) {
+            return null;
+        }
+        var curStartX = currentArc.startX;
+        var curStartY = currentArc.startY;
+        var prevEndX = prevArc.endX;
+        var prevEndY = prevArc.endY;
+        return createTileConnectionSvgLine(prevEndX, prevEndY, curStartX, curStartY, tileState.id, prevTileState.id);
+    }
+    function getPrevCircleTileSelectionState(currentIndex) {
+        if(currentIndex <= 0) {
+            return null;
+        }
+        if(currentIndex >= state.tileCircles.length) {
+            return state.tileCircles[state.tileCircles.length - 1];
+        }
+        for (var i = currentIndex - 1; i >= 0; i--) {
+            var prevTileCircleState = state.tileCircles[i];
+            var prevSelectedTileId = prevTileCircleState.selectedId;
+            if(!isNull(prevSelectedTileId)) {
+                return getTileIdState(prevSelectedTileId);
+            }               
+        }
+        return null;
+    }
+    function createSelectedTileTimeline(overlays, dur, radius) {
+        var timeline = gsap.timeline({ paused: true, ease: "power4.inOut"});
+        
+        var xc = config.centre.x;
+        var yc = config.centre.y;
+        var direction = 1;
+
+        var children = overlays.children;
+        if (isNull(children)) {
+            return;
+        }
+        log("createSelectedTileTimeline: have : " + children.length + " children");
+        for (var i = 0; i < children.length; i++) {
+            var child = children[i];
+            if (u.isEmptyString(child.id)) {
+                child.id = "csh" + i;
+            }
+
+            var bbox = child.getBBox();
+            var objX = bbox.x;
+            var objY = bbox.y;
+            var objWidth = bbox.width;
+            var objHeight = bbox.height;
+
+            var rndPoint = getPointOutsideCircle(xc, yc, objX, objY, objWidth, objHeight, radius);
+            var angle = u.randomIntFromInterval(0, 360) * direction;
+            direction *= -1;
+            var scale = u.randomFloatFromInterval(0.1, 2.0);
+            var xt = rndPoint.x - objX;
+            var yt = rndPoint.y - objY;
+
+            var id = child.id;
+            var tween = gsap.from(u.toCssIdQuery(id), {
+                x: xt,
+                y: yt,
+                rotation: angle,
+                scale: scale,
+            });
+
+            timeline.add(tween, 0);
+        }
+
+        timeline.totalDuration(dur);
+        return timeline;
+    }
+    function removeOverlays() {
+        u.removeChildren(config.overlayParentId);
+    }
+    function resetSelectedTilesState() {
+        removeOverlays();
+        for (var i = 0; i < state.tileCircles.length; i++) {
+            var tileCircleState = state.tileCircles[i];
+            tileCircleState.selectedId = null;
+        }      
     }
     function setTileStyle(tileState, tileObj) {
         var tileStyle = getTileStyle(tileState);
@@ -964,6 +1480,20 @@ var zscore = (function (u, n, s, a, win, doc) {
             paused: true
         });
     }
+    function createAlpha(objId, dur, val) {
+        if (isNull(objId)) {
+            logError("dissolve: Invalid objectId: " + objId);
+            return;
+        }
+
+        return gsap.to(u.toCssIdQuery(objId), {
+            duration: dur,
+            opacity: val,
+            onComplete: onAlphaComplete,
+            onCompleteParams: [objId],
+            paused: true
+        });
+    }
     function getRandomPointInsideCircle(xc, yc, rc) {
         if (!u) {
             logError("getRandomPointInsideCircle: invalid zsUtil");
@@ -977,10 +1507,32 @@ var zscore = (function (u, n, s, a, win, doc) {
 
         return u.createPoint(x, y);
     }
+    function getPointOutsideCircle(xc, yc, objX, objY, objWidth, objHeight, radius) {
+        var xlen = objX - xc;
+        var ylen = objY - yc;
+
+        // Determine hypotenuse length
+        var hypoLen = Math.sqrt(Math.pow(xlen, 2) + Math.pow(ylen, 2));
+        var objHypoLen = Math.sqrt(Math.pow(objWidth, 2) + Math.pow(objHeight, 2));
+
+        var newLen = radius + 2 * objHypoLen;
+        var ratio = newLen / hypoLen;
+
+        var newXLen = xlen * ratio;
+        var newYLen = ylen * ratio;
+
+        var x = u.round(objX + newXLen, 0);
+        var y = u.round(objY + newYLen, 0);
+
+        // log("getPointOutsideTheView: objX objY x y : " + u.round(objX, 0) + " " + u.round(objY, 0) + " " + x + " " + y + " xlen: " + xlen + " ylen: " + ylen + " hypoLen: " + hypoLen + " objHypoLen: " + objHypoLen + " newLen: " + newLen + " ratio: " + ratio + " newXLen: " + newXLen + " newYLen: " + newYLen);
+
+        return u.createPoint(x, y);
+    }
     function onShapeTimelineComplete(shapeState) {
         log("onShapeTimelineComplete: progress: " + shapeState.gsapTimeline.progress());
-        // shapeState.gsapTimeline.totalDuration(20);
-        // shapeState.gsapTimeline.reverse();
+    }
+    function onShapeExplodeTimelineComplete(shapeState) {
+        log("onShapeExplodeTimelineComplete: progress: " + shapeState.gsapExplodeTimeline.progress());
     }
     function zoom(targets) {
         if (u.isArray(targets)) {
@@ -991,13 +1543,13 @@ var zscore = (function (u, n, s, a, win, doc) {
             zoomTarget(targets);
         }
     }
-    function timeline(actionId, targets) {
+    function timeline(actionId, targets, params) {
         if (u.isArray(targets)) {
             for (var i = 0; i < targets.length; i++) {
-                runTimeline(actionId, targets[i]);
+                runTimeline(actionId, targets[i], params);
             }
         } else {
-            runTimeline(actionId, targets);
+            runTimeline(actionId, targets, params);
         }
     }
     function audio(actionId, targets, params) {
@@ -1022,6 +1574,9 @@ var zscore = (function (u, n, s, a, win, doc) {
                 break;
             case 'granulator':
                 runAudioGranulator(actionId, params);
+                break;
+            case 'speechSynth':
+                runSpeechSynth(actionId, params);
                 break;
         }
     }
@@ -1059,6 +1614,9 @@ var zscore = (function (u, n, s, a, win, doc) {
                 break;
             case 'rampSin':
                 runAudioGranulatorRampSin(params);
+                break;
+            case 'volume':
+                setGranulatorVolume(params);
                 break;
             default:
                 logError("runAudioGranulator: Unknown actionId: " + actionId);
@@ -1104,6 +1662,25 @@ var zscore = (function (u, n, s, a, win, doc) {
 
         a.setGranulatorRampLinear(configParamName, rampEndValue, rampDurationMs);
     }
+    function setGranulatorVolume(params) {
+        if (isNull(a)) {
+            logError("runAudioPlayGranulator: Invalid zsAudio lib");
+            return;
+        }
+        if (!u.isObject(params)) {
+            return;
+        }
+        var level = null;
+        var timeMs = null;
+
+        if (!isNull(params.level)) {
+            level = params.level;
+        }
+        if (!isNull(params.timeMs)) {
+            timeMs = params.timeMs;
+        }
+        a.setGranulatorGain(level, timeMs);
+    }
     function runAudioGranulatorRampSin(params) {
         if (isNull(a)) {
             logError("runAudioPlayGranulator: Invalid zsAudio lib");
@@ -1140,6 +1717,9 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
         a.resetGranulator();
     }
+    function resetSelectedTiles() {
+        resetSelectedTilesState();
+    }
     function updateGranulatorCofig(params) {
         if (isNull(a)) {
             logError("runAudioPlayGranulator: Invalid zsAudio lib");
@@ -1149,6 +1729,132 @@ var zscore = (function (u, n, s, a, win, doc) {
             return;
         }
         a.setGranulatorConfig(params);
+    }
+    function runSpeechSynth(actionId, params) {
+        if (!u.isString(actionId)) {
+            return;
+        }
+
+        switch (actionId) {
+            case 'play':
+                runPlaySpeechSynth(params);
+                break;
+            case 'stop':
+                runStopSpeechSynth(params);
+                break;
+            case 'config':
+                updateSpeechCofig(params);
+                break;
+            case 'state':
+                setSpeechState(params);
+                break;
+            case 'rampLinear':
+                rampLinearSpeechParam(params);
+                break;
+            default:
+                logError("runSpeechSynth: Unknown actionId: " + actionId);
+                return;
+        }
+    }
+    function runPlaySpeechSynth(params) {
+        if (isNull(a)) {
+            logError("runPlaySpeechSynth: Invalid zsAudio lib");
+            return;
+        }
+        if (isNull(params)) {
+            logError("runPlaySpeechSynth: Invalid params");
+            return;
+        }
+        var text = EMPTY;
+        var voiceName = "random";
+        var isInterrupt = false;
+
+        if (!isNull(params.speechText)) {
+            text = params.speechText;
+        }
+        if (!isNull(params.speechVoice)) {
+            voiceName = params.speechVoice;
+        }
+        if (!isNull(params.speechIsInterrupt)) {
+            isInterrupt = params.speechIsInterrupt;
+        }
+        var tileId = state.playingTileId;
+        if (isNull(tileId)) {
+            tileId = state.selectedTileId;
+        }
+
+        var selectedTileState = getTileIdState(tileId);
+
+        playSpeechText(text, voiceName, isInterrupt, selectedTileState);
+    }
+    function playSpeechText(text, voice, isInterrupt, tileState) {
+        if (isNull(text)) {
+            return;
+        }
+        if (u.contains(text, TILE_TEXT_TOKEN)) {
+            var tileText = null;
+            if (!isNull(tileState)) {
+                tileText = tileState.txt;
+            }
+            if (u.isString(tileText.value)) {
+                text = u.replace(text, TILE_TEXT_TOKEN, tileText.value);
+            } else {
+                text = u.replace(text, TILE_TEXT_TOKEN, EMPTY);
+            }
+        }
+        a.speak(text, voice, isInterrupt);
+    }
+    function runStopSpeechSynth(params) {
+        if (isNull(a)) {
+            logError("runStopSpeechSynth: Invalid zsAudio lib");
+            return;
+        }
+        a.stopSpeach();
+    }
+    function updateSpeechCofig(params) {
+        if (isNull(a)) {
+            logError("updateSpeechCofig: Invalid zsAudio lib");
+            return;
+        }
+        a.setSpeechConfig(params);
+    }
+    function setSpeechState(params) {
+        if (!u.isObject(params)) {
+            logError("setSpeechState: Invalid params");
+            return;
+        }
+        var speechState = state.speech;
+        if (!isNull(params.isPlaySpeechSynthOnClick)) {
+            speechState.isPlaySpeechSynthOnClick = params.isPlaySpeechSynthOnClick;
+        }
+        if (!isNull(params.speechText)) {
+            speechState.speechText = params.speechText;
+        }
+        if (!isNull(params.speechVoice)) {
+            speechState.speechVoice = params.speechVoice;
+        }
+        if (!isNull(params.speechIsInterrupt)) {
+            speechState.speechIsInterrupt = params.speechIsInterrupt;
+        }
+    }
+    function rampLinearSpeechParam(params) {
+        if (!u.isObject(params)) {
+            logError("rampLinearSpeechParam: Invalid params");
+            return;
+        }
+        var paramName = null;
+        if (!isNull(params.paramName)) {
+            paramName = params.paramName;
+        }
+        var endValue = null;
+        if (!isNull(params.endValue)) {
+            endValue = params.endValue;
+        }
+        var durationSec = null;
+        if (!isNull(params.duration)) {
+            durationSec = params.duration;
+        }
+        a.rumpLinearSpeechParam(paramName, endValue, durationSec);
     }
     function runAudioPlayBuffer(params) {
         if (isNull(a)) {
@@ -1225,7 +1931,6 @@ var zscore = (function (u, n, s, a, win, doc) {
         var tween = null;
         if (isTileId(target)) {
             var tGroupId = config.tileGroupPrefix + target;
-            var tileGroup = u.getElement(tGroupId);
             var tile = u.getElement(target);
             var tweens = getObjectTweens(tile);
             if (u.isArray(tweens) && tweens.length > 0) {
@@ -1233,6 +1938,15 @@ var zscore = (function (u, n, s, a, win, doc) {
             } else {
                 tween = createRotateAroundSvgCentre(tGroupId, dur, angle);
                 tweens.push(tween);
+            }
+        } else if (isCircleGroupId(target)) {
+            var tileCircleState = getCircleGroup(target);
+            if (!isNull(tileCircleState)) {
+                var circleTweens = tileCircleState.tweens;
+                tween = circleTweens;
+                if (u.isArray(circleTweens)) {
+                    tween = circleTweens[0];
+                }
             }
         }
 
@@ -1256,6 +1970,67 @@ var zscore = (function (u, n, s, a, win, doc) {
         if (config.all === target.toUpperCase()) {
             state.tiles
         }
+    }
+    function alpha(actionId, targets, params) {
+        if (u.isArray(targets)) {
+            for (var i = 0; i < targets.length; i++) {
+                runAlpha(actionId, targets[i], params);
+            }
+        } else {
+            runAlpha(actionId, targets, params);
+        }
+    }
+    function runAlpha(actionId, target, params) {
+        if (!u.isString(actionId) || !u.isObject(params)) {
+            return;
+        }
+
+        log("runAlpha: " + target);
+
+        switch (actionId) {
+            case 'start':
+                runAlphaStart(target, params);
+                break;
+            default:
+                logError("Unknown aplha actionId: " + actionId);
+                return;
+        }
+    }
+    function runAlphaStart(target, params) {
+        var dur = 0;
+        if (!isNull(params.duration)) {
+            dur = params.duration;
+        }
+        var val = 1;
+        if (!isNull(params.value)) {
+            val = params.value;
+        }
+
+        var tween = null;
+        if (isTileId(target)) {
+            var tGroupId = config.tileGroupPrefix + target;
+            tween = createAlpha(tGroupId, dur, val);
+        } else {
+            switch(target) {
+               case config.stageParentId:
+                   if(state.stageAlpha === val) {
+                       return;
+                   }
+                   state.stageAlpha = val;
+                   if(val > 0.0) {
+                       var obj = u.getElement("c" + config.stageParentId);
+                       if(!isNull(obj)) {
+                           setObjectVisibility(obj, true);
+                       }
+                   }
+                   break;
+             
+            }
+            tween = createAlpha(target, dur, val);                       
+            log("runAlphaStart: tween: " + target);
+        }
+
+        playOrRestartTween(tween);
     }
     function reset(actionId, targets, params) {
         if (u.isArray(targets)) {
@@ -1302,6 +2077,9 @@ var zscore = (function (u, n, s, a, win, doc) {
             case 'granulator':
                 resetGranulator();
                 break;
+            case 'selectedTiles':
+                resetSelectedTiles();                
+                break;
             default:
                 logError("Unknown reset target: " + target);
                 return;
@@ -1325,6 +2103,148 @@ var zscore = (function (u, n, s, a, win, doc) {
             default:
                 log("resetElements: unknown target: " + target);
         }
+    }
+    function activate(actionId, targets, params) {
+        if (u.isArray(targets)) {
+            for (var i = 0; i < targets.length; i++) {
+                runActivate(actionId, targets[i], params);
+            }
+        } else {
+            runActivate(actionId, targets, params);
+        }
+    }
+    function runActivate(actionId, target, params) {
+        if (!u.isString(actionId)) {
+            return;
+        }
+
+        log("runActivate: actionId: " + actionId + BLANK + target);
+
+        switch (actionId) {
+            case 'display':
+                runDisplayAction(target, params);
+                break;
+            default:
+                logError("Unknown activate actionId: " + actionId);
+                return;
+        }
+    }
+    function runDisplayAction(target, params) {
+        if (isNull(target)) {
+            return;
+        }
+
+        log("runDisplayAction: target: " + target);
+
+        switch (target) {
+            case 'selectedTiles':
+                runDisplaySelectedTiles(params);
+                break;
+        }
+    }
+    function runDisplaySelectedTiles(params) {
+        log("runDisplaySelectedTiles: ");
+        var durationSec = null;
+        if (!isNull(params) && !isNull(params.duration)) {
+            durationSec = params.duration;
+        }
+        displaySelectedTilesOverlay(durationSec);
+    }
+    function deActivate(actionId, targets, params) {
+        if (u.isArray(targets)) {
+            for (var i = 0; i < targets.length; i++) {
+                runDeActivate(actionId, targets[i], params);
+            }
+        } else {
+            runDeActivate(actionId, targets, params);
+        }
+    }
+    function runDeActivate(actionId, target, params) {
+        if (!u.isString(actionId)) {
+            return;
+        }
+
+        log("runDeActivate: actionId: " + actionId + BLANK + target);
+
+        switch (actionId) {
+            case 'display':
+                runDeActivateDisplayAction(target, params);
+                break;
+            default:
+                logError("Unknown DeActivate actionId: " + actionId);
+                return;
+        }
+    }
+    function runDeActivateDisplayAction(target, params) {
+        if (isNull(target)) {
+            return;
+        }
+
+        log("runDeActivateDisplayAction: target: " + target);
+
+        switch (target) {
+            case 'overlays':
+                removeOverlays();
+                break;
+        }
+    }
+    function stop(actionId, targets, params) {
+        if (u.isArray(targets)) {
+            for (var i = 0; i < targets.length; i++) {
+                runStop(actionId, targets[i], params);
+            }
+        } else {
+            runStop(actionId, targets, params);
+        }
+    }
+    function runStop(actionId, target, params) {
+        if (!u.isString(actionId)) {
+            return;
+        }
+
+        log("stop: actionId: " + actionId + BLANK + target);
+
+        switch (actionId) {
+            case 'stop':
+                runStopAction(target, params);
+                break;
+            default:
+                logError("Unknown stop actionId: " + actionId);
+                return;
+        }
+    }
+    function runStopAction(target, params) {
+        if (isNull(target)) {
+            return;
+        }
+
+        log("runStopAction: target: " + target);
+
+        switch (target) {
+            case 'all':
+                runStopAll(params);
+                break;
+            case 'granulator':
+                runAudioStopGranulator(params);
+                break;
+            case 'speechSynth':
+                runStopSpeechSynth(params);
+                break;
+        }
+    }
+    function runStopAll(params) {
+        log("runStopAll: ");
+        if (!isNull(a) && a.isReady()) {
+            runAudioStopGranulator(params);
+            runStopSpeechSynth(params);
+        }
+    }
+    function processStageAlpha(stageAlpha) {
+        if (isNull(stageAlpha)) {
+            return;
+        }
+        state.stageAlpha = stageAlpha;
+        setStageCoverStyle();
     }
     function processZoomLevel(zoomLevel) {
         if (isNull(zoomLevel)) {
@@ -1355,12 +2275,14 @@ var zscore = (function (u, n, s, a, win, doc) {
                 return "660 660 204 204";
             case "innerCircle":
                 return "471 471 582 582";
+            case "outerCircleSmall":
+                return "350 350 824 824";
             case "outerCircle":
             default:
                 return "0 0 1525 1525";
         }
     }
-    function runTimeline(actionId, target) {
+    function runTimeline(actionId, target, params) {
         if (!u.isString(target) || !u.isString(actionId)) {
             return;
         }
@@ -1376,6 +2298,15 @@ var zscore = (function (u, n, s, a, win, doc) {
             case "outerCircle":
                 tl = state.outerCircle.gsapTimeline;
                 break;
+            case "centreShapeExplode":
+                tl = state.centreShape.gsapExplodeTimeline;
+                break;
+            case "innerCircleExplode":
+                tl = state.innerCircle.gsapExplodeTimeline;
+                break;
+            case "outerCircleExplode":
+                tl = state.outerCircle.gsapExplodeTimeline;
+                break;
             default:
                 logError("runTimeline: invalid target: " + target);
                 return;
@@ -1383,7 +2314,7 @@ var zscore = (function (u, n, s, a, win, doc) {
 
         switch (actionId) {
             case "start":
-                startTimeline(tl);
+                startTimeline(tl, params);
                 break;
             case "stop":
                 stopTimeline(tl);
@@ -1395,7 +2326,10 @@ var zscore = (function (u, n, s, a, win, doc) {
                 resetTimeline(tl);
                 break;
             case "reverse":
-                reverseTimeline(tl);
+                reverseTimeline(tl, params);
+                break;
+            case "resume":
+                resumeTimeline(tl, params);
                 break;
             default:
                 logError("runTimeline: invalid actionId: " + actionId);
@@ -1405,10 +2339,17 @@ var zscore = (function (u, n, s, a, win, doc) {
     function getSvg() {
         return u.getElement("svgCanvas");
     }
-    function startTimeline(timeline) {
+    function startTimeline(timeline, params) {
         if (isNull(timeline)) {
             logError("startTimeline: invalid timeline");
             return;
+        }
+
+        if (!isNull(params)) {
+            if (!isNull(params.duration)) {
+                var dur = params.duration;
+                timeline.totalDuration(dur);
+            }
         }
 
         var progress = timeline.progress();
@@ -1439,17 +2380,54 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
         timeline.pause(0);
     }
-    function reverseTimeline(timeline) {
+    function resumeTimeline(timeline, params) {
+        if (isNull(timeline)) {
+            logError("resumeTimeline: invalid timeline");
+            return;
+        }
+
+        if (timeline.isActive()) {
+            return;
+        }
+        var dur = timeline.totalDuration();
+        if (!isNull(params)) {
+            if (!isNull(params.duration)) {
+                var dur = params.duration;
+            }
+        }
+
+        var progress = timeline.progress();
+        if (progress == 1.0 || progress == 0.0) {
+            timeline.totalDuration(dur);
+            timeline.restart();
+        } else {
+            timeline.resume();
+        }
+    }
+    function reverseTimeline(timeline, params) {
         if (isNull(timeline)) {
             logError("reverseTimeline: invalid timeline");
             return;
         }
-
+        var progress = timeline.progress();
+        if (progress < 1) {
+            endTimeline(timeline);
+        }
+        if (!isNull(params)) {
+            if (!isNull(params.duration)) {
+                var dur = params.duration;
+                timeline.totalDuration(dur);
+            }
+        }
         timeline.reverse();
     }
     function onAnimationComplete(rotationObjId) {
         var obj = u.getElement(rotationObjId);
         // log("onAnimationComplete: " + rotationObjId);
+    }
+    function onAlphaComplete(objId) {
+        var obj = u.getElement(objId);
+        log("onAlphaComplete: " + objId + "  opacity: " + obj.style.opacity + "  visiblility: " + obj.style.visibility);
     }
     function getObjectTweens(obj) {
         if (!u.isObject(obj)) {
@@ -1491,14 +2469,16 @@ var zscore = (function (u, n, s, a, win, doc) {
                 longestLine = checkLongestLine(l1, longestLine);
                 l1 = u.wrapInSpanElement(l1, spanId1);
                 val += l1;
-            }            
+            }
             if (!u.isEmptyString(l2)) {
+                log("displayInstructions: processing line2 " + l2);
                 longestLine = checkLongestLine(l2, longestLine);
                 l2 = u.wrapInSpanElement(l2, spanId2);
                 val = u.addSuffixIfNotThere(val, config.textLineBreak);
                 val += l2;
-            }            
+            }
             if (!u.isEmptyString(l3)) {
+                log("displayInstructions: processing line3 " + l3);
                 longestLine = checkLongestLine(l3, longestLine);
                 l3 = u.wrapInSpanElement(l3, spanId3);
                 val = u.addSuffixIfNotThere(val, config.textLineBreak);
@@ -1515,25 +2495,43 @@ var zscore = (function (u, n, s, a, win, doc) {
         instructionsElement.innerHTML = val;
 
         var span1 = u.getChildElement(instructionsElement, u.toCssIdQuery(spanId1));
-        span1.style.opacity = 0;
+        if (!isNull(span1)) {
+            span1.style.opacity = 0;
+        }
         var span2 = u.getChildElement(instructionsElement, u.toCssIdQuery(spanId2));
-        span2.style.opacity = 0;
+        if (!isNull(span2)) {
+            span2.style.opacity = 0;
+        }
         var span3 = u.getChildElement(instructionsElement, u.toCssIdQuery(spanId3));
-        span3.style.opacity = 0;
+        if (!isNull(span3)) {
+            span3.style.opacity = 0;
+        }
 
         state.instructions.isVisible = true;
         setInstructionsTextStyle(instructionsElement, state.instructions);
 
-        if(config.textSpanIsFadeIn) {
+        if (config.textSpanIsFadeIn) {
             var du = config.textSpanFadeTimeSec;
             var dl = config.textSpanFadeStaggerTimeSec;
-            gsap.to(span1, {duration: du, autoAlpha: 1,  ease: "power1.in"});
-            gsap.to(span2, {delay: dl, duration: du, autoAlpha: 1,  ease: "power1.in"});
-            gsap.to(span3, {delay: 2*dl, duration: du, autoAlpha: 1,  ease: "power1.in"});
+            if (!isNull(span1)) {
+                gsap.to(span1, { duration: du, autoAlpha: 1, ease: "power1.in" });
+            }
+            if (!isNull(span2)) {
+                gsap.to(span2, { delay: dl, duration: du, autoAlpha: 1, ease: "power1.in" });
+            }
+            if (!isNull(span3)) {
+                gsap.to(span3, { delay: 2 * dl, duration: du, autoAlpha: 1, ease: "power1.in" });
+            }
         } else {
-            span1.style.opacity = 1;
-            span2.style.opacity = 1;
-            span3.style.opacity = 1;    
+            if (!isNull(span1)) {
+                span1.style.opacity = 1;
+            }
+            if (!isNull(span2)) {
+                span2.style.opacity = 1;
+            }
+            if (!isNull(span3)) {
+                span3.style.opacity = 1;
+            }
         }
     }
     function checkLongestLine(lineToCheck, longestLine) {
@@ -1566,16 +2564,23 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
         if (isNotNull(event.data)) {
             var serverState = u.parseJson(serverData);
-            processSeverState(serverState);
+            processSeverState(serverState, false);
         }
 
     }
-    function processSeverState(serverState) {
+    function processSeverState(serverState, isDeltaUpdate) {
         if (isNull(serverState)) {
             return;
         }
+        if (!isDeltaUpdate) {
+            resetAll();
+        }
         if (isNotNull(serverState.tiles)) {
-            processSeverTilesState(serverState.tiles);
+            if (isDeltaUpdate) {
+                processSeverTilesStateDelta(serverState.tiles);
+            } else {
+                processSeverTilesState(serverState.tiles);
+            }
         }
         if (isNotNull(serverState.centreShape)) {
             processSeverShapeState(serverState.centreShape, state.centreShape, 'centreShape');
@@ -1595,6 +2600,9 @@ var zscore = (function (u, n, s, a, win, doc) {
         if (isNotNull(serverState.instructions)) {
             processInstructions(serverState.instructions);
         }
+        if (isNotNull(serverState.stageAlpha)) {
+            processStageAlpha(serverState.stageAlpha);
+        }
     }
     function processSeverShapeState(serverShapeState, clientShapeState, shapeId) {
         if (isNull(serverShapeState) || isNull(clientShapeState)) {
@@ -1603,6 +2611,35 @@ var zscore = (function (u, n, s, a, win, doc) {
 
         clientShapeState.isVisible = serverShapeState.isVisible;
         setShapeStyle(clientShapeState, shapeId);
+    }
+    function processSeverTilesStateDelta(serverTiles) {
+        if (!u.isArray(serverTiles)) {
+            return;
+        }
+        var toUpdate = [];
+        for (var i = 0; i < serverTiles.length; i++) {
+            var serverTile = serverTiles[i];
+            if (!u.isObject(serverTile)) {
+                logError("processSeverTilesStateDelta: invalid server tile")
+                continue;
+            }
+            var serverTileState = serverTile.state;
+            var clientTileState = getTileIdState(serverTileState.id);
+            var serverTileText = serverTile.tileText;
+            var clientTileText = clientTileState.txt;
+            clientTileState.isActive = serverTileState.isActive;
+            clientTileState.isVisible = serverTileState.isVisible;
+            clientTileState.isPlaying = serverTileState.isPlaying;
+            clientTileState.isPlayingNext = serverTileState.isPlayingNext;
+            clientTileState.isPlayed = serverTileState.isPlayed;
+            clientTileState.clickCount = serverTileState.clickCount;
+
+            clientTileText.value = serverTileText.value;
+            clientTileText.isVisible = serverTileText.isVisible;
+
+            toUpdate.push(clientTileState);
+        }
+        processTileUpdates(toUpdate);
     }
     function processSeverTilesState(serverTileStates) {
         if (!u.isArray(serverTileStates) || !u.isArray(serverTileStates[0])) {
@@ -1639,14 +2676,25 @@ var zscore = (function (u, n, s, a, win, doc) {
                 }
             }
         }
+        processTileUpdates(toUpdate);
+    }
+    function processTileUpdates(toUpdate) {
         log("Have " + toUpdate.length + " tile changes");
         for (var i = 0; i < toUpdate.length; i++) {
             var tileState = toUpdate[i]
             var tileObj = u.getElement(tileState.id);
             // log("updating tile " + tileState.id);
+            if((tileState.isPlayed || !tileState.isVisible || !tileState.isActive) && tileState.isSelected) {
+                tileState.isSelected = false;
+            }
             setTileStyle(tileState, tileObj);
             setTileStyleText(tileState, tileObj);
+            setTileOverlay(tileState, tileObj);
+            if (tileState.isPlaying) {
+                state.playingTileId = tileState.id;
+            }
         }
+        setActiveTileFillOnClickCount();
     }
     function processSeverActions(actions) {
         var id = null;
@@ -1681,9 +2729,15 @@ var zscore = (function (u, n, s, a, win, doc) {
 
         switch (actionType) {
             case "ACTIVATE":
+                activate(id, elementIds, params);
+                break;
             case "ANIMATION":
+                break;
             case "DEACTIVATE":
+                deActivate(id, elementIds, params);
+                break;
             case "VISIBLE":
+                break;
             case "INVISIBLE":
                 makeInvisible(elementIds);
                 break;
@@ -1691,10 +2745,13 @@ var zscore = (function (u, n, s, a, win, doc) {
                 zoom(elementIds);
                 break;
             case "TIMELINE":
-                timeline(id, elementIds);
+                timeline(id, elementIds, params);
                 break;
             case "ROTATE":
                 rotate(id, elementIds, params);
+                break;
+            case "ALPHA":
+                alpha(id, elementIds, params);
                 break;
             case "AUDIO":
                 audio(id, elementIds, params);
@@ -1702,6 +2759,11 @@ var zscore = (function (u, n, s, a, win, doc) {
             case "RESET":
                 reset(id, elementIds, params);
                 break;
+            case "STOP":
+                stop(id, elementIds, params);
+                break;
+            default:
+                logError("doAction: Unknown actionType: " + actionType);
         }
     }
     function makeInvisible(elementIds) {
@@ -1738,8 +2800,7 @@ var zscore = (function (u, n, s, a, win, doc) {
             return false;
         }
 
-        return (tileState1.isSelected === tileState2.isSelected &&
-            tileState1.isVisible === tileState2.isVisible &&
+        return (tileState1.isVisible === tileState2.isVisible &&
             tileState1.isActive === tileState2.isActive &&
             tileState1.isPlaying === tileState2.isPlaying &&
             tileState1.isPlayingNext === tileState2.isPlayingNext &&
@@ -1822,7 +2883,7 @@ var zscore = (function (u, n, s, a, win, doc) {
 
         ctx.fillRect(0, 0, fontDraw.width, fontDraw.height);
         ctx.textBaseline = 'top';
-        ctx.fillStyle = 'white';
+        ctx.fillStyle = COL_WHITE;
         ctx.font = fontStyle;
         return ctx.measureText(text);
     }
@@ -1834,7 +2895,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         fontDraw.height = height;
         ctx.fillRect(0, 0, fontDraw.width, fontDraw.height);
         ctx.textBaseline = 'top';
-        ctx.fillStyle = 'white';
+        ctx.fillStyle = COL_WHITE;
         ctx.font = fontStyle;
         var fill = 'gM';
         ctx.fillText(fill, 0, 0);
