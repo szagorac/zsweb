@@ -89,6 +89,13 @@ var zscore = (function (u, n, s, a, win, doc) {
         tileAngles: [0, 45, 90, 135, 180, 225, 270, 315, 360],
         viewMinPoint: 0,
         viewMaxPoint: 1525,
+        zoomCentreSmall: "700 700 124 124",
+        zoomCentreShape: "660 660 204 204",
+        zoomInnerCircleSmall: "540 540 444 444",
+        zoomInnerCircle: "471 471 582 582",
+        zoomOuterCircleSmall: "350 350 824 824",
+        zoomOuterCircle: "471 471 582 582",
+        zoomFull: "0 0 1525 1525",
         circlePrefix: "c",
         linePrefix: "l",
         tilePrefix: "t",
@@ -2270,16 +2277,20 @@ var zscore = (function (u, n, s, a, win, doc) {
         if (!u.isString(target)) {
             target = "default";
         }
-        switch (target) {
+        switch (target) {            
+            case "centreSmall":
+                return config.zoomCentreSmall;
             case "centreShape":
-                return "660 660 204 204";
+                return config.zoomCentreShape;
+            case "innerCircleSmall":
+                return config.zoomInnerCircleSmall;
             case "innerCircle":
-                return "471 471 582 582";
+                return config.zoomInnerCircle;
             case "outerCircleSmall":
-                return "350 350 824 824";
+                return config.zoomOuterCircleSmall;
             case "outerCircle":
             default:
-                return "0 0 1525 1525";
+                return config.zoomFull;
         }
     }
     function runTimeline(actionId, target, params) {
