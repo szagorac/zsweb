@@ -10,6 +10,8 @@ var zscore = (function (u, n, s, a, win, doc) {
     const EVENT_PARAM_ELEMENT_ID = "elementId";
     const EVENT_PARAM_SELECTED = "selected";
     const ATTR_FILL = "fill";
+    const VISIBLE = "visible";
+    const HIDDEN = "hidden";
     const COL_WHITE = "#FFFFFF";
     const COL_BLACK = "#000000";
     const COL_LAVANDER_BLUSH = "#FFF0F5";
@@ -116,7 +118,8 @@ var zscore = (function (u, n, s, a, win, doc) {
         svgArcs: [null, null, null, null, null, null, null, null],
         gridParentId: "grid",
         gridStyle: { "fill": "none", "stroke": "aqua", "stroke-width": "2px" },
-        stageStyle: { "fill": FILL_STAGE_CIRCLE, "stroke-width": "0px", "stroke-opacity": "0", "visibility": "visible", "opacity": state.stageAlpha, "pointer-events": "none" },
+        stageStyle: { "fill": FILL_STAGE_CIRCLE, "stroke-width": "0px", "stroke-opacity": "0", "pointer-events": "none" },
+        stageVisibilityStyle: { "opacity": state.stageAlpha, "visibility": "visible"},
         tilesParentId: "tiles",
         frameStyle: { "fill": FILL_OUTER_FRAME, "stroke-width": "0px", "stroke-opacity": "0", "visibility": "visible", "opacity": 1 },
         tileStyleOverlayPlayingNext: { "fill": "none", "stroke": STROKE_PLAYING_NEXT, "stroke-width": "1px", "visibility": "visible", "opacity": 1, "pointer-events": "none" },
@@ -534,9 +537,18 @@ var zscore = (function (u, n, s, a, win, doc) {
         var stageParentId = config.stageParentId;
 
         var circleElement = s.createSvgCircle(centre.x, centre.y, radius, stageParentId);
-        config.stageStyle['opacity'] = state.stageAlpha;
-        u.setElementAttributes(circleElement, config.stageStyle);
+        updateStageStyle(circleElement); 
         u.addChildToParentId(stageParentId, circleElement);
+    }
+    function updateStageStyle(circleElement) {
+        config.stageVisibilityStyle['opacity'] = state.stageAlpha;
+        if(state.stageAlpha > 0) {
+            config.stageVisibilityStyle['visibility'] = VISIBLE;
+        } else {
+            config.stageVisibilityStyle['visibility'] = HIDDEN;
+        }
+        u.setElementAttributes(circleElement, config.stageStyle);
+        u.setElementStyleProperty(circleElement, config.stageVisibilityStyle);
     }
     function setStageCoverStyle() {        
         var stageParentId = config.stageParentId;
@@ -545,8 +557,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         if(isNull(circleElement)) {
             return;
         }
-        config.stageStyle['opacity'] = state.stageAlpha;
-        u.setElementAttributes(circleElement, config.stageStyle);
+        updateStageStyle(circleElement);                
     }
     function initInstructions() {
         var inst = getInstructionsElement();
@@ -1345,10 +1356,12 @@ var zscore = (function (u, n, s, a, win, doc) {
             }
         }        
         var connector = createSelectedTileConnectionLines(firstTileState, lastTileState);       
-        var connectorOverlay = u.getElement(connector.id);
-        if(isNull(connectorOverlay)) {
-            u.addChildToParentId(config.overlayParentId, connector);
-            connectorElements.push(connector);
+        if(!isNull(connector)) {
+            var connectorOverlay = u.getElement(connector.id);
+            if(isNull(connectorOverlay)) {
+                u.addChildToParentId(config.overlayParentId, connector);
+                connectorElements.push(connector);
+            }
         }
     
         var overlays = u.getElement(config.overlayParentId);
@@ -1425,8 +1438,8 @@ var zscore = (function (u, n, s, a, win, doc) {
 
             var rndPoint = getPointOutsideCircle(xc, yc, objX, objY, objWidth, objHeight, radius);
             var angle = u.randomIntFromInterval(0, 360) * direction;
-            direction *= -1;
-            var scale = u.randomFloatFromInterval(0.1, 2.0);
+            direction *= -1; 
+            var scale = u.randomIntFromInterval(5, 15);
             var xt = rndPoint.x - objX;
             var yt = rndPoint.y - objY;
 
@@ -1487,7 +1500,7 @@ var zscore = (function (u, n, s, a, win, doc) {
             paused: true
         });
     }
-    function createAlpha(objId, dur, val) {
+    function createAlphaTween(objId, dur, val) {
         if (isNull(objId)) {
             logError("dissolve: Invalid objectId: " + objId);
             return;
@@ -1495,7 +1508,7 @@ var zscore = (function (u, n, s, a, win, doc) {
 
         return gsap.to(u.toCssIdQuery(objId), {
             duration: dur,
-            opacity: val,
+            autoAlpha: val,
             onComplete: onAlphaComplete,
             onCompleteParams: [objId],
             paused: true
@@ -2013,31 +2026,40 @@ var zscore = (function (u, n, s, a, win, doc) {
             val = params.value;
         }
 
-        var tween = null;
+        var tweens = [];
         if (isTileId(target)) {
             var tGroupId = config.tileGroupPrefix + target;
-            tween = createAlpha(tGroupId, dur, val);
+            tweens.push(createAlphaTween(tGroupId, dur, val));
         } else {
             switch(target) {
                case config.stageParentId:
                    if(state.stageAlpha === val) {
                        return;
                    }
-                   state.stageAlpha = val;
-                   if(val > 0.0) {
-                       var obj = u.getElement("c" + config.stageParentId);
-                       if(!isNull(obj)) {
-                           setObjectVisibility(obj, true);
-                       }
-                   }
+                   var stageCircleId = "c" + config.stageParentId;
+                   var obj = u.getElement(stageCircleId);
+                    if(isNull(obj)) {
+                       logError("Invalid stage circle id: " + stageCircleId);
+                       return;
+                    }
+                //    if(val > 0.0) {
+                //        var obj = u.getElement("c" + config.stageParentId);
+                //        if(!isNull(obj)) {
+                //            setObjectVisibility(obj, true);
+                //        }
+                //    }
+                   tweens.push(createAlphaTween(stageCircleId, dur, val));                       
                    break;
+                default:
+                    //whatever   
              
-            }
-            tween = createAlpha(target, dur, val);                       
-            log("runAlphaStart: tween: " + target);
+            }        
         }
-
-        playOrRestartTween(tween);
+        for (var i = 0; i < tweens.length; i++) {
+            log("runAlphaStart: tween: " + target);
+            playOrRestartTween(tweens[i]);
+        }
+        
     }
     function reset(actionId, targets, params) {
         if (u.isArray(targets)) {
