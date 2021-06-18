@@ -81,7 +81,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         stageAlpha: 1,
     }
     var config = {
-        connectionPreference: "ws,poll",
+        connectionPreference: "ws,sse,poll",
         centre: { x: 762, y: 762 },
         circleRadii: [55, 92, 125, 194, 291, 401, 552, 750],
         outerFrameRadius: 2000,
