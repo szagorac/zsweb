@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html>
 
 <head>
@@ -10,10 +9,12 @@
     <link rel="shortcut icon" href="img/favicon.ico" type="image/x-icon">
     <link rel="icon" href="img/favicon.ico" type="image/x-icon">
 
-    <link href="/fonts/fonts.css" rel="stylesheet">
+    <link href="js/inscore/fonts/fonts.css" rel="stylesheet">
 
-    <script type="text/javascript" src="libINScore.js"></script>
-    <script type="text/javascript" src="INScoreJS.js"></script>
+    <script type="text/javascript" src="js/util/zsUtil.js?v=1.0.1"></script>
+    <script type="text/javascript" src="js/inscore/libINScore.js"></script>
+    <script type="text/javascript" src="js/inscore/INScoreJS.js"></script>
+    <script type="text/javascript" src="js/zsInscore.js?v=1.0.3"></script>
 
     <style>
         body { margin: 50; background-color: white; color: black}
@@ -32,6 +33,18 @@
         /ITL/scene/title color black;
         /ITL/scene/title scale 3.0;
     </div>
+
+    <script type="text/javascript">
+        try {
+            zscore.load();
+        } catch(err) {
+            if(zsUtil) {
+                zsUtil.logException(err, "Failed to load ZScore");
+            } else {
+                console.log("Failed to load ZScore js, err: " + err);
+            }
+        }
+    </script>
 </body>
 
 </html>

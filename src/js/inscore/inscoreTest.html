@@ -1,22 +1,35 @@
-<!DOCTYPE html>
 <html>
 
 <head>
     <title>Inscore Test</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="img/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16x16.png">
+    <link rel="manifest" href="img/manifest.json">
+    <link rel="shortcut icon" href="img/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="img/favicon.ico" type="image/x-icon">
+
     <link href="fonts/fonts.css" rel="stylesheet">
 
     <script type="text/javascript" src="libINScore.js"></script>
     <script type="text/javascript" src="INScoreJS.js"></script>
+
+    <style>
+        body { margin: 50; background-color: white; color: black}
+        .inscore { background-color: white; border-color: grey; width: 100%; height: 90%; }
+    </style>
 </head>
 
+
 <body>
+
     <h1>INScoreJS Template</h1>
     <div class="inscore" id="scene">
-        /ITL/scene/title set txt "Zscore";
-        /ITL/scene/title x 0.0;
-        /ITL/scene/title y -0.9;
-        /ITL/scene/title z 3.0;
-        /ITL/scene/title scale 3.0;
+        <!-- put you inscore code inside this div -->
+        /ITL/scene/title set txt "Welcome to INScore";
+        /ITL/scene/title fontSize 32;
+        /ITL/scene/title color blue;
+        /ITL/scene/title scale 1.0;
     </div>
 </body>
 
