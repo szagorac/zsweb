@@ -63,6 +63,7 @@ var zscore = (function (u, n, s, a, win, doc) {
     var state = {
         tsBeatMaps: {},
         currentBeat: 0,
+        tempoBPm: 80,
     }
     var config = {
         tsX: [61.5, 99.5, 139.5, 179.5, 219.5, 259.5, 299.5, 339.5, 379.5, 419.5, 459.5, 499.5, 539.5, 579.5, 619.5, 659.5, 699.5, 739.5],    
@@ -115,7 +116,29 @@ var zscore = (function (u, n, s, a, win, doc) {
         //init audio
         initAudio();
 
-        initTimeSpace()
+        initTimeSpace();
+
+        // // onRepeat callback in a dummy tween
+        // TweenMax.to({}, 0.25, {
+        //     repeat: -1,
+        //     onRepeat: function() {
+        //       // ...
+        //     }
+        //   });
+        
+        //   // create a new ticker object
+        //   var ticker = new com.greensock.Ticker(4);
+        //   ticker.addEventListener("tick", function() {
+        //     // ...
+        //   });
+        // gsap.ticker.add(myFunction);
+
+        // function myFunction() {
+        // //executes on every tick after the core engine updates
+        // }
+
+        // //to remove the listener later...
+        // gsap.ticker.remove(myFunction);
     }
     function initTimeSpace() {
         for (var i = 0; i < config.tsX.length - 1; i++) {
