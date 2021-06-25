@@ -61,41 +61,29 @@ var zscore = (function (u, n, s, a, win, doc) {
 
     // ---------  MODEL -----------
     var state = {
-   
+        tsBeatMaps: {},
+        currentBeat: 0,
     }
     var config = {
-    
+        tsX: [61.5, 99.5, 139.5, 179.5, 219.5, 259.5, 299.5, 339.5, 379.5, 419.5, 459.5, 499.5, 539.5, 579.5, 619.5, 659.5, 699.5, 739.5],    
+        tsBeats: [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35],
+        tsBeatDenom: 8,
+        tsY: 0, 
     }
 
     function ZScoreException(message) {
         this.message = message;
         this.name = 'ZScoreException';
     }
-
-    function TileText(value, isVisible, sizeMultiplier) {
-        this.value = value;
-        this.isVisible = isVisible;
-        this.sizeMultiplier = sizeMultiplier;
-    }
-
-    function TileState(id, isSelected, isActive, isVisible, isPlaying, isPlayingNext, isPlayed, clickCount, arc, txt) {
-        this.id = id;
-        this.isSelected = isSelected;
-        this.isActive = isActive;
-        this.isVisible = isVisible;
-        this.isPlaying = isPlaying;
-        this.isPlayingNext = isPlayingNext;
-        this.isPlayed = isPlayed;
-        this.clickCount = clickCount;
-        this.arc = arc;
-        this.txt = txt;
-        this.tweens = [];
-    }
-
-    function TileCircleState(id) {
-        this.id = id;
-        this.tweens = [];
-        this.selectedId = null;
+    function TsMapElement(xStart, xEnd, yStart, yEnd, beatStartNum, beatStartDenom, beatEndNum, beatEndDenom) {
+        this.xStart = xStart;
+        this.xEnd = xEnd;
+        this.yStart = yStart;
+        this.yEnd = yEnd;
+        this.beatStartNum = beatStartNum;
+        this.beatStartDenom = beatStartDenom;
+        this.beatEndNum = beatEndNum;
+        this.beatEndDenom = beatEndDenom;
     }
 
     // ---------  API -----------
@@ -126,8 +114,62 @@ var zscore = (function (u, n, s, a, win, doc) {
         initSvg();
         //init audio
         initAudio();
-       
+
+        initTimeSpace()
     }
+    function initTimeSpace() {
+        for (var i = 0; i < config.tsX.length - 1; i++) {
+            var xStart = config.tsX[i];
+            var beatStartNum = config.tsBeats[i];
+            var xEnd = config.tsX[i + 1];
+            var beatEndNum = config.tsBeats[i + 1];
+            var mapElement = new TsMapElement(xStart, xEnd, config.tsY, config.tsY, beatStartNum, config.tsBeatDenom, beatEndNum, config.tsBeatDenom);
+            state.tsBeatMaps[beatStartNum] = mapElement;
+        }
+    }
+    function onTimeStep() {
+        log("timeStep: ");
+        incrementBeatNo();
+        var beat = state.currentBeat;
+        var beatMap = null;
+        if(beat in state.tsBeatMaps) {
+            beatMap = state.tsBeatMaps[beat];
+        } else {
+            var previousBeat = beat - 1;
+            beatMap = state.tsBeatMaps[previousBeat];
+        }
+
+        if(isNull(beatMap)) {
+            logError("Can not find timeSpace map for beat: " + beat);
+            return;
+        }
+        
+        var x = 0;
+        var startBeat = beatMap.beatStartNum;
+        var diff = beat - startBeat;
+        if(diff > 1 || diff < 0) {
+            logError("Unexpected beat diff: " + diff + " for beat: " + beat);
+            return;
+        }
+
+        if(diff === 0) {
+            x = beatMap.xStart;
+        } else {
+            x = u.interpolateLinear(beatMap.xStart, beatMap.xEnd, 0.5);
+        }
+        setBeatLinePosition(x);
+    }
+    function setBeatLinePosition(x) {
+        var pLine = u.getElement("posLine");
+        if(isNull(pLine)) {
+            return;
+        }
+
+        s.setLineX(pLine, x, x);
+    } 
+    function incrementBeatNo() {
+        state.currentBeat++;
+    }    
     function resetAll() {
         resetAudio();
     }
@@ -801,6 +843,9 @@ var zscore = (function (u, n, s, a, win, doc) {
     return {
         load: function () {
             onLoad();
+        },
+        timeStep: function () {
+            onTimeStep();
         },
     }
 }(zsUtil, zsNet, zsSvg, zsAudio, window, document));

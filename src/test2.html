@@ -79,7 +79,7 @@
             <!-- bottom controls -->
             <g id="controls">
                 <g id="btn1" class="btn" filter="url(#dropshadow)">             
-                    <rect x="216" y="537" width="80" height="30" fill="white" style="stroke-width:1;stroke:rgb(0,0,0)" rx="10"/>                        
+                    <rect x="216" y="537" width="80" height="30" fill="white" style="stroke-width:1;stroke:rgb(0,0,0)" rx="10" onclick="step();"/>                        
                     <text x="256" y="554" dominant-baseline="middle" text-anchor="middle" font-size="1em" fill="black" pointer-events="none">Violin1</text>
                 </g>
                 <g id="btn1" class="btn" filter="url(#dropshadow)">              
@@ -99,7 +99,7 @@
             <line id="bottomLine" x1="0" y1="609" x2="812" y2="609" stroke="black" />
             <!-- <line id="topCtrlLine1" x1="0" y1="28" x2="812" y2="28" stroke="black" /> --> 
             <!-- <line id="topCtrlLine2" x1="0" y1="60" x2="812" y2="60" stroke="black" />             -->
-            <!-- <line id="staveStart" x1="95" y1="0" x2="95" y2="609" stroke="black" /> -->
+            <line id="posLine" x1="95" y1="0" x2="95" y2="609" stroke="red" />
         </svg>    
     </div>
     <div id="btnOuterDiv" class="outer">
@@ -123,6 +123,17 @@
                     console.log("Failed to load ZScore js, err: " + err);
                 }
                 // window.location = 'error.html';
+            }
+        }        
+        function step() {
+            try {
+                zscore.timeStep();
+            } catch(err) {
+                if(zsUtil) {
+                    zsUtil.logException(err, "Failed to load ZScore");
+                } else {
+                    console.log("Failed to load ZScore js, err: " + err);
+                }
             }
         }        
     </script>

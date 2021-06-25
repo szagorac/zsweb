@@ -1026,6 +1026,9 @@ var zsUtil = (function (console, win, doc) {
             onUpdateParams: [gRumpLinear],
         });
     }
+    function _interpolateLinear(v1, v2, decMid) {
+        return v1 * (1 - decMid) + v2 * decMid;
+    }
 
     // PUBLIC API
     return {
@@ -1038,6 +1041,9 @@ var zsUtil = (function (console, win, doc) {
         Oscillator: Oscillator,
         ParamOscillator: ParamOscillator,
 
+        interpolateLinear: function (val1, val2, decimalMid) {
+            return _interpolateLinear(val1, val2, decimalMid);
+        },
         arrMinMax: function (arr) {
             return _arrMinMax(arr);
         },

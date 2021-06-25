@@ -143,6 +143,13 @@ var zsSvg = (function (u, doc) {
 
         return lineElement;
     }
+    function _setLineX(line, startX, endX) {
+        if(!u.isObject(line)) {
+            return;
+        }
+        line.setAttribute(SVG_PARAM_X1, startX);        
+        line.setAttribute(SVG_PARAM_X2, endX);
+    }
     function _createArc(x, y, radius, startAngle, endAngle) {
         var start = u.polarToCartesian(x, y, radius, endAngle);
         var end = u.polarToCartesian(x, y, radius, startAngle);
@@ -304,6 +311,9 @@ var zsSvg = (function (u, doc) {
         },
         createTorusPath: function (cX, cY, inR, outR) {
             return  _createTorusPath(cX, cY, inR, outR);
+        }, 
+        setLineX: function (line, startX, endX) {
+            return  _setLineX(line, startX, endX);
         },       
     }
 }(zsUtil, document));
