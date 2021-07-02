@@ -21,6 +21,7 @@
     <script type="text/javascript" src="js/gsap/minified/gsap.min.js"></script>
     <script type="text/javascript" src="js/util/zsUtil.js?v=1.0.5"></script>
     <script type="text/javascript" src="js/net/zsNet.js?v=1.0.8"></script>
+    <script type="text/javascript" src="js/music/zsMusic.js?v=1.0.1"></script>
     <script type="text/javascript" src="js/svg/zsSvg.js?v=1.0.2"></script>
     <script type="text/javascript" src="js/audio/zsGranulator.js?v=1.0.6"></script>
     <script type="text/javascript" src="js/audio/zsSpeech.js?v=1.0.1"></script>
@@ -83,11 +84,11 @@
                     <text x="256" y="554" dominant-baseline="middle" text-anchor="middle" font-size="1em" fill="black" pointer-events="none">Violin1</text>
                 </g>
                 <g id="btn1" class="btn" filter="url(#dropshadow)">              
-                    <rect x="316" y="537" width="80" height="30" fill="white" style="stroke-width:1;stroke:rgb(0,0,0)" rx="10"/>                        
+                    <rect x="316" y="537" width="80" height="30" fill="white" style="stroke-width:1;stroke:rgb(0,0,0)" rx="10" onclick="play();"/>                        
                     <text x="356" y="554" dominant-baseline="middle" text-anchor="middle" font-size="1em" fill="black" pointer-events="none">Violin2</text>
                 </g>
                 <g id="btn1" class="btn" filter="url(#dropshadow)">              
-                    <rect x="416" y="537" width="80" height="30" fill="white" style="stroke-width:1;stroke:rgb(0,0,0)" rx="10"/>                        
+                    <rect x="416" y="537" width="80" height="30" fill="white" style="stroke-width:1;stroke:rgb(0,0,0)" rx="10" onclick="incrementTempo();"/>                        
                     <text x="456" y="554" dominant-baseline="middle" text-anchor="middle" font-size="1em" fill="black" pointer-events="none">Viola</text>
                 </g>
                 <g id="btn1" class="btn" filter="url(#dropshadow)">              
@@ -100,6 +101,8 @@
             <!-- <line id="topCtrlLine1" x1="0" y1="28" x2="812" y2="28" stroke="black" /> --> 
             <!-- <line id="topCtrlLine2" x1="0" y1="60" x2="812" y2="60" stroke="black" />             -->
             <line id="posLine" x1="95" y1="0" x2="95" y2="609" stroke="red" />
+            <line id="beatLine" x1="95" y1="0" x2="95" y2="609" stroke="green" />
+            <circle id="beatBall" cx="95" cy="110" r="4" stroke="none" fill="blue"/>
         </svg>    
     </div>
     <div id="btnOuterDiv" class="outer">
@@ -128,6 +131,28 @@
         function step() {
             try {
                 zscore.timeStep();
+            } catch(err) {
+                if(zsUtil) {
+                    zsUtil.logException(err, "Failed to load ZScore");
+                } else {
+                    console.log("Failed to load ZScore js, err: " + err);
+                }
+            }
+        }      
+        function play() {
+            try {
+                zscore.playTopStave();
+            } catch(err) {
+                if(zsUtil) {
+                    zsUtil.logException(err, "Failed to load ZScore");
+                } else {
+                    console.log("Failed to load ZScore js, err: " + err);
+                }
+            }
+        } 
+        function incrementTempo() {
+            try {
+                zscore.incrementTempo();
             } catch(err) {
                 if(zsUtil) {
                     zsUtil.logException(err, "Failed to load ZScore");

@@ -1,4 +1,4 @@
-var zscore = (function (u, n, s, a, win, doc) {
+var zscore = (function (u, n, s, a, m, win, doc) {
     "use strict";
 
     // TODO set for prod when ready - gets rid of console logs
@@ -61,15 +61,33 @@ var zscore = (function (u, n, s, a, win, doc) {
 
     // ---------  MODEL -----------
     var state = {
-        tsBeatMaps: {},
-        currentBeat: 0,
-        tempoBPm: 80,
+        isRunning: false,
+        tsBaseBeatMaps: {},
+        tsBaseBeatTweens: {},
+        currentBeatNo: 0,
+        currentBbBeatNo: 0,
+        startTimeTl: 0,
+        startTimeBb: 0,
+        tickBeatNo: 0,
+        currentBeatId: "b0",
+        tempo: {},
+        topStaveTimeline: {},
+        bottomStaveTimeline: {},
+        lastTimelineBeatNo: 0,
+        currentTickTimeSec: 0,
+        nextBeatTickTimeSec: 0,
+        audioTlBeatTime: 0,
+        audioTickBeatTime: 0,
     }
     var config = {
         tsX: [61.5, 99.5, 139.5, 179.5, 219.5, 259.5, 299.5, 339.5, 379.5, 419.5, 459.5, 499.5, 539.5, 579.5, 619.5, 659.5, 699.5, 739.5],    
-        tsBeats: [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35],
-        tsBeatDenom: 8,
+        tsBaseBeats: [1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31, 33, 35],
+        tsBaseBeatDenom: 8,
         tsY: 0, 
+        beatIdPrefix: "b",
+        tweenIdPrefix: "tw",
+        beatTweenIdPrefix: "btw",
+        ballTweenIdPrefix: "bltw",
     }
 
     function ZScoreException(message) {
@@ -93,8 +111,8 @@ var zscore = (function (u, n, s, a, win, doc) {
         init();
     }
     function init() {
-        if (!u || !n || !s || !a) {
-            throw new ZScoreException("Invalid libraries. Required: zsUtil, zsNet, zsSvg and zsAudio");
+        if (!u || !n || !s || !a || !m) {
+            throw new ZScoreException("Invalid libraries. Required: zsUtil, zsNet, zsSvg, zsAudio and zsMusic");
         }
 
         u.setRunMode(RUN_MODE);
@@ -115,8 +133,11 @@ var zscore = (function (u, n, s, a, win, doc) {
         initSvg();
         //init audio
         initAudio();
+        initTempo();
 
         initTimeSpace();
+        initTimelines();
+        initTicker();
 
         // // onRepeat callback in a dummy tween
         // TweenMax.to({}, 0.25, {
@@ -140,26 +161,276 @@ var zscore = (function (u, n, s, a, win, doc) {
         // //to remove the listener later...
         // gsap.ticker.remove(myFunction);
     }
+    function initTicker() {
+        gsap.ticker.add(onTick);
+    }  
+    function initTicker() {
+        gsap.ticker.add(onTick);
+    }
+    function onTick(time, deltaTime, frame) {
+        state.currentTickTimeSec = time;
+        if(!state.isRunning) {
+            return;
+        }
+        if(isNextBeatTime()) {
+            nextBeat();
+        }
+    }
+    function isNextBeatTime() {
+        if(state.nextBeatTickTimeSec === 0) {
+            return false;
+        }
+        return state.currentTickTimeSec >= state.nextBeatTickTimeSec;
+    }
+    function nextBeat() {
+        state.tickBeatNo++;
+        state.audioTickBeatTime = a.getCurrentTime();
+        var delta = state.audioTickBeatTime - state.audioTlBeatTime;
+        log("Ticker beat: " + state.tickBeatNo + " tickTime: " + state.audioTickBeatTime + " delta: " + delta);
+        var bpm = state.tempo.bpm;
+        var beatDurationSec = m.getBeatDurationSec(bpm);        
+        state.nextBeatTickTimeSec = state.currentTickTimeSec + beatDurationSec;
+    }
+    function initTempo() {
+        state.tempo = new m.ZsTempo(80, m.NoteDuration.QUARTER);
+    }  
+    function onTimelineComplete() {
+        log("onTimelineComplete");
+        state.isRunning = false;
+    }
+    function initTimelines() {
+        var topStaveTimeline = gsap.timeline({onComplete: onTimelineComplete, paused: true});
+        // var topStaveTimeline = gsap.timeline();
+        var bbMaps = state.tsBaseBeatMaps;
+        var bbTweens = state.tsBaseBeatTweens;
+        var lineId = "posLine";
+        var ballId = "beatBall";
+        var beatLineId = "beatLine";
+        var tempoBeat = m.NoteDuration.QUARTER;
+        var isFirstBeat = true;
+
+        for (var beat in bbMaps){
+            var bbMap = bbMaps[beat];            
+            var bpm = state.tempo.bpm;
+            var beatDurationSec = m.getBeatDurationSec(bpm);
+
+            if(isFirstBeat) {
+                var beatId = config.beatIdPrefix + 0;
+                var endX = bbMap.xStart;
+                var startBeatPositionLineTween = createPositionLineTween(lineId, 0, endX, beatId, 0);    
+                topStaveTimeline.add(startBeatPositionLineTween, "<");
+                var bbStartBeatPositionLineTween = createBbPositionLineTween(beatLineId, 0, endX, beatId, 0);  
+                bbStartBeatPositionLineTween.resume();
+                isFirstBeat = false;
+            }
+
+            var ballY = 84;
+            var endX = bbMap.xEnd;
+            var startBeat = bbMap.beatStartNum;
+            var beatId = config.beatIdPrefix + startBeat;
+            var tweenId = config.tweenIdPrefix + beatId;
+            var beatPositionLineTween = createPositionLineTween(lineId, beatDurationSec, endX, beatId, startBeat);
+            var beatPositionBallXTween = createPositionBallXTween(ballId, beatDurationSec, endX, beatId);
+            var beatPositionBallYTween = createPositionBallYTween(ballId, beatDurationSec/2, ballY, beatId);
+            var tweenId = beatPositionLineTween.vars.id;
+            topStaveTimeline.addLabel(tweenId, ">");
+            topStaveTimeline.add(beatPositionLineTween, ">");
+            topStaveTimeline.add(beatPositionBallXTween, "<");
+            topStaveTimeline.add(beatPositionBallYTween, tweenId);
+
+
+            var bbTween = createBbPositionLineTween(beatLineId, beatDurationSec, endX, beatId, startBeat);
+            bbTweens[startBeat] = bbTween;
+
+            state.lastTimelineBeatNo = startBeat;
+        }
+
+        state.topStaveTimeline = topStaveTimeline;
+    }
+    function createPositionBallYTween(ballId, beatDurationSec, endY, beatId) {
+        var tweenId = config.ballTweenIdPrefix + beatId;
+        log("creating ball tween: " + tweenId);
+        return gsap.to(u.toCssIdQuery(ballId), {
+            duration: beatDurationSec,
+            attr: {"cy":endY, "r":2},
+            // ease: "sine.out",
+            // ease: "slow(0.5, 0.8, false)",
+            // ease: "power1.out",
+            ease: "power1.out",
+            autoAlpha: 0.5,
+            repeat: 1, 
+            yoyo: true,
+        });
+    }
+    function createPositionBallXTween(ballId, beatDurationSec, endX, beatId) {
+        var tweenId = config.ballTweenIdPrefix + beatId;
+        log("creating ball tween: " + tweenId);
+        return gsap.to(u.toCssIdQuery(ballId), {
+            duration: beatDurationSec,
+            attr: {"cx":endX},
+            ease: "none",
+        });
+    }
+    function createPositionLineTween(lineId, beatDurationSec, endX, beatId, beatNo) {
+        var tweenId = config.tweenIdPrefix + beatId;
+        log("creating tween: " + tweenId);
+        return gsap.to(u.toCssIdQuery(lineId), {
+            id: tweenId,
+            duration: beatDurationSec,
+            attr: {"x1":endX, "x2":endX},
+            ease: "none",
+            onStart: onBeatStart,
+            onStartParams: [beatId, beatNo],
+            onComplete: onBeatEnd,
+            onCompleteParams: [beatId, beatNo],            
+        });
+    }
+    function createBbPositionLineTween(lineId, beatDurationSec, endX, beatId, beatNo) {
+        var tweenId = config.beatTweenIdPrefix + beatId;
+        log("creating BB tween: " + tweenId);
+        return gsap.to(u.toCssIdQuery(lineId), {
+            id: tweenId,
+            duration: beatDurationSec,
+            attr: {"x1":endX, "x2":endX},
+            ease: "none",
+            paused: true,
+            onStart: onBbBeatStart,
+            onStartParams: [beatId, beatNo],
+            onComplete: onBbBeatEnd,
+            onCompleteParams: [beatId, beatNo],            
+        });
+    }
+    function onNewBpm(bpm) {
+        if(!u.isNumeric(bpm)) {
+            return;
+        }
+        var previousBpm = state.tempo.bpm;
+        state.tempo.bpm = bpm;
+        onTempoChange(previousBpm, bpm);
+    }
+    function onTempoChange(previousBpm, bpm) {
+        var ratio = bpm/previousBpm;        
+        var tl = state.topStaveTimeline;
+        var currentTimeScale = tl.timeScale();
+        var newTimeScale = currentTimeScale * ratio;
+        tl.timeScale(newTimeScale);
+
+        var beatDurationSec = m.getBeatDurationSec(bpm);   
+        log("####  new duration: " + beatDurationSec + " new ratio: " + ratio + " newTimeScale: " + newTimeScale)
+        var currentBbBeatNo = state.currentBbBeatNo;
+        var bbTween = state.tsBaseBeatTweens[currentBbBeatNo];
+        if(!u.isNull(bbTween)) {
+            bbTween.duration(beatDurationSec);
+        }
+        for (var beatNo in state.tsBaseBeatTweens){
+            if(beatNo > currentBbBeatNo) {
+                var bbTween = state.tsBaseBeatTweens[beatNo];
+                bbTween.duration(beatDurationSec);
+            }
+        } 
+
+     
+        // var currentBeatNo = state.currentBeatNo;
+        // var lastBeat = state.lastTimelineBeatNo;
+
+        // for (var i = currentBeatNo; i <= lastBeat; i++) {
+        //     var tid = config.tweenIdPrefix + config.beatIdPrefix + i;
+        //     var tween = tl.getById(tid);
+        //     if(u.isObject(tween)) {
+        //         tween.duration(beatDurationSec);
+        //     }
+        // }
+    }
+    function onBeatStart(beatId, beatNo) {
+        var currentTime = a.getCurrentTime();
+        state.audioTlBeatTime = currentTime;
+        log("onBeatStart: beat: " + beatId + " beatNo: " + beatNo + " beatTime: " + currentTime);
+        setCurrentBeat(beatNo, beatId);
+    }
+    function onBeatEnd(beatId, beatNo) {
+        var now = a.getCurrentTime();
+        var diff = now - state.startTimeTl;
+        log("onBeatEnd: beat: " + beatId + " beatNo: " + beatNo + " elapsedTime: " + diff);        
+    }
+    function onBbBeatStart(beatId, beatNo) {
+        log("onBbBeatStart: beat: " + beatId + " beatNo: " + beatNo);
+        state.currentBbBeatNo = beatNo;
+        if(beatNo === 21) {
+            onNewBpm(state.tempo.bpm + 20);
+        }
+    }
+    function onBbBeatEnd(beatId, beatNo) {
+        var now = a.getCurrentTime();
+        var diff = now - state.startTimeTl;
+        log("onBbBeatEnd: beat: " + beatId + " beatNo: " + beatNo + " elapsedTime: " + diff);
+        var next = beatNo + 2;
+        var bbTween = state.tsBaseBeatTweens[next];
+        if(u.isObject(bbTween)) {
+            bbTween.resume();
+        }
+    }
+    function setCurrentBeat(beatNo, beatId) {
+        if(!u.isNumeric(beatNo)) {
+            return;
+        }
+        if(u.isNull(beatId)) {
+            beatId = config.beatIdPrefix + beatNo;
+        }
+        state.currentBeatId = beatId;
+        state.currentBeatNo = beatNo;
+    }      
     function initTimeSpace() {
         for (var i = 0; i < config.tsX.length - 1; i++) {
             var xStart = config.tsX[i];
-            var beatStartNum = config.tsBeats[i];
+            var beatStartNum = config.tsBaseBeats[i];
             var xEnd = config.tsX[i + 1];
-            var beatEndNum = config.tsBeats[i + 1];
-            var mapElement = new TsMapElement(xStart, xEnd, config.tsY, config.tsY, beatStartNum, config.tsBeatDenom, beatEndNum, config.tsBeatDenom);
-            state.tsBeatMaps[beatStartNum] = mapElement;
+            var beatEndNum = config.tsBaseBeats[i + 1];
+            var mapElement = new TsMapElement(xStart, xEnd, config.tsY, config.tsY, beatStartNum, config.tsBaseBeatDenom, beatEndNum, config.tsBaseBeatDenom);
+            state.tsBaseBeatMaps[beatStartNum] = mapElement;
         }
+    }
+    function onPlayTopStave() {
+        nextBeat();
+
+        var beatNo = state.currentBeatNo;
+        var bbTween = state.tsBaseBeatTweens[1];
+        if(u.isObject(bbTween)) {
+            state.startTimeBb = a.getCurrentTime();
+            bbTween.resume();
+        }
+        
+        var tl = state.topStaveTimeline;
+        state.startTimeTl = a.getCurrentTime();
+        tl.resume();
+                
+        state.isRunning = true;
     }
     function onTimeStep() {
         log("timeStep: ");
         incrementBeatNo();
-        var beat = state.currentBeat;
+        var beat = state.currentBeatNo;
+        var label = config.beatIdPrefix + beat;
+        var labels = state.topStaveTimeline.labels;
+        if(label in labels) {
+            state.topStaveTimeline.seek(label);     
+        } else {
+            onTimeStepManual(true);
+        }
+    }
+    function onTimeStepManual(skipIncrement) {
+        log("timeStep: ");
+
+        if(!skipIncrement) {
+            incrementBeatNo();
+        }
+
+        var beat = state.currentBeatNo;
         var beatMap = null;
-        if(beat in state.tsBeatMaps) {
-            beatMap = state.tsBeatMaps[beat];
+        if(beat in state.tsBaseBeatMaps) {
+            beatMap = state.tsBaseBeatMaps[beat];
         } else {
             var previousBeat = beat - 1;
-            beatMap = state.tsBeatMaps[previousBeat];
+            beatMap = state.tsBaseBeatMaps[previousBeat];
         }
 
         if(isNull(beatMap)) {
@@ -191,7 +462,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         s.setLineX(pLine, x, x);
     } 
     function incrementBeatNo() {
-        state.currentBeat++;
+        state.currentBeatNo++;
     }    
     function resetAll() {
         resetAudio();
@@ -870,5 +1141,11 @@ var zscore = (function (u, n, s, a, win, doc) {
         timeStep: function () {
             onTimeStep();
         },
+        playTopStave: function () {
+            onPlayTopStave();
+        },
+        incrementTempo: function () {
+            onNewBpm(state.tempo.bpm + 20);
+        },
     }
-}(zsUtil, zsNet, zsSvg, zsAudio, window, document));
+}(zsUtil, zsNet, zsSvg, zsAudio, zsMusic, window, document));

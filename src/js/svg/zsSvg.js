@@ -63,7 +63,7 @@ var zsSvg = (function (u, doc) {
     //Private functions
     function _initSvg() {
         if (!u || !doc) {
-            throw new ZsAudioException("Invalid libraries, or document. Required: zsUtil");
+            throw new ZsSvgException("Invalid libraries, or document. Required: zsUtil");
         }
 
     }
