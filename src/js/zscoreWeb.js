@@ -1138,14 +1138,11 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         load: function () {
             onLoad();
         },
-        timeStep: function () {
-            onTimeStep();
+        onInstrumentSelect: function (instName) {
+            log("onInstrumentSelect: " + instName);
         },
-        playTopStave: function () {
-            onPlayTopStave();
-        },
-        incrementTempo: function () {
-            onNewBpm(state.tempo.bpm + 20);
+        onInstrumentControl: function (instName) {
+            log("onInstrumentControl: " + instName);
         },
     }
 }(zsUtil, zsNet, zsSvg, zsAudio, zsMusic, window, document));

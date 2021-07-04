@@ -9,62 +9,34 @@
     <link rel="manifest" href="img/manifest.json">
     <link rel="shortcut icon" href="img/favicon.ico" type="image/x-icon">
     <link rel="icon" href="img/favicon.ico" type="image/x-icon">
-    <style>
-        body {
-            background-color: #545353;
-            color: azure;
-            font-size: 1.0em;
-            text-align: center;
-        }
-
-        h1 {
-            color: #d1d2d4;
-            font-size: 2.5em;
-        }
-
-        #intro {
-            font-size: 1.3em;
-        }
-
-        .top-3cm-spacer {
-            margin-top: 3cm;
-        }
-    </style>
-    <script type="text/javascript">
-        var redirectPage = "test.html"
-        window.location = redirectPage;
-
-        function displayContent(){
-            var p = document.createElement('p');
-            var a = document.createElement('a');
-            var linkText = document.createTextNode("Enter the show");
-            var welcomeText = document.createTextNode("Welcome, ");
-            p.appendChild(welcomeText);
-            a.appendChild(linkText);
-            a.title = "Enter";
-            a.href = "unionRose.html";
-            p.appendChild(a);
-            document.body.appendChild(p);
-        }
-        function log(val){
-            console.log(val);
-        }
-    </script>
-
+    <link rel="stylesheet" type="text/css" href="css/zscore.css?v=1.0.9">
 </head>
 
 <body>
-    <h1 class="top-3cm-spacer">Welcome to ZScore</h1>
-    <p id="intro">Landing Page</p>
-    
+    <h1 class="title-content">Welcome to ZScore</h1>
+    <h1 class="subtitle-content">Performers' View</h1>
+
     <noscript>
-        <h2>JavaScript-enabled browser is required</h2>
-        Unfortunately, you will not be able to participate in the performance.
+        <div class="top-3cm-spacer">
+            <h2>JavaScript-enabled browser is required</h2>
+            <br />
+            Unfortunately, you will not be able to participate in the performance.
+        </div>
     </noscript>
-    <!-- <script type="text/javascript">
+    <script type="text/javascript">
         log("Javascript supported!!");
-        // displayContent();
-    </script> -->
+
+    </script>
+    <div class="main-content">
+        <div class="rTable">
+            <div class="rTableRow">
+                <div class="rTableCell"><a href="zsPart.html">Instrument Part</a></div>
+                <div class="rTableCell"><a href="zsPart.html">Full Score</a></div>
+                <div class="rTableCell"><a class="pg-content" href="zsPart.html">AV</a></div>
+            </div>
+        </div>
+    </div>
+
 </body>
 
 </html>
