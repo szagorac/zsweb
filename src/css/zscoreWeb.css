@@ -302,4 +302,7 @@ a:active {
 .inst-svg-btn:active {
     transform: translate(1px, 1px);
 }
+.inst-svg-btn-dis:active {
+    transform: none;
+}
   

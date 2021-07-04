@@ -99,7 +99,7 @@
             </g> 
         
             <!-- bottom controls -->
-            <g id="instControls" style="visibility: hidden;">
+            <g id="instControls" style="visibility: visible;">
                 <g id="instbtn1" class="inst-svg-btn" filter="url(#dropshadow)">             
                     <rect id="instBtn1Rect" x="216" y="537" width="80" height="30" fill="white" style="stroke-width:1;stroke:rgb(0,0,0)" rx="10" onclick="onInstrumentControl('inst1');"/>                        
                     <text id="instBtn1Txt" x="256" y="554" dominant-baseline="middle" text-anchor="middle" font-size="1em" fill="black" pointer-events="none">Violin1</text>
@@ -112,9 +112,9 @@
                     <rect id="instBtn3Rect" x="416" y="537" width="80" height="30" fill="white" style="stroke-width:1;stroke:rgb(0,0,0)" rx="10" onclick="onInstrumentControl('inst3');"/>                        
                     <text id="instBtn3Txt" x="456" y="554" dominant-baseline="middle" text-anchor="middle" font-size="1em" fill="black" pointer-events="none">Viola</text>
                 </g>
-                <g id="instbtn4" class="inst-svg-btn" filter="url(#dropshadow)">              
-                    <rect id="instBtn4Rect" x="516" y="537" width="80" height="30" fill="white" style="stroke-width:1;stroke:rgb(0,0,0)" rx="10" onclick="onInstrumentControl('inst4');"/>                        
-                    <text id="instBtn4Txt" x="556" y="554" dominant-baseline="middle" text-anchor="middle" font-size="1em" fill="black" pointer-events="none">Cello</text>
+                <g id="instbtn4" class="inst-svg-btn-dis" filter="none" style="visibility: visible;">              
+                    <rect id="instBtn4Rect" x="516" y="537" width="80" height="30" fill="lightgrey" style="stroke:none" rx="10" onclick=""/>                        
+                    <text id="instBtn4Txt" x="556" y="554" dominant-baseline="middle" text-anchor="middle"  style="visibility: hidden;" font-size="1em" fill="black" pointer-events="none">Cello</text>
                 </g>                                
             </g>
            
