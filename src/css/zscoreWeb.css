@@ -305,4 +305,10 @@ a:active {
 .inst-svg-btn-dis:active {
     transform: none;
 }
+.srvr-status-svg-btn:active {
+    transform: translate(1px, 1px);
+}
+.srvr-status-svg-btn-dis:active {
+    transform: none;
+}
   
