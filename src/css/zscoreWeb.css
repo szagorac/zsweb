@@ -135,8 +135,7 @@ a:hover {
 a:active {
     color: blue;
 }
-
-.inst-list{ 
+.part-list{ 
     border:2px solid black;
     background-color: rgb(237, 248, 247);
     opacity: 1.0;
@@ -147,13 +146,11 @@ a:active {
     position: relative;
     z-index: 100;
 }
-
-.inst-list-content {
+.part-list-content {
     margin-top: 3vw;
     margin-bottom: 5vw;
-    font-size: 1.2em;
+    font-size: 1.0em;
 }
-
 .myTxt {
 	font-family:Courier New;
     font-size: 20px;
@@ -202,7 +199,7 @@ a:active {
 .joinButton:focus {
     outline:0;
 }
-.instListButton {
+.partListButton {
     margin-bottom: 5vw;
 	box-shadow: 3px 4px 0px 0px #91b8b3;
 	background:linear-gradient(to bottom, #768d87 5%, #6c7c7c 100%);
@@ -211,40 +208,27 @@ a:active {
 	border:1px solid #566963;
 	display:inline-block;
 	cursor:pointer;
-	color:#ffffff;
+	color:white;
 	font-family:Arial;
-	font-size: 1.5em;
+	font-size: 1.0em;
 	padding:7px 25px;
 	text-decoration:none;
     text-shadow:0px 1px 0px #2b665e;
     z-index:5; 
 }
-.instListButton:hover {
+.partListButton:hover {
 	background:linear-gradient(to bottom, #6c7c7c 5%, #768d87 100%);
 	background-color:#6c7c7c;
 }
-.instListButton:active {
+.partListButton:active {
 	background: #819890;
     -webkit-box-shadow: inset 0px 0px 5px #c1c1c1;
     -moz-box-shadow: inset 0px 0px 5px #c1c1c1;
     box-shadow: inset 0px 0px 5px #c1c1c1;
     outline: none;
 }
-.instListButton:focus {
+.partListButton:focus {
     outline:0;
-}
-.instButton {
-	box-shadow: 2px 3px 0px 0px #91b8b3;
-	background-color:#ddebe7f5;
-	border-radius:10px;
-	border:3px solid #060707;
-	display:inline;
-	cursor:pointer;
-	color: rgb(50, 50, 50);
-	font-size: 1em;
-	padding:7px 10px;
-	text-decoration:none;
-    z-index:5; 
 }
 .instButton:hover {background-color: #98d3a2;}
 .instButton:active {

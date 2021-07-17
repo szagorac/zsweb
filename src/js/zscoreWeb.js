@@ -5,6 +5,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     const RUN_MODE = "DEV";
     const EMPTY = "";
     const BLANK = " ";
+    const AV = "AV";
+    const FULL_SCORE = "FullScore";
     const CONNECTED = "Connected";
     const CONNECT = "Connect";
     const RECONNECTING = "Reconnecting";
@@ -23,6 +25,11 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     const TXT_FILL_CONNECTED = CLR_WHITE;
     const TXT_FILL_DISCONNECTED = CLR_WHITE;
     const TXT_FILL_ERROR = CLR_BLACK;
+    const COUNTER_TOKEN = "@CNT@";
+    const PART_TOKEN = "@PART@";
+
+    const EVENT_ID_PART_REG= "PART_REG";
+    const EVENT_PARAM= "part";
    
     // const RUN_MODE = "DEV";
     // const RUN_MODE = "PROD";
@@ -43,7 +50,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         tsBaseBeatMaps: {},
         startTimeTl: 0,
         currentBeatId: "b0",
-        tempo: {},
+        tempo: 0,
         topStaveTimeline: {},
         bottomStaveTimeline: {},
         lastTimelineBeatNo: 0,
@@ -51,6 +58,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         nextBeatTickTimeSec: 0,
         audioTlBeatTime: 0,
         audioTickBeatTime: 0,
+        parts: [],
         instrument: "Part View",
         title: "ZScore",
         isConnected: false,
@@ -73,6 +81,11 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         idServerStatusRect: "srvrStatusRect",
         idServerStatusTxt: "srvrStatusTxt",
         idServerStatusBtn: "srvrStatBtn",
+        idParts: "parts",
+        idPartsListOuterDiv: "partListOuterDiv",
+        idPartPrefix: "part",
+        idTempoBpm: "tmpBpm",
+        filterOutParts: [AV, FULL_SCORE],
         connectedRectStyle: { "fill": FILL_CONNECTED, "stroke": STROKE_CONNECTED, "stroke-width": "0px", "visibility": "visible", "opacity": 1 },
         disconnectedRectStyle: { "fill": FILL_DISCONNECTED, "stroke": STROKE_DISCONNECTED, "stroke-width": "1px", "visibility": "visible", "opacity": 1 },
         errorRectStyle: { "fill": FILL_ERROR, "stroke": STROKE_ERROR, "stroke-width": "1px", "visibility": "visible", "opacity": 1 },
@@ -98,6 +111,13 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         this.beatEndNum = beatEndNum;
         this.beatEndDenom = beatEndDenom;
     }
+    function PartBtnAttrs(btnNo, partName) {
+        this.id = "partBtn"+btnNo;
+        this.class = "partListButton";
+        this.onclick = "onPartSelect('"+partName+"')";
+    }
+    function EventParams() {
+    }    
 
     // ---------  API -----------
     function init() {
@@ -138,6 +158,18 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             log("onStateBtnClick: initialising");
             init();
         }
+    }
+    function onPartSelection(part) {
+        if(!u.arrContains(state.parts, part)) {
+            log("onPartSelection: unexpected part: " + part);
+            return;
+        }
+        state.instrument = part;
+        registerPart(part);
+        u.makeInVisible(config.idPartsListOuterDiv);
+    }
+    function onInstrumentSelection(instrument) {
+        
     }
     function resetAll() {
         resetAudio();
@@ -260,19 +292,82 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             return;
         }
         if (isNotNull(scoreInfo.title)) {
-            var title = scoreInfo.title;
-            setTitle(title);
+            setTitle(scoreInfo.title);
         }
-
-        // private List<String> instruments;
-        // private int bpm;
+        if (isNotNull(scoreInfo.instruments)) {
+            processinstruments(scoreInfo.instruments);
+        }
+        if (isNotNull(scoreInfo.bpm)) {
+            setBpm(scoreInfo.bpm);
+        }
     }
     function setTitle(title) {
-        var element = u.getElement(config.idTitle);
-        if(isNull(element)) {
+        if(state.title === title) {
             return;
         }
-        element.textContent = title;
+        state.title = title;
+        s.setElementText(config.idTitle, title);
+    }
+    function setBpm(bpm) {
+        if(state.tempo === bpm) {
+            return;
+        }
+        state.tempo = bpm;
+        s.setElementText(config.idTempoBpm, bpm);
+    }   
+    function processinstruments(instruments) {
+        var parts = [];
+        if(!u.isArray(instruments)) {
+            parts.push(instruments);
+        } else {
+            parts = instruments;
+        }
+        if(!u.arrEquals(state.parts, parts)) {
+            state.parts = parts;
+        }
+        if(isInstrumentInScore(parts)) {
+            registerPart(state.instrument);
+            return;
+        }
+        showParts(parts);
+    }
+    function isInstrumentInScore(parts) {
+        if(isNull(state.instrument) || !u.isArray(parts)) {
+            return false;
+        }
+        var instrument = state.instrument;
+        for (var i = 0; i < parts.length; i++) {
+            if(instrument === parts[i]) {
+                return true;
+            }
+        }
+        return false;
+    }
+    function showParts(parts) {
+        var partsElement = u.getElement(config.idParts);
+        if(isNull(partsElement)) {
+            return;
+        }
+        u.removeElementChildren(partsElement);
+        for (var i = 0; i < parts.length; i++) {
+            var part = parts[i];
+            if(u.arrContains(config.filterOutParts, part)) {
+                continue;
+            }
+            var attrs = new PartBtnAttrs(i+1, part);            
+            var btnDiv = u.createDiv();
+            var partBtn = u.createButton(attrs);
+            u.setText(partBtn, part);
+            u.addChildToParent(btnDiv, partBtn);
+            u.addChildToParent(partsElement, btnDiv);
+        }        
+        u.makeVisible(config.idPartsListOuterDiv);
+    }
+    function registerPart(part) {
+        //TODO send to server
+        var evParams = new EventParams();
+        evParams[EVENT_PARAM] = part;
+        n.sendEvent(EVENT_ID_PART_REG, evParams);
     }
     function processSeverActions(actions) {
         var id = null;
@@ -336,11 +431,11 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         onStateBtn: function () {
             onStateBtnClick();
         },
-        onInstrumentSelect: function (instName) {
-            log("onInstrumentSelect: " + instName);
+        onPartSelect: function (part) {
+            onPartSelection(part);
         },
-        onInstrumentControl: function (instName) {
-            log("onInstrumentControl: " + instName);
+        onInstrumentSelect: function (instrument) {
+            onInstrumentSelection(instrument);
         },
     }
 }(zsUtil, zsNet, zsSvg, zsAudio, zsMusic, window, document));

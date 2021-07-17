@@ -18,10 +18,13 @@ var zsUtil = (function (console, win, doc) {
     const OBJ_ARRAY = '[object Array]';
     const ON = "on";
     const DIV = "div";
+    const BUTTON = "button";
     const SPAN = "span";
     const MARKUP_PREFIX = "</";
     const T_URL_PARAM = "t=";
     const THAU = 1000;
+    const STYLE_VISIBLE = { "visibility": "visible", "opacity": 1 };
+    const STYLE_INVISIBLE = { "visibility": "hidden" };
     const _RUN_MODE = {
         DEV: 'dev',
         PROD: 'prod',
@@ -36,6 +39,29 @@ var zsUtil = (function (console, win, doc) {
         Array.isArray = function (arg) {
             return Object.prototype.toString.call(arg) === OBJ_ARRAY;
         };
+    }
+    if (!Array.prototype.includes) {
+        Array.prototype.includes = function (search) {
+            return !!~this.indexOf(search);
+        }
+    }
+    if (!Array.prototype.indexOf) {
+        Array.prototype.indexOf = (function (Object, max, min) {
+            return function indexOf(member, fromIndex) {
+                if (this === null || this === undefined) throw TypeError("Array.prototype.indexOf called on null or undefined");
+
+                var that = Object(this), Len = that.length >>> 0, i = min(fromIndex | 0, Len);
+                if (i < 0) i = max(0, Len + i); else if (i >= Len) return -1;
+
+                if (member === void 0) {
+                    for (; i !== Len; ++i) if (that[i] === void 0 && i in that) return i; // undefined
+                } else if (member !== member) {
+                    for (; i !== Len; ++i) if (that[i] !== that[i]) return i; // NaN
+                } else for (; i !== Len; ++i) if (that[i] === member) return i; // all else
+
+                return -1; // if the value was not found, then return -1
+            };
+        });
     }
     if (!String.prototype.splice) {
         /**
@@ -347,12 +373,12 @@ var zsUtil = (function (console, win, doc) {
     }
     GsapRampLinear.prototype.onUpdate = function (grl) {
         grl.parentObj[grl.propName] = grl.currentValue;
-        if(_isFunction(grl.onUpdateCallback)) {
+        if (_isFunction(grl.onUpdateCallback)) {
             grl.onUpdateCallback(grl);
         }
     }
     GsapRampLinear.prototype.onComplete = function (grl) {
-        if(_isFunction(grl.onCompleteCallback)) {
+        if (_isFunction(grl.onCompleteCallback)) {
             grl.onCompleteCallback(grl);
         }
     }
@@ -365,16 +391,16 @@ var zsUtil = (function (console, win, doc) {
     }
     Oscillator.prototype.compute = function (time) {
         //oscillator functions return value 0 -> 1 in time domain (seconds)
-        if(_isNull(time) || !_isNumeric(time)) {
+        if (_isNull(time) || !_isNumeric(time)) {
             _logError("Oscillator.computeValue invalid time: " + time);
             return;
         }
         var frequency = this.freq;
-        if(!_isNull(this.freqMod)) {
+        if (!_isNull(this.freqMod)) {
             frequency += this.freqMod;
         }
         switch (this.type) {
-            case 'SAWTOOTH':  
+            case 'SAWTOOTH':
                 return _sawtooth(time, frequency);
             case 'SINE':
                 return _cosine(time, frequency);
@@ -394,13 +420,13 @@ var zsUtil = (function (console, win, doc) {
         return null;
     }
     Oscillator.prototype.setFrequency = function (value) {
-        if(!_isNumeric(value)) {
+        if (!_isNumeric(value)) {
             return;
         }
         this.freq = value;
     }
     Oscillator.prototype.setFrequencyMod = function (mod) {
-        if(!_isNumeric(mod)) {
+        if (!_isNumeric(mod)) {
             return;
         }
         this.freqMod = mod;
@@ -427,26 +453,26 @@ var zsUtil = (function (console, win, doc) {
         }
         var timeDelta = now - this.startTime;
         var oscValue = this.oscillator.compute(timeDelta);
-        if(_isNull(oscValue)) {
+        if (_isNull(oscValue)) {
             oscValue = 0.0;
         }
-        if(!_isNull(this.freqLFO)) {
+        if (!_isNull(this.freqLFO)) {
             var freqMod = this.freqLFO.getValue(now);
-            if(!_isNull(freqMod)) {
+            if (!_isNull(freqMod)) {
                 this.oscillator.setFrequencyMod(freqMod);
             }
         }
         var min = this.minValue;
-        if(!_isNull(this.minValLFO)) {
+        if (!_isNull(this.minValLFO)) {
             var minMod = this.minValLFO.getValue(now);
-            if(!_isNull(minMod)) {
+            if (!_isNull(minMod)) {
                 min += minMod;
             }
         }
         var max = this.maxValue;
-        if(!_isNull(this.maxValLFO)) {
+        if (!_isNull(this.maxValLFO)) {
             var maxMod = this.maxValLFO.getValue(now);
-            if(!_isNull(maxMod)) {
+            if (!_isNull(maxMod)) {
                 max += maxMod;
             }
         }
@@ -457,30 +483,30 @@ var zsUtil = (function (console, win, doc) {
     }
     ParamOscillator.prototype.setStartTime = function (startTime) {
         this.startTime = startTime;
-        if(!_isNull(this.freqLFO)) {
+        if (!_isNull(this.freqLFO)) {
             this.freqLFO.setStartTime(startTime);
         }
-        if(!_isNull(this.minValLFO)) {
+        if (!_isNull(this.minValLFO)) {
             this.minValLFO.setStartTime(startTime);
         }
-        if(!_isNull(this.maxValLFO)) {
+        if (!_isNull(this.maxValLFO)) {
             this.maxValLFO.setStartTime(startTime);
         }
     }
     ParamOscillator.prototype.setFrequencyLFO = function (lfo) {
-        if(!_isObjectInstanceOf(ParamOscillator, lfo)) {
+        if (!_isObjectInstanceOf(ParamOscillator, lfo)) {
             return;
         }
         this.freqLFO = lfo;
     }
     ParamOscillator.prototype.setMinValueLFO = function (lfo) {
-        if(!_isObjectInstanceOf(ParamOscillator, lfo)) {
+        if (!_isObjectInstanceOf(ParamOscillator, lfo)) {
             return;
         }
         this.minValLFO = lfo;
     }
     ParamOscillator.prototype.setMaxValueLFO = function (lfo) {
-        if(!_isObjectInstanceOf(ParamOscillator, lfo)) {
+        if (!_isObjectInstanceOf(ParamOscillator, lfo)) {
             return;
         }
         this.maxValLFO = lfo;
@@ -655,14 +681,17 @@ var zsUtil = (function (console, win, doc) {
     }
     function _removeElement(elementId) {
         var elm = _getElement(elementId);
-        if(_isNull(elm)) {
+        if (_isNull(elm)) {
             return;
         }
         elm.remove();
     }
     function _removeChildren(parentId) {
         var elm = _getElement(parentId);
-        if(_isNull(elm)) {
+        _removeElementChildren(elm);
+    }
+    function _removeElementChildren(elm) {
+        if (_isNull(elm)) {
             return;
         }
         while (elm.firstChild) {
@@ -670,14 +699,14 @@ var zsUtil = (function (console, win, doc) {
         }
     }
     function _clone(elm, elmId) {
-        if(_isNull(elm) || _isNull(elmId)) {
+        if (_isNull(elm) || _isNull(elmId)) {
             logError("_cloneAndAddElement: invalid element");
             return;
         }
         var out = elm.cloneNode();
         out.id = elmId;
         return out;
-    }    
+    }
     function _initArray(elNo1, initValue) {
         var a1 = [];
         for (var i = 0; i < elNo1; ++i) {
@@ -792,11 +821,54 @@ var zsUtil = (function (console, win, doc) {
         }
         return strVal.replace(strToReplace, strReplaceWith);
     }
+    function _replacePropValue(asocArr, prop, strToReplace, strReplaceWith) {
+        var nv = _replace(asocArr[prop], strToReplace, strReplaceWith);
+        asocArr[prop] = nv;
+    }
     function _getTestDiv() {
         if (_isNull(_testDiv)) {
-            _testDiv = doc.createElement(DIV);
+            _testDiv = _createDiv();
         }
         return _testDiv;
+    }
+    function _createButton(attrs) {
+        return _createElement(BUTTON, attrs);
+    }
+    function _createDiv(attrs) {
+        return _createElement(DIV, attrs);
+    }
+    function _createElement(type, attrs) {
+        if (_isNull(type)) {
+            return null;
+        }
+        var el = doc.createElement(type);
+        if (_isNotNull(attrs)) {
+            _setElementAttributes(el, attrs);
+        }
+        return el;
+    }
+    function _makeVisible(elementId) {
+        _setElementVisibility(elementId, true);
+    }
+    function _makeInVisible(elementId) {
+        _setElementVisibility(elementId, false);
+    }
+    function _setElementVisibility(elementId, isVisible) {
+        var element = _getElement(elementId);
+        if (_isNull(element)) {
+            return;;
+        }
+        var attrs = STYLE_INVISIBLE;
+        if(isVisible) {
+            attrs = STYLE_VISIBLE;
+        }
+        _setElementStyleProperty(element, attrs);
+    }    
+    function _setText(element, txt) {
+        if (_isNull(element) || !_isString(txt)) {
+            return;;
+        }
+        element.textContent = txt;
     }
     function _removeMarkup(line) {
         if (!_contains(line, MARKUP_PREFIX)) {
@@ -921,43 +993,43 @@ var zsUtil = (function (console, win, doc) {
     }
     //----  Oscillator functions return value 0 -> 1 in time domain [0,1]
     function _sawtooth(time, freq) {
-        var p = 1.0/freq;
-        return ((2.0 * (time % p)/p - 1.0) + 1.0)/2.0;
+        var p = 1.0 / freq;
+        return ((2.0 * (time % p) / p - 1.0) + 1.0) / 2.0;
     }
     function _sawtoothInverted(time, freq) {
-        var p = 1.0/freq;
-        return Math.abs(((2.0 * (time % p)/p - 1.0) - 1.0)/2.0);
+        var p = 1.0 / freq;
+        return Math.abs(((2.0 * (time % p) / p - 1.0) - 1.0) / 2.0);
     }
     function _cosine(time, freq) {
         return Math.abs(1.0 - (Math.cos(2.0 * Math.PI * time * freq) + 1.0) / 2.0);
     }
     function _square(time, freq) {
         var out = _cosine(time, freq);
-        return (out < 0.5) ? 0.0 : 1.0; 
+        return (out < 0.5) ? 0.0 : 1.0;
     }
     function _triangle(time, freq) {
-        var p = 1.0/freq;
-        return 1.0 - Math.abs(2.0 * (time % p)/p - 1.0);
+        var p = 1.0 / freq;
+        return 1.0 - Math.abs(2.0 * (time % p) / p - 1.0);
     }
     function _random() {
         return Math.random();
     }
-    function _modColour(col, amt) {  
-        var usePound = false;      
+    function _modColour(col, amt) {
+        var usePound = false;
         if (col[0] == "#") {
             col = col.slice(1);
             usePound = true;
-        }     
-        var num = parseInt(col,16);     
+        }
+        var num = parseInt(col, 16);
         var r = (num >> 16) + amt;
         r = _validateCol(r);
-        var b = ((num >> 8) & 0x00FF) + amt;     
+        var b = ((num >> 8) & 0x00FF) + amt;
         b = _validateCol(b);
         var g = (num & 0x0000FF) + amt;
         g = _validateCol(g);
-        return (usePound?"#":"") + (g | (b << 8) | (r << 16)).toString(16);      
+        return (usePound ? "#" : "") + (g | (b << 8) | (r << 16)).toString(16);
     }
-    function _validateCol(col) {  
+    function _validateCol(col) {
         if (col > 255) {
             return 255;
         } else if (col < 0) {
@@ -967,30 +1039,85 @@ var zsUtil = (function (console, win, doc) {
     }
     function _arrSortedNonZeroElem(arr) {
         var out = [];
-        if(!_isArray(arr)) {
+        if (!_isArray(arr)) {
             return out;
-        }        
+        }
         for (var i = 0; i < arr.length; i++) {
             var value = arr[i];
-            if(value !== 0) {
+            if (value !== 0) {
                 out.push(value);
             }
         }
-        out.sort(function(a, b){return b - a});
+        out.sort(function (a, b) { return b - a });
         return out;
     }
-    function _arrMinMax(arr) {
-        if(!_isArray(arr) || arr.length < 1) {
-            return new Point(0,0);
+    function _arrShallowClone(arr) {
+        var out = [];
+        if (!_isArray(arr)) {
+            return out;
         }
-        
+        return arr.slice(0);
+    }
+    function _arrSortStrings(arr) {
+        if (!_isArray(arr)) {
+            return arr;
+        }
+        arr.sort(function (a, b) { return ('' + a).localeCompare(b); })
+        return arr;
+    }
+    function _arrSortNumericAscending(arr) {
+        if (!_isArray(arr)) {
+            return arr;
+        }
+        arr.sort(function (a, b) { return a - b })
+        return arr;
+    }
+    function _arrSortNumericDescending(arr) {
+        if (!_isArray(arr)) {
+            return arr;
+        }
+        arr.sort(function (a, b) { return b - a })
+        return arr;
+    }
+    function _arrEquals(a, b) {
+        if (a === b) return true;
+        if (a == null || b == null) return false;
+        if (a.length !== b.length) return false;
+        if (a.length === 0) return true;
+
+        var as = _arrShallowClone(a);
+        var bs = _arrShallowClone(b);
+        if (_isString(a[0])) {
+            as = _arrSortStrings(as);
+            bs = _arrSortStrings(bs);
+        } else if (_isNumeric(a[0])) {
+            as = _arrSortNumericAscending(as);
+            bs = _arrSortNumericAscending(bs);
+        }
+
+        for (var i = 0; i < as.length; ++i) {
+            if (as[i] !== bs[i]) return false;
+        }
+        return true;
+    }
+    function _arrContains(arr, elm) {
+        if(!_isArray(arr)) {
+            return false;
+        }
+        return arr.includes(elm);
+    }
+    function _arrMinMax(arr) {
+        if (!_isArray(arr) || arr.length < 1) {
+            return new Point(0, 0);
+        }
+
         var min = arr[0], max = arr[0];
         for (var i = 1; i < arr.length; i++) {
             var value = arr[i];
             min = (value < min) ? value : min;
             max = (value > max) ? value : max;
         }
-        return new Point(min,max);
+        return new Point(min, max);
     }
     function _setConfig(config, paramsToSet) {
         if (!_isObject(config) || !_isObject(paramsToSet)) {
@@ -1011,7 +1138,7 @@ var zsUtil = (function (console, win, doc) {
         }
     }
     function _runGsapRampLinear(parentObj, propName, startValue, endValue, dur, onUpdateCallback, onCompleteCallback) {
-        if(!_isObject(parentObj) || !_isString(propName) || _isNull(endValue) || _isNull(dur)) {
+        if (!_isObject(parentObj) || !_isString(propName) || _isNull(endValue) || _isNull(dur)) {
             _logError("_runGsapRampLinear: invalid input params");
             return;
         }
@@ -1020,7 +1147,7 @@ var zsUtil = (function (console, win, doc) {
         gsap.to(gRumpLinear, {
             currentValue: endValue,
             duration: dur,
-            onComplete: gRumpLinear.onComplete,  
+            onComplete: gRumpLinear.onComplete,
             onCompleteParams: [gRumpLinear],
             onUpdate: gRumpLinear.onUpdate,
             onUpdateParams: [gRumpLinear],
@@ -1049,6 +1176,33 @@ var zsUtil = (function (console, win, doc) {
         },
         arrSortedNonZeroElem: function (arr) {
             return _arrSortedNonZeroElem(arr);
+        },
+        arrSortStrings: function (arr) {
+            return _arrSortStrings(arr);
+        },
+        arrEquals: function (arr1, arr2) {
+            return _arrEquals(arr1, arr2);
+        },
+        arrContains: function (arr, elm) {
+            return _arrContains(arr, elm);
+        },
+        createButton: function (attrs) {
+            return _createButton(attrs);
+        },
+        createDiv: function (attrs) {
+            return _createDiv(attrs);
+        },
+        createElement: function (type, attrs) {
+            return _createElement(type, attrs);
+        },
+        makeVisible: function (elementId) {
+            _makeVisible(elementId);
+        },
+        makeInVisible: function (elementId) {
+            _makeInVisible(elementId);
+        },
+        setText: function (element, txt) {
+            _setText(element, txt);
         },
         modColour: function (col, amt) {
             return _modColour(col, amt);
@@ -1084,7 +1238,7 @@ var zsUtil = (function (console, win, doc) {
             _runGsapRampLinear(parentObj, propName, startValue, endValue, duration, onUpdateCallback, onCompleteCallback);
         },
         wrapInSpanElement: function (str, spanId) {
-            return  _wrapInSpanElement(str, spanId);
+            return _wrapInSpanElement(str, spanId);
         },
         setRunMode: function (rMode) {
             _setRunMode(rMode);
@@ -1103,6 +1257,9 @@ var zsUtil = (function (console, win, doc) {
         },
         replace: function (strVal, strToReplace, strReplaceWith) {
             return _replace(strVal, strToReplace, strReplaceWith);
+        },
+        replacePropValue: function (asocArr, prop, strToReplace, strReplaceWith) {
+            _replacePropValue(asocArr, prop, strToReplace, strReplaceWith);
         },
         removeMarkup: function (line) {
             return _removeMarkup(line);
@@ -1148,6 +1305,9 @@ var zsUtil = (function (console, win, doc) {
         },
         removeChildren: function (parentId) {
             _removeChildren(parentId);
+        },
+        removeElementChildren: function (parent) {
+            _removeElementChildren(parent);
         },
         cloneElement: function (elm, elmId) {
             return _clone(elm, elmId);
@@ -1205,7 +1365,7 @@ var zsUtil = (function (console, win, doc) {
         randomFloatFromInterval: function (min, max) { // min and max included 
             return Math.random() * (max - min) + min;
         },
-        randomArrayElement: function (arr) { 
+        randomArrayElement: function (arr) {
             return arr[Math.floor(Math.random() * arr.length)];
         },
         round: function (val, decimalPlaces) {
