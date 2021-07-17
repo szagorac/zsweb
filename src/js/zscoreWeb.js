@@ -83,7 +83,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         idServerStatusBtn: "srvrStatBtn",
         idParts: "parts",
         idPartsListOuterDiv: "partListOuterDiv",
-        idPartPrefix: "part",
+        idInstrument: "part",
         idTempoBpm: "tmpBpm",
         filterOutParts: [AV, FULL_SCORE],
         connectedRectStyle: { "fill": FILL_CONNECTED, "stroke": STROKE_CONNECTED, "stroke-width": "0px", "visibility": "visible", "opacity": 1 },
@@ -283,6 +283,9 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         if (isNotNull(serverState.scoreInfo)) {
             processScoreInfo(serverState.scoreInfo);
         }
+        if (isNotNull(serverState.part)) {
+            processPart(serverState.part);
+        }
         if (isNotNull(serverState.actions)) {
             processSeverActions(serverState.actions);
         }
@@ -314,7 +317,11 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         }
         state.tempo = bpm;
         s.setElementText(config.idTempoBpm, bpm);
-    }   
+    }
+    function processPart(part) {
+        state.instrument = part;
+        s.setElementText(config.idInstrument, part);
+    }  
     function processinstruments(instruments) {
         var parts = [];
         if(!u.isArray(instruments)) {
