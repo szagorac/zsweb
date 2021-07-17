@@ -7,6 +7,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     const BLANK = " ";
     const CONNECTED = "Connected";
     const CONNECT = "Connect";
+    const RECONNECTING = "Reconnecting";
     const ERROR = "Error";
     const CLR_GREEN = "green";
     const CLR_RED = "red";
@@ -21,6 +22,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     const STROKE_ERROR = CLR_ORANGE;
     const TXT_FILL_CONNECTED = CLR_WHITE;
     const TXT_FILL_DISCONNECTED = CLR_WHITE;
+    const TXT_FILL_ERROR = CLR_BLACK;
    
     // const RUN_MODE = "DEV";
     // const RUN_MODE = "PROD";
@@ -53,7 +55,6 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         title: "ZScore",
         isConnected: false,
         isInitialised: false,
-        reconnectAttmpts: 0,
         connectionType: null,
     }
     var config = {
@@ -62,8 +63,6 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         appUrlHttp: "/htp",
         appUrlSse: "/sse",
         appUrlWebsockets: "/wsoc",
-        reconnectTimeMultiplierMs: 10,
-        reconnectMaxTimeMs: 5000,
         tsBaseBeatDenom: 8,
         tsY: 0, 
         beatIdPrefix: "b",
@@ -79,7 +78,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         errorRectStyle: { "fill": FILL_ERROR, "stroke": STROKE_ERROR, "stroke-width": "1px", "visibility": "visible", "opacity": 1 },
         connectedTxtStyle: { "fill": TXT_FILL_CONNECTED },
         disconnectedTxtStyle: { "fill": TXT_FILL_DISCONNECTED },
-        errorTxtStyle: { "fill": TXT_FILL_DISCONNECTED },
+        errorTxtStyle: { "fill": TXT_FILL_ERROR },
         connectedBtnAttrib: { "filter": ""},
         disconnectedBtnAttrib: { "filter": "url(#dropshadow)"},
         errorBtnAttrib: { "filter": "url(#dropshadow)"},
@@ -101,18 +100,10 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     }
 
     // ---------  API -----------
-    function onLoad() {
-        log("onLoad: ");
-        init();
-
-        if(!state.isConnected) {
-            reconnect();
-        }        
-    }
     function init() {
         if(state.isInitialised) {
             return;
-        }
+        } 
         if (!u || !n || !s || !a || !m) {
             throw new ZScoreException("Invalid libraries. Required: zsUtil, zsNet, zsSvg, zsAudio and zsMusic");
         }
@@ -135,6 +126,18 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         initAudio();
 
         state.isInitialised = true;
+    }
+    function onStateBtnClick() {
+        if(state.isInitialised) {
+            log("onStateBtnClick: zscore initialised");
+            if(!n.isConnected()) {                
+                log("onStateBtnClick: zscore not connected, reconnecting...");
+                reconnect();
+            }
+        } else {
+            log("onStateBtnClick: initialising");
+            init();
+        }
     }
     function resetAll() {
         resetAudio();
@@ -189,7 +192,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     }
     function onConnectionError(connType) {
         log(connType + " connection error.");     
-        onError(connType);   
+        onConError(connType);   
     }
     function onConnected(connType) {
         state.isConnected = true;
@@ -199,12 +202,12 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     }
     function onDisconnected(connType) {
         state.isConnected = false;
-        setServerStatusView(config.disconnectedRectStyle, config.disconnectedBtnAttrib, config.disconnectedTxtStyle, CONNECT);
+        setServerStatusView(config.disconnectedRectStyle, config.disconnectedBtnAttrib, config.disconnectedTxtStyle, RECONNECTING);
         reconnect(connType);
     }
-    function onError(connType) {
+    function onConError(connType) {
         state.isConnected = false;
-        setServerStatusView(config.idServerStatusRect, config.errorBtnAttrib, config.disconnectedTxtStyle, ERROR);
+        setServerStatusView(config.errorRectStyle, config.errorBtnAttrib, config.errorTxtStyle, ERROR);
         reconnect(connType);
     }
     function setServerStatusView(rectStyle, btnStyle, txtStyle, txtVal) {
@@ -223,19 +226,10 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         }    
     }
     function reconnect(connType) {
-        state.reconnectAttmpts++;        
-        var timeout = getReconnectionTimeout();        
-        log("reconnect: scheduling reconnect in: " + timeout + " ms");
-        setTimeout(function() {
-            n.reconnect(connType);
-        }, timeout);
+        n.reconnect(connType, true);
     }
-    function getReconnectionTimeout() {
-        var timeout = config.reconnectTimeMultiplierMs * state.reconnectAttmpts; 
-        if(timeout > config.reconnectMaxTimeMs) {
-            timeout = config.reconnectMaxTimeMs;
-        }
-        return timeout;
+    function closeConnection(connType) {
+        n.closeConnection(connType);
     }
     function getConnectionType() {
         var connType = state.connectionType;
@@ -339,8 +333,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     }
     // Public members if any??
     return {
-        load: function () {
-            onLoad();
+        onStateBtn: function () {
+            onStateBtnClick();
         },
         onInstrumentSelect: function (instName) {
             log("onInstrumentSelect: " + instName);
