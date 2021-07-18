@@ -29,7 +29,9 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     const PART_TOKEN = "@PART@";
 
     const EVENT_ID_PART_REG= "PART_REG";
-    const EVENT_PARAM= "part";
+    const EVENT_ID_PING= "PING";
+    const EVENT_PARAM_PART= "part";
+    const EVENT_PARAM_SERVER_TIME= "serverTime";
    
     // const RUN_MODE = "DEV";
     // const RUN_MODE = "PROD";
@@ -371,48 +373,57 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         u.makeVisible(config.idPartsListOuterDiv);
     }
     function registerPart(part) {
-        //TODO send to server
         var evParams = new EventParams();
-        evParams[EVENT_PARAM] = part;
+        evParams[EVENT_PARAM_PART] = part;
         n.sendEvent(EVENT_ID_PART_REG, evParams);
+    }
+    function sendPing(serverTime) {
+        var evParams = new EventParams();
+        evParams[EVENT_PARAM_SERVER_TIME] = serverTime;
+        n.sendEvent(EVENT_ID_PING, evParams);
     }
     function processSeverActions(actions) {
         var id = null;
-        var actionType = null;
-        var elementIds = [];
+        var type = null;
+        var targets = [];
         var params = {};
         if (u.isArray(actions)) {
             for (var i = 0; i < actions.length; i++) {
                 var action = actions[i];
-                if (isNotNull(action.id)) {
-                    id = action.id;
+                if (isNotNull(action.type)) {
+                    type = action.type;
                 }
-                if (isNotNull(action.actionType)) {
-                    actionType = action.actionType;
-                }
-                if (isNotNull(action.elementIds)) {
-                    elementIds = action.elementIds;
+                if (isNotNull(action.targets)) {
+                    targets = action.targets;
                 }
                 if (isNotNull(action.params)) {
                     params = action.params;
                 }
-                doAction(id, actionType, elementIds, params);
+                doAction(type, targets, params);
             }
         }
     }
-    function doAction(id, actionType, elementIds, params) {
-        log("doAction: " + id + " actionType: " + actionType);
+    function doAction(actionType, targets, params) {
+        log("doAction: " +  actionType);
 
-        if (isNull(actionType) || isNull(elementIds)) {
+        if (isNull(actionType)) {
             return;
         }
 
         switch (actionType) {
-            case "TIMELINE":
-                // timeline(id, elementIds, params);
+            case "PING":
+                onPing(params);
                 break;
             default:
                 logError("doAction: Unknown actionType: " + actionType);
+        }
+    }
+    function onPing(params) {
+        if (!u.isObject(params)) {
+            return;
+        }
+        if (isNotNull(params.sendTimeMs)) {
+            sendPing(params.sendTimeMs);
         }
     }    
     function setElementStyleProperty(element, attrAssocArr) {
