@@ -28,16 +28,16 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     const COUNTER_TOKEN = "@CNT@";
     const PART_TOKEN = "@PART@";
 
-    const EVENT_ID_PART_REG= "PART_REG";
-    const EVENT_ID_PING= "PING";
-    const EVENT_PARAM_PART= "part";
-    const EVENT_PARAM_SERVER_TIME= "serverTime";
-   
+    const EVENT_ID_PART_REG = "PART_REG";
+    const EVENT_ID_PING = "PING";
+    const EVENT_PARAM_PART = "part";
+    const EVENT_PARAM_SERVER_TIME = "serverTime";
+
     // const RUN_MODE = "DEV";
     // const RUN_MODE = "PROD";
 
     var AUDIO_FLIES = [
-        '/audio/violin-tuning.mp3',     
+        '/audio/violin-tuning.mp3',
     ];
 
     var isTouch = null;
@@ -53,8 +53,9 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         appUrlHttp: "/htp",
         appUrlSse: "/sse",
         appUrlWebsockets: "/wsoc",
+        pageNoToken: "@PgNo@",
         tsBaseBeatDenom: 8,
-        tsY: 0, 
+        tsY: 0,
         beatIdPrefix: "b",
         tweenIdPrefix: "tw",
         beatTweenIdPrefix: "btw",
@@ -74,15 +75,16 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         connectedTxtStyle: { "fill": TXT_FILL_CONNECTED },
         disconnectedTxtStyle: { "fill": TXT_FILL_DISCONNECTED },
         errorTxtStyle: { "fill": TXT_FILL_ERROR },
-        connectedBtnAttrib: { "filter": ""},
-        disconnectedBtnAttrib: { "filter": "url(#dropshadow)"},
-        errorBtnAttrib: { "filter": "url(#dropshadow)"},
+        connectedBtnAttrib: { "filter": "" },
+        disconnectedBtnAttrib: { "filter": "url(#dropshadow)" },
+        errorBtnAttrib: { "filter": "url(#dropshadow)" },
     }
     var state = {
         isRunning: false,
-        score: {title: "ZScore", instrument: "Part View", parts: ["Part View"], firstPageNo: 1,  lastPageNo: 2},
-        topStave: {pageId: "0", filename: "img/blankStave.png", timeSpaceMap: {}},
-        bottomStave: {pageId: "0", filename: "img/blankStave.png", timeSpaceMap: {}},
+        score: { title: "ZScore", instrument: "Part View", parts: ["Part View"], firstPageNo: 1, lastPageNo: 2 },
+        part: {name: "Part View", imgDir: "", imgPageNameToken: "", imgContPageName: "", pageRanges: [{start: 1, end: 1}]},
+        topStave: { pageId: "0", filename: "img/blankStave.png", timeSpaceMap: {} },
+        bottomStave: { pageId: "0", filename: "img/blankStave.png", timeSpaceMap: {} },
         tsBaseBeatMaps: {},
         startTimeTl: 0,
         currentBeatId: "b0",
@@ -115,18 +117,18 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         this.beatEndDenom = beatEndDenom;
     }
     function PartBtnAttrs(btnNo, partName) {
-        this.id = "partBtn"+btnNo;
+        this.id = "partBtn" + btnNo;
         this.class = "partListButton";
-        this.onclick = "onPartSelect('"+partName+"')";
+        this.onclick = "onPartSelect('" + partName + "')";
     }
     function EventParams() {
-    }    
+    }
 
     // ---------  API -----------
     function init() {
-        if(state.isInitialised) {
+        if (state.isInitialised) {
             return;
-        } 
+        }
         if (!u || !n || !s || !a || !m) {
             throw new ZScoreException("Invalid libraries. Required: zsUtil, zsNet, zsSvg, zsAudio and zsMusic");
         }
@@ -151,9 +153,9 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         state.isInitialised = true;
     }
     function onStateBtnClick() {
-        if(state.isInitialised) {
+        if (state.isInitialised) {
             log("onStateBtnClick: zscore initialised");
-            if(!n.isConnected()) {                
+            if (!n.isConnected()) {
                 log("onStateBtnClick: zscore not connected, reconnecting...");
                 reconnect();
             }
@@ -163,16 +165,16 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         }
     }
     function onPartSelection(part) {
-        if(!u.arrContains(state.score.parts, part)) {
+        if (!u.arrContains(state.score.parts, part)) {
             log("onPartSelection: unexpected part: " + part);
             return;
         }
-        state.score.instrument = part;
+        state.part.name = part;
         registerPart(part);
         u.makeInVisible(config.idPartsListOuterDiv);
     }
     function onInstrumentSelection(instrument) {
-        
+
     }
     function resetAll() {
         resetAudio();
@@ -200,25 +202,25 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     function onWindowResize(event) {
         if (!u.isObject(this)) {
             return null;
-        }       
+        }
     }
     function onConnectionEvent(connState, connType) {
-        switch(connState) {
+        switch (connState) {
             case n.OPEN:
                 onConnectionOpen(connType);
                 break;
             case n.CLOSED:
                 onConnectionClosed(connType);
-                break;                
+                break;
             case n.ERROR:
                 onConnectionError(connType);
-                break;                                
+                break;
             default:
                 logError("Unknown Connection Event State: " + connState + " for type: " + connType);
         }
-    } 
+    }
     function onConnectionOpen(connType) {
-        log(connType + " connection opened.");        
+        log(connType + " connection opened.");
         onConnected(connType);
     }
     function onConnectionClosed(connType) {
@@ -226,8 +228,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         onDisconnected(connType);
     }
     function onConnectionError(connType) {
-        log(connType + " connection error.");     
-        onConError(connType);   
+        log(connType + " connection error.");
+        onConError(connType);
     }
     function onConnected(connType) {
         state.isConnected = true;
@@ -247,18 +249,18 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     }
     function setServerStatusView(rectStyle, btnStyle, txtStyle, txtVal) {
         var rect = u.getElement(config.idServerStatusRect);
-        if(!isNull(rect)) {
+        if (!isNull(rect)) {
             setElementStyleProperty(rect, rectStyle);
         }
         var btn = u.getElement(config.idServerStatusBtn);
-        if(!isNull(btn)) {
+        if (!isNull(btn)) {
             setElementAttributes(btn, btnStyle);
         }
         var txt = u.getElement(config.idServerStatusTxt);
-        if(!isNull(txt)) {
+        if (!isNull(txt)) {
             setElementStyleProperty(txt, txtStyle);
             txt.textContent = txtVal;
-        }    
+        }
     }
     function reconnect(connType) {
         n.reconnect(connType, true);
@@ -268,13 +270,13 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     }
     function getConnectionType() {
         var connType = state.connectionType;
-        if(isNull(connType)) {
+        if (isNull(connType)) {
             connType = config.defaultConnectionType;
         }
         return connType;
     }
     function processServerState(serverState, isDeltaUpdate) {
-        if(!state.isConnected) {
+        if (!state.isConnected) {
             onConnected();
         }
         if (isNull(serverState)) {
@@ -291,13 +293,13 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         }
         if (isNotNull(serverState.pageInfo)) {
             processPageinfo(serverState.pageInfo);
-        }        
+        }
         if (isNotNull(serverState.actions)) {
             processSeverActions(serverState.actions);
         }
     }
     function processScoreInfo(scoreInfo) {
-        if(!u.isObject(scoreInfo)) {
+        if (!u.isObject(scoreInfo)) {
             return;
         }
         if (isNotNull(scoreInfo.title)) {
@@ -314,20 +316,20 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         }
     }
     function setTitle(title) {
-        if(state.score.title === title) {
+        if (state.score.title === title) {
             return;
         }
         state.score.title = title;
         s.setElementText(config.idTitle, title);
     }
     function setScoreDir(scoreDir) {
-        if(state.scoreDir === scoreDir) {
+        if (state.scoreDir === scoreDir) {
             return;
         }
-        state.scoreDir = scoreDir;        
-    }    
+        state.scoreDir = scoreDir;
+    }
     function setBpm(bpm) {
-        if(state.tempo === bpm) {
+        if (state.tempo === bpm) {
             return;
         }
         state.tempo = bpm;
@@ -338,38 +340,66 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             return;
         }
         var staveId = pageInfo.staveId;
-        state.score.instrument = part;
-        s.setElementText(config.idInstrument, part);
+      
     }
     function processPartInfo(partInfo) {
         if (isNotNull(partInfo.name)) {
-            state.score.instrument = partInfo.name;
+            state.part.name = partInfo.name;
             s.setElementText(config.idInstrument, partInfo.name);
-        }        
-    }  
+        }
+        if (isNotNull(partInfo.pageRanges)) {
+            var pgRanges = partInfo.pageRanges;
+            if (u.isArray(pgRanges)) {
+                for (var i = 0; i < pgRanges.length; i++) {
+                    addInstrumentPageRange(pgRanges[i]);
+                }
+            } else {
+                addInstrumentPageRange(pgRanges);
+            }
+        }
+        if (isNotNull(partInfo.imgDir)) {
+            state.part.imgDir = partInfo.imgDir;
+        }
+        if (isNotNull(partInfo.imgPageNameToken)) {
+            state.part.imgPageNameToken = partInfo.imgPageNameToken;
+        }
+        if (isNotNull(partInfo.imgContPageName)) {
+            state.part.imgContPageName = partInfo.imgContPageName;
+        }
+    }
+    function addInstrumentPageRange(pgRange) {
+        if (isNull(pgRange) || isNull(pgRange.start) || isNull(pgRange.end)) {
+            return;
+        }
+        var startPage = pgRange.start;
+        var endPage = pgRange.end;
+        var pr = {start: startPage, end: endPage};
+        state.part.pageRanges = [];
+        state.part.pageRanges.push(pr);
+    }
     function processinstruments(instruments) {
         var parts = [];
-        if(!u.isArray(instruments)) {
+        if (!u.isArray(instruments)) {
             parts.push(instruments);
         } else {
             parts = instruments;
         }
-        if(!u.arrEquals(state.score.parts, parts)) {
+        if (!u.arrEquals(state.score.parts, parts)) {
             state.score.parts = parts;
         }
-        if(isInstrumentInScore(parts)) {
-            registerPart(state.score.instrument);
+        if (isInstrumentInScore(parts)) {
+            registerPart(state.part.name);
             return;
         }
         showParts(parts);
     }
     function isInstrumentInScore(parts) {
-        if(isNull(state.score.instrument) || !u.isArray(parts)) {
+        if (isNull(state.part.name) || !u.isArray(parts)) {
             return false;
         }
-        var instrument = state.score.instrument;
+        var instrument = state.part.name;
         for (var i = 0; i < parts.length; i++) {
-            if(instrument === parts[i]) {
+            if (instrument === parts[i]) {
                 return true;
             }
         }
@@ -377,22 +407,22 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     }
     function showParts(parts) {
         var partsElement = u.getElement(config.idParts);
-        if(isNull(partsElement)) {
+        if (isNull(partsElement)) {
             return;
         }
         u.removeElementChildren(partsElement);
         for (var i = 0; i < parts.length; i++) {
             var part = parts[i];
-            if(u.arrContains(config.filterOutParts, part)) {
+            if (u.arrContains(config.filterOutParts, part)) {
                 continue;
             }
-            var attrs = new PartBtnAttrs(i+1, part);            
+            var attrs = new PartBtnAttrs(i + 1, part);
             var btnDiv = u.createDiv();
             var partBtn = u.createButton(attrs);
             u.setText(partBtn, part);
             u.addChildToParent(btnDiv, partBtn);
             u.addChildToParent(partsElement, btnDiv);
-        }        
+        }
         u.makeVisible(config.idPartsListOuterDiv);
     }
     function registerPart(part) {
@@ -427,7 +457,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         }
     }
     function doAction(actionType, targets, params) {
-        log("doAction: " +  actionType);
+        log("doAction: " + actionType);
 
         if (isNull(actionType)) {
             return;
@@ -448,10 +478,10 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         if (isNotNull(params.sendTimeMs)) {
             sendPing(params.sendTimeMs);
         }
-    }    
+    }
     function setElementStyleProperty(element, attrAssocArr) {
         u.setElementStyleProperty(element, attrAssocArr);
-    }    
+    }
     function setElementAttributes(element, attrAssocArr) {
         u.setElementAttributes(element, attrAssocArr);
     }
