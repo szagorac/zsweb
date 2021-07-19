@@ -47,26 +47,6 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     // u.listen("load", window, onLoad);
 
     // ---------  MODEL -----------
-    var state = {
-        isRunning: false,
-        tsBaseBeatMaps: {},
-        startTimeTl: 0,
-        currentBeatId: "b0",
-        tempo: 0,
-        topStaveTimeline: {},
-        bottomStaveTimeline: {},
-        lastTimelineBeatNo: 0,
-        currentTickTimeSec: 0,
-        nextBeatTickTimeSec: 0,
-        audioTlBeatTime: 0,
-        audioTickBeatTime: 0,
-        parts: [],
-        instrument: "Part View",
-        title: "ZScore",
-        isConnected: false,
-        isInitialised: false,
-        connectionType: null,
-    }
     var config = {
         connectionPreference: "ws,sse,poll",
         defaultConnectionType: n.WEBSOCKET,
@@ -97,6 +77,27 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         connectedBtnAttrib: { "filter": ""},
         disconnectedBtnAttrib: { "filter": "url(#dropshadow)"},
         errorBtnAttrib: { "filter": "url(#dropshadow)"},
+    }
+    var state = {
+        isRunning: false,
+        score: {title: "ZScore", instrument: "Part View", parts: ["Part View"], firstPageNo: 1,  lastPageNo: 2},
+        topStave: {pageId: "0", filename: "img/blankStave.png", timeSpaceMap: {}},
+        bottomStave: {pageId: "0", filename: "img/blankStave.png", timeSpaceMap: {}},
+        tsBaseBeatMaps: {},
+        startTimeTl: 0,
+        currentBeatId: "b0",
+        tempo: 0,
+        scoreDir: "/score/",
+        topStaveTimeline: {},
+        bottomStaveTimeline: {},
+        lastTimelineBeatNo: 0,
+        currentTickTimeSec: 0,
+        nextBeatTickTimeSec: 0,
+        audioTlBeatTime: 0,
+        audioTickBeatTime: 0,
+        isConnected: false,
+        isInitialised: false,
+        connectionType: null,
     }
 
     function ZScoreException(message) {
@@ -162,11 +163,11 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         }
     }
     function onPartSelection(part) {
-        if(!u.arrContains(state.parts, part)) {
+        if(!u.arrContains(state.score.parts, part)) {
             log("onPartSelection: unexpected part: " + part);
             return;
         }
-        state.instrument = part;
+        state.score.instrument = part;
         registerPart(part);
         u.makeInVisible(config.idPartsListOuterDiv);
     }
@@ -285,9 +286,12 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         if (isNotNull(serverState.scoreInfo)) {
             processScoreInfo(serverState.scoreInfo);
         }
-        if (isNotNull(serverState.part)) {
-            processPart(serverState.part);
+        if (isNotNull(serverState.partInfo)) {
+            processPartInfo(serverState.partInfo);
         }
+        if (isNotNull(serverState.pageInfo)) {
+            processPageinfo(serverState.pageInfo);
+        }        
         if (isNotNull(serverState.actions)) {
             processSeverActions(serverState.actions);
         }
@@ -305,14 +309,23 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         if (isNotNull(scoreInfo.bpm)) {
             setBpm(scoreInfo.bpm);
         }
+        if (isNotNull(scoreInfo.scoreDir)) {
+            setScoreDir(scoreInfo.scoreDir);
+        }
     }
     function setTitle(title) {
-        if(state.title === title) {
+        if(state.score.title === title) {
             return;
         }
-        state.title = title;
+        state.score.title = title;
         s.setElementText(config.idTitle, title);
     }
+    function setScoreDir(scoreDir) {
+        if(state.scoreDir === scoreDir) {
+            return;
+        }
+        state.scoreDir = scoreDir;        
+    }    
     function setBpm(bpm) {
         if(state.tempo === bpm) {
             return;
@@ -320,9 +333,19 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         state.tempo = bpm;
         s.setElementText(config.idTempoBpm, bpm);
     }
-    function processPart(part) {
-        state.instrument = part;
+    function processPageinfo(pageInfo) {
+        if (isNull(pageInfo.staveId)) {
+            return;
+        }
+        var staveId = pageInfo.staveId;
+        state.score.instrument = part;
         s.setElementText(config.idInstrument, part);
+    }
+    function processPartInfo(partInfo) {
+        if (isNotNull(partInfo.name)) {
+            state.score.instrument = partInfo.name;
+            s.setElementText(config.idInstrument, partInfo.name);
+        }        
     }  
     function processinstruments(instruments) {
         var parts = [];
@@ -331,20 +354,20 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         } else {
             parts = instruments;
         }
-        if(!u.arrEquals(state.parts, parts)) {
-            state.parts = parts;
+        if(!u.arrEquals(state.score.parts, parts)) {
+            state.score.parts = parts;
         }
         if(isInstrumentInScore(parts)) {
-            registerPart(state.instrument);
+            registerPart(state.score.instrument);
             return;
         }
         showParts(parts);
     }
     function isInstrumentInScore(parts) {
-        if(isNull(state.instrument) || !u.isArray(parts)) {
+        if(isNull(state.score.instrument) || !u.isArray(parts)) {
             return false;
         }
-        var instrument = state.instrument;
+        var instrument = state.score.instrument;
         for (var i = 0; i < parts.length; i++) {
             if(instrument === parts[i]) {
                 return true;

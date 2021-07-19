@@ -1,0 +1,11 @@
+scoreName: "Test Score"
+presets:
+  - id: 1
+    scripts: [
+        "sce.resetState()",
+        "sce.setRndStrategy([2])",
+    ]
+  - id: 2
+    scripts: [
+        "sce.setRndStrategy([2,2])",
+    ]
