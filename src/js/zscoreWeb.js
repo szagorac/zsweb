@@ -32,6 +32,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     const PAGE_ID_CONTINUOUS = "p" + PAGE_NO_CONTINUOUS;
 
     const EVENT_ID_PART_REG = "PART_REG";
+    const EVENT_ID_PART_READY = "PART_READY";
     const EVENT_ID_PING = "PING";
     const EVENT_PARAM_PART = "part";
     const EVENT_PARAM_SERVER_TIME = "serverTime";
@@ -403,6 +404,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         if(isOk) {
             log("All Pages loaded: ");
             state.isReady = true;
+            sendReady();
         }
     }
     function processPartInfo(partInfo) {
@@ -580,6 +582,11 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         var evParams = new EventParams();
         evParams[EVENT_PARAM_PART] = part;
         n.sendEvent(EVENT_ID_PART_REG, evParams);
+    }
+    function sendReady() {
+        var evParams = new EventParams();
+        evParams[EVENT_PARAM_PART] = state.part.name;
+        n.sendEvent(EVENT_ID_PART_READY, evParams);
     }
     function sendPing(serverTime) {
         var evParams = new EventParams();
