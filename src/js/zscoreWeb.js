@@ -5,9 +5,12 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     const RUN_MODE = "DEV";
     const EMPTY = "";
     const BLANK = " ";
+    const UNDERSCORE = "_";
     const AV = "AV";
     const FULL_SCORE = "FullScore";
     const CONNECTED = "Connected";
+    const LOADING = "Loading";
+    const READY = "READY";
     const CONNECT = "Connect";
     const RECONNECTING = "Reconnecting";
     const ERROR = "Error";
@@ -25,8 +28,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     const TXT_FILL_CONNECTED = CLR_WHITE;
     const TXT_FILL_DISCONNECTED = CLR_WHITE;
     const TXT_FILL_ERROR = CLR_BLACK;
-    const COUNTER_TOKEN = "@CNT@";
-    const PART_TOKEN = "@PART@";
+    const PAGE_NO_CONTINUOUS = 6666;
+    const PAGE_ID_CONTINUOUS = "p" + PAGE_NO_CONTINUOUS;
 
     const EVENT_ID_PART_REG = "PART_REG";
     const EVENT_ID_PING = "PING";
@@ -54,6 +57,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         appUrlSse: "/sse",
         appUrlWebsockets: "/wsoc",
         pageNoToken: "@PgNo@",
+        pageIdPrefix: "p",
         tsBaseBeatDenom: 8,
         tsY: 0,
         beatIdPrefix: "b",
@@ -81,8 +85,9 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     }
     var state = {
         isRunning: false,
-        score: { title: "ZScore", instrument: "Part View", parts: ["Part View"], firstPageNo: 1, lastPageNo: 2 },
-        part: {name: "Part View", imgDir: "", imgPageNameToken: "", imgContPageName: "", pageRanges: [{start: 1, end: 1}]},
+        isReady: false,
+        score: { title: "ZScore", noSpaceTitle: "ZScore", instrument: "Part View", parts: ["Part View"], firstPageNo: 1, lastPageNo: 2},
+        part: {name: "Part View", imgDir: null, imgPageNameToken: null, imgContPageName: null, contPageNo: 6666, pageRanges: [{start: 1, end: 1}], pages: {}},
         topStave: { pageId: "0", filename: "img/blankStave.png", timeSpaceMap: {} },
         bottomStave: { pageId: "0", filename: "img/blankStave.png", timeSpaceMap: {} },
         tsBaseBeatMaps: {},
@@ -100,13 +105,14 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         isConnected: false,
         isInitialised: false,
         connectionType: null,
+        pageNoToLoad: 0,
     }
 
     function ZScoreException(message) {
         this.message = message;
         this.name = 'ZScoreException';
     }
-    function TsMapElement(xStart, xEnd, yStart, yEnd, beatStartNum, beatStartDenom, beatEndNum, beatEndDenom) {
+    function ZsTsMapElement(xStart, xEnd, yStart, yEnd, beatStartNum, beatStartDenom, beatEndNum, beatEndDenom) {
         this.xStart = xStart;
         this.xEnd = xEnd;
         this.yStart = yStart;
@@ -116,6 +122,23 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         this.beatEndNum = beatEndNum;
         this.beatEndDenom = beatEndDenom;
     }
+    function ZsPage(id, no, imgFileName, imgFileUrl) {
+        this.id = id;
+        this.no = no;
+        this.imgFileName = imgFileName;
+        this.imgFileUrl = imgFileUrl;
+        this.isLoaded = false;        
+        this.img = new Image();
+        this.img.pageId = id;
+    }
+    ZsPage.prototype.loadImg = function (imgFileUrl) {        
+        this.img.src = imgFileUrl;
+        this.img.onload = function() {
+            log("pageImgOnLoad: id: " + this.pageId);
+            onPageImageLoad(this.pageId);
+        }         
+    };
+
     function PartBtnAttrs(btnNo, partName) {
         this.id = "partBtn" + btnNo;
         this.class = "partListButton";
@@ -320,6 +343,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             return;
         }
         state.score.title = title;
+        state.score.noSpaceTitle = u.replaceEmptySpaces(title, UNDERSCORE);
         s.setElementText(config.idTitle, title);
     }
     function setScoreDir(scoreDir) {
@@ -341,6 +365,45 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         }
         var staveId = pageInfo.staveId;
       
+    }
+    function onPageImageLoad(pageId) {
+        var page = state.part.pages[pageId]
+        if(isNotNull(page)) {
+            page.isLoaded = true;
+        }
+
+        state.pageNoToLoad--;
+        if(state.pageNoToLoad === 0) {
+            onPageLoadComplete();
+        }
+        notifyPageLoadListeners(state.pageNoToLoad);
+    }
+    function notifyPageLoadListeners(noPagesToLoad) {
+        if(noPagesToLoad > 0) {
+            var txt = LOADING + " " + noPagesToLoad;
+            setServerStatusView(config.errorRectStyle, config.errorBtnAttrib, config.errorTxtStyle, txt);
+        } else {
+            setServerStatusView(config.connectedRectStyle, config.connectedBtnAttrib, config.connectedTxtStyle, READY);
+        }
+    }
+    function onPageLoadComplete() {
+        log("onPageLoadComplete: ");
+        var pages = state.part.pages;
+        var isOk = true;
+        for (var key in pages) {
+            if (pages.hasOwnProperty(key)) {
+                var page = pages[key];
+                if(!page.isLoaded) {
+                    log("onPageLoadComplete: page: " + key + " is not loaded, retying load");
+                    loadPageNo(page.no);
+                    isOk = false;
+                }
+            }
+        }
+        if(isOk) {
+            log("All Pages loaded: ");
+            state.isReady = true;
+        }
     }
     function processPartInfo(partInfo) {
         if (isNotNull(partInfo.name)) {
@@ -366,6 +429,94 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         if (isNotNull(partInfo.imgContPageName)) {
             state.part.imgContPageName = partInfo.imgContPageName;
         }
+        if (isNotNull(partInfo.contPageNo)) {
+            state.part.contPageNo = partInfo.contPageNo;
+        }
+        loadPartPages();
+    }
+    function loadPartPages() {
+        var part = state.part;
+        var pageRanges = part.pageRanges;
+        if(!u.isArray(pageRanges)) {
+            return;
+        }
+        for (var i = 0; i < pageRanges.length; i++) {
+            loadPageRange(pageRanges[i]);
+        }
+        loadContinuousPage();
+    }
+    function loadContinuousPage() {
+        var page = getOrCreateContPage();
+        state.pageNoToLoad++;
+        loadPage(page);
+    }
+    function loadPageRange(pgRange) {
+        if(!u.isObject(pgRange)) {
+            return;
+        }
+        var startPage = 1;
+        var endPage = 1;
+        if(isNotNull(pgRange.start)) {
+            startPage = u.toInt(pgRange.start);
+        }
+        if(isNotNull(pgRange.end)) {
+            endPage = u.toInt(pgRange.end)
+        }
+        var pagesToLoad = state.pageNoToLoad + (endPage - startPage + 1);
+        state.pageNoToLoad = pagesToLoad;
+        for (var i = startPage; i <= endPage; i++) {
+            loadPageNo(i);
+        }
+    }
+    function loadPageNo(pageNo) {
+        var page = getOrCreatePage(pageNo); 
+        loadPage(page);
+    }
+    function loadPage(page) {
+        if(isNull(page)) {
+            return;
+        }
+        var imgUrl = page.imgFileUrl;
+        if(isNull(imgUrl)) {
+            return;
+        }
+        page.loadImg(imgUrl, page.id);
+    }
+    function getOrCreatePage(pageNo) {
+        var pageId = createPageId(pageNo);
+        var page = state.part.pages[pageId];
+        if(isNotNull(page)) {
+            return page;
+        }
+        var imgFileName = state.part.imgPageNameToken;
+        if(isNull(imgFileName)) {
+            imgFileName = createDefaultPageImgFileName(pageNo);
+        } else {
+            imgFileName = u.replace(imgFileName, config.pageNoToken, ""+pageNo);
+        }
+        var imgFileUrl = state.part.imgDir + imgFileName;
+        var page = new ZsPage(pageId, pageNo, imgFileName, imgFileUrl)
+        state.part.pages[pageId] = page;
+        return page;
+    }
+    function getOrCreateContPage() {
+        var pageNo = state.part.contPageNo;
+        var pageId = createPageId(pageNo);
+        var page = state.part.pages[pageId];
+        if(isNotNull(page)) {
+            return page;
+        }
+        var imgFileName = state.part.imgContPageName;
+        var imgFileUrl = state.part.imgDir + imgFileName;
+        var page = new ZsPage(pageId, pageNo, imgFileName, imgFileUrl)
+        state.part.pages[pageId] = page;
+        return page;
+    }
+    function createDefaultPageImgFileName(pageNo) {
+        return state.score.noSpaceTitle  + UNDERSCORE + instrumentName + "_page" + pageNo + ".png";
+    }
+    function createPageId(pageNo) {
+        return config.pageIdPrefix + pageNo;
     }
     function addInstrumentPageRange(pgRange) {
         if (isNull(pgRange) || isNull(pgRange.start) || isNull(pgRange.end)) {

@@ -821,6 +821,12 @@ var zsUtil = (function (console, win, doc) {
         }
         return strVal.replace(strToReplace, strReplaceWith);
     }
+    function _replaceEmptySpaces(strVal, strReplaceWith) {
+        if (!_isString(strVal) || !_isString(strReplaceWith)) {
+            return strVal;
+        }
+        return strVal.replace(/ /g, strReplaceWith);
+    }
     function _replacePropValue(asocArr, prop, strToReplace, strReplaceWith) {
         var nv = _replace(asocArr[prop], strToReplace, strReplaceWith);
         asocArr[prop] = nv;
@@ -1260,6 +1266,9 @@ var zsUtil = (function (console, win, doc) {
         },
         replacePropValue: function (asocArr, prop, strToReplace, strReplaceWith) {
             _replacePropValue(asocArr, prop, strToReplace, strReplaceWith);
+        },       
+        replaceEmptySpaces: function (strVal, strReplaceWith) {
+            _replaceEmptySpaces(strVal, strReplaceWith);
         },
         removeMarkup: function (line) {
             return _removeMarkup(line);
