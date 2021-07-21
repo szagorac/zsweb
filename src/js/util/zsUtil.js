@@ -28,6 +28,7 @@ var zsUtil = (function (console, win, doc) {
     const _RUN_MODE = {
         DEV: 'dev',
         PROD: 'prod',
+        DEBUG: 'debug',
     }
 
     // ----- private vars
@@ -533,9 +534,9 @@ var zsUtil = (function (console, win, doc) {
     }
     function _logError(val, id) {
         if (_isNull(id)) {
-            _log(ERROR + val);
+            _log(ERROR + val, null, true);
         } else {
-            _log(ERROR + id + val);
+            _log(ERROR + id + val, null, true);
         }
     }
     function _logObj(obj) {
@@ -546,11 +547,21 @@ var zsUtil = (function (console, win, doc) {
                 break;
         }
         console.log(obj);
-    }
-    function _log(val, id) {
+    }    
+    function _logDebug(val) {
+        if(_mode !== _RUN_MODE.DEBUG) {
+            return;
+        }
+        _log(val);
+    }    
+    function _log(val, id, isError) {
         switch (_mode) {
             case _RUN_MODE.PROD:
-                return;
+                if(!isError) {
+                    return;
+                }
+                break;
+            case _RUN_MODE.DEBUG:
             case _RUN_MODE.DEV:
                 break;
         }
@@ -1449,6 +1460,9 @@ var zsUtil = (function (console, win, doc) {
         logObj: function (obj) {
             _logObj(obj);
         },
+        logDebug: function (val) {
+            _logDebug(val);
+        },        
         log: function (val, id) {
             _log(val, id);
         },

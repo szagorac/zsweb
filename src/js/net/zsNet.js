@@ -2,6 +2,7 @@ var zsNet = (function (u, win) {
     "use strict";
 
     //static members
+    const RUN_MODE = 'debug';
     const LOG_ID = "zsNet: ";
     const GET_SERVER_STATE = "GET_SERVER_STATE";
     const EVENT_PARAM_LAST_STATE_UPDATE_TIME = "lsut";
@@ -89,6 +90,8 @@ var zsNet = (function (u, win) {
             _isReady = false;
             return;
         }
+
+        u.setRunMode(RUN_MODE);
 
         _appUrlHttp = httpUrl;
         _webQueue = u.createQueue();
@@ -648,11 +651,11 @@ var zsNet = (function (u, win) {
         try {
             switch (type) {
                 case ERROR:
-                    log("_processResponse: time: " + sendTime + " type: " + type + " source: " + source + " message: " + message);
+                    logError("_processResponse: time: " + sendTime + " type: " + type + " source: " + source + " message: " + message);
                     _processError(message);
                     break;
                 case OK:
-                    log("_processResponse: time: " + sendTime + " type: " + type + " source: " + source + " message: " + message);
+                    u.logDebug("_processResponse: time: " + sendTime + " type: " + type + " source: " + source + " message: " + message);
                     _processOkResponse(message)
                     break;
                 case STATE_DELTA:                    
@@ -660,7 +663,7 @@ var zsNet = (function (u, win) {
                 case STATE:
                     var state = bag.st;
                     // log("handleAjaxGetResponse: time: " + t + " type: " + type + " state: " + st);
-                    log("_processResponse: time: " + sendTime + " type: " + type + " source: " + source);
+                    u.logDebug("_processResponse: time: " + sendTime + " type: " + type + " source: " + source);
                     _lastStateUpdateTime = sendTime;
                     _processStateResponse(state, isDeltaUpdate);
                     break;
@@ -672,10 +675,10 @@ var zsNet = (function (u, win) {
         }
     }
     function _processError(error) {
-        log("processError: Received ERROR: " + error);
+        logError("processError: Received ERROR: " + error);
     }
     function _processOkResponse(message) {
-        log("processOkResponse: Received message: " + message);
+        u.logDebug("processOkResponse: Received message: " + message);
     }
     function _processConnectionState(connState, connType) {
         switch (connState) {

@@ -615,7 +615,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         }
     }
     function doAction(actionType, targets, params) {
-        log("doAction: " + actionType);
+        u.logDebug("doAction: " + actionType);
 
         if (isNull(actionType)) {
             return;
