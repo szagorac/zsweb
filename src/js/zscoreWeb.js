@@ -2,10 +2,11 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     "use strict";
 
     // TODO set for prod when ready - gets rid of console logs
-    const RUN_MODE = "DEV";
+    const RUN_MODE = "dev";
     const EMPTY = "";
     const BLANK = " ";
     const UNDERSCORE = "_";
+    const SLASH = "/";
     const AV = "AV";
     const FULL_SCORE = "FullScore";
     const CONNECTED = "Connected";
@@ -73,6 +74,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         idPartsListOuterDiv: "partListOuterDiv",
         idInstrument: "part",
         idTempoBpm: "tmpBpm",
+        blankPageUrl: "img/blankStave.png",
         filterOutParts: [AV, FULL_SCORE],
         connectedRectStyle: { "fill": FILL_CONNECTED, "stroke": STROKE_CONNECTED, "stroke-width": "0px", "visibility": "visible", "opacity": 1 },
         disconnectedRectStyle: { "fill": FILL_DISCONNECTED, "stroke": STROKE_DISCONNECTED, "stroke-width": "1px", "visibility": "visible", "opacity": 1 },
@@ -83,21 +85,21 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         connectedBtnAttrib: { "filter": "" },
         disconnectedBtnAttrib: { "filter": "url(#dropshadow)" },
         errorBtnAttrib: { "filter": "url(#dropshadow)" },
+        topStave: {gId: "stvTop", imgId: "stvTopImg", startLineId: "stvTopStartLine", positionLineId: "stvTopPosLine", beatBallId: "stvTopBeatBall", maskId: "stvTopMask"},
+        bottomStave: {gId: "stvBot", imgId: "stvBotImg", startLineId:"stvBotStartLine", positionLineId: "stvBotPosLine", beatBallId: "stvBotBeatBall", maskId: "stvBotMask"},
     }
     var state = {
         isRunning: false,
         isReady: false,
         score: { title: "ZScore", noSpaceTitle: "ZScore", instrument: "Part View", parts: ["Part View"], firstPageNo: 1, lastPageNo: 2},
-        part: {name: "Part View", imgDir: null, imgPageNameToken: null, imgContPageName: null, contPageNo: 6666, pageRanges: [{start: 1, end: 1}], pages: {}},
-        topStave: { pageId: "0", filename: "img/blankStave.png", timeSpaceMap: {} },
-        bottomStave: { pageId: "0", filename: "img/blankStave.png", timeSpaceMap: {} },
+        part: {name: "Part View", imgDir: null, imgPageNameToken: null, imgContPageName: null, blankPageNo: 0, contPageNo: 6666, pageRanges: [{start: 1, end: 1}], pages: {}},
+        topStave: { config: config.topStave, pageId: "0", filename: "img/blankStave.png", timeSpaceMap: {}, timeline: {} },
+        bottomStave: { config: config.bottomStave, pageId: "0", filename: "img/blankStave.png", timeSpaceMap: {}, timeline: {} },
         tsBaseBeatMaps: {},
         startTimeTl: 0,
         currentBeatId: "b0",
         tempo: 0,
         scoreDir: "/score/",
-        topStaveTimeline: {},
-        bottomStaveTimeline: {},
         lastTimelineBeatNo: 0,
         currentTickTimeSec: 0,
         nextBeatTickTimeSec: 0,
@@ -374,15 +376,41 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             stave.filename = pageInfo.filename;
         }
         if (isNotNull(pageInfo.pageId)) {
-            stave.pageId = pageInfo.filename;
+            stave.pageId = pageInfo.pageId;
         }
-        showStave(stave);
+        showStavePage(stave);
     }
-    function showStave(stave) {
+    function showStavePage(stave) {
         if(isNull(stave)) {
             return;
         }
 
+        var conf = stave.config;
+        if(isNull(conf)) {
+            return;
+        }
+
+        var imgSrc = null;
+        var pageImg = getPageImage(stave.pageId) 
+        if(isNull(pageImg)) {
+            imgSrc = createStaveImgUrl(stave.fileName);
+        } else {
+            imgSrc = pageImg.src;
+        }
+
+        var imgElement = u.getElement(conf.imgId);
+        imgElement.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", imgSrc);
+        imgElement.setAttribute("href", imgSrc); 
+    }
+    function createStaveImgUrl(fileName) {
+        return state.scoreDir + state.score.noSpaceTitle + SLASH + fileName;
+    }
+    function getPageImage(pageId) {
+        var page = state.part.pages[pageId];
+        if(isNull(page)) {
+            return null;
+        }
+        return page.img;
     }
     function onPageImageLoad(pageId) {
         var page = state.part.pages[pageId]
@@ -462,7 +490,13 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         for (var i = 0; i < pageRanges.length; i++) {
             loadPageRange(pageRanges[i]);
         }
+        loadBlankPage();
         loadContinuousPage();
+    }
+    function loadBlankPage() {
+        var page = getOrCreateBlankPage();
+        state.pageNoToLoad++;
+        loadPage(page);
     }
     function loadContinuousPage() {
         var page = getOrCreateContPage();
@@ -527,6 +561,19 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         }
         var imgFileName = state.part.imgContPageName;
         var imgFileUrl = state.part.imgDir + imgFileName;
+        var page = new ZsPage(pageId, pageNo, imgFileName, imgFileUrl)
+        state.part.pages[pageId] = page;
+        return page;
+    }
+    function getOrCreateBlankPage() {
+        var pageNo = state.part.blankPageNo;
+        var pageId = createPageId(pageNo);
+        var page = state.part.pages[pageId];
+        if(isNotNull(page)) {
+            return page;
+        }
+        var imgFileName = config.blankPageUrl;
+        var imgFileUrl = config.blankPageUrl;
         var page = new ZsPage(pageId, pageNo, imgFileName, imgFileUrl)
         state.part.pages[pageId] = page;
         return page;

@@ -2,7 +2,6 @@ var zsNet = (function (u, win) {
     "use strict";
 
     //static members
-    const RUN_MODE = 'debug';
     const LOG_ID = "zsNet: ";
     const GET_SERVER_STATE = "GET_SERVER_STATE";
     const EVENT_PARAM_LAST_STATE_UPDATE_TIME = "lsut";
@@ -90,8 +89,6 @@ var zsNet = (function (u, win) {
             _isReady = false;
             return;
         }
-
-        u.setRunMode(RUN_MODE);
 
         _appUrlHttp = httpUrl;
         _webQueue = u.createQueue();
