@@ -365,7 +365,24 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             return;
         }
         var staveId = pageInfo.staveId;
-      
+        var stave = state[staveId];
+        if(isNull(stave)) {
+            logError("processPageinfo: Invalid stave for id: {}", staveId);
+            return;
+        }
+        if (isNotNull(pageInfo.filename)) {
+            stave.filename = pageInfo.filename;
+        }
+        if (isNotNull(pageInfo.pageId)) {
+            stave.pageId = pageInfo.filename;
+        }
+        showStave(stave);
+    }
+    function showStave(stave) {
+        if(isNull(stave)) {
+            return;
+        }
+
     }
     function onPageImageLoad(pageId) {
         var page = state.part.pages[pageId]
