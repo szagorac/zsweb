@@ -350,7 +350,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     function onBeatEnd(beatId, beatNo) {
         var now = a.getCurrentTime();
         var diff = now - state.startTimeTl;
-        log("onBeatEnd: beat: " + beatId + " beatNo: " + beatNo + " elapsedTime: " + diff);        
+        log("onBeatEnd: beat: " + beatId + " beatNo: " + beatNo + " elapsedTime: " + diff);
     }
     function onBbBeatStart(beatId, beatNo) {
         log("onBbBeatStart: beat: " + beatId + " beatNo: " + beatNo);

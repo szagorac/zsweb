@@ -15,6 +15,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     const CONNECT = "Connect";
     const RECONNECTING = "Reconnecting";
     const ERROR = "Error";
+    const TL_START_OF_PREVIOUS = "<";
+    const TL_END_OF_PREVIOUS = ">";
     const CLR_GREEN = "green";
     const CLR_RED = "red";
     const CLR_ORANGE = "orange";
@@ -85,22 +87,22 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         connectedBtnAttrib: { "filter": "" },
         disconnectedBtnAttrib: { "filter": "url(#dropshadow)" },
         errorBtnAttrib: { "filter": "url(#dropshadow)" },
-        topStave: {gId: "stvTop", imgId: "stvTopImg", startLineId: "stvTopStartLine", positionLineId: "stvTopPosLine", beatBallId: "stvTopBeatBall", maskId: "stvTopMask"},
-        bottomStave: {gId: "stvBot", imgId: "stvBotImg", startLineId:"stvBotStartLine", positionLineId: "stvBotPosLine", beatBallId: "stvBotBeatBall", maskId: "stvBotMask"},
+        topStave: { gId: "stvTop", imgId: "stvTopImg", startLineId: "stvTopStartLine", positionLineId: "stvTopPosLine", beatBallId: "stvTopBeatBall", maskId: "stvTopMask", ballYmax: 84, xLeftMargin: 31.5 },
+        bottomStave: { gId: "stvBot", imgId: "stvBotImg", startLineId: "stvBotStartLine", positionLineId: "stvBotPosLine", beatBallId: "stvBotBeatBall", maskId: "stvBotMask", ballYmax: 84, xLeftMargin: 31.5 },
     }
     var state = {
         isRunning: false,
         isReady: false,
-        score: { title: "ZScore", noSpaceTitle: "ZScore", instrument: "Part View", parts: ["Part View"], firstPageNo: 1, lastPageNo: 2},
-        part: {name: "Part View", imgDir: null, imgPageNameToken: null, imgContPageName: null, blankPageNo: 0, contPageNo: 6666, pageRanges: [{start: 1, end: 1}], pages: {}},
-        topStave: { config: config.topStave, pageId: "0", filename: "img/blankStave.png", timeSpaceMap: {}, timeline: {} },
-        bottomStave: { config: config.bottomStave, pageId: "0", filename: "img/blankStave.png", timeSpaceMap: {}, timeline: {} },
-        tsBaseBeatMaps: {},
+        score: { title: "ZScore", noSpaceTitle: "ZScore", instrument: "Part View", parts: ["Part View"], firstPageNo: 1, lastPageNo: 2 },
+        part: { name: "Part View", imgDir: null, imgPageNameToken: null, imgContPageName: null, blankPageNo: 0, contPageNo: 6666, pageRanges: [{ start: 1, end: 1 }], pages: {}, pageBeatMaps: {} },
+        topStave: { id: "topStave", config: config.topStave, pageId: "0", filename: "img/blankStave.png", beatMap: null, timeline: null, isActive: true, isRunning: false},
+        bottomStave: { id: "bottomStave", config: config.bottomStave, pageId: "0", filename: "img/blankStave.png", beatMap: null, timeline: null, isActive: false, isRunning: false },
         startTimeTl: 0,
         currentBeatId: "b0",
+        currentBeatNo: 0,
         tempo: 0,
+        tempoModifier: 1,
         scoreDir: "/score/",
-        lastTimelineBeatNo: 0,
         currentTickTimeSec: 0,
         nextBeatTickTimeSec: 0,
         audioTlBeatTime: 0,
@@ -130,16 +132,16 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         this.no = no;
         this.imgFileName = imgFileName;
         this.imgFileUrl = imgFileUrl;
-        this.isLoaded = false;        
+        this.isLoaded = false;
         this.img = new Image();
         this.img.pageId = id;
     }
-    ZsPage.prototype.loadImg = function (imgFileUrl) {        
+    ZsPage.prototype.loadImg = function (imgFileUrl) {
         this.img.src = imgFileUrl;
-        this.img.onload = function() {
+        this.img.onload = function () {
             log("pageImgOnLoad: id: " + this.pageId);
             onPageImageLoad(this.pageId);
-        }         
+        }
     };
 
     function PartBtnAttrs(btnNo, partName) {
@@ -320,6 +322,12 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         if (isNotNull(serverState.pageInfo)) {
             processPageinfo(serverState.pageInfo);
         }
+        if (isNotNull(serverState.mapInfo)) {
+            processMapinfo(serverState.mapInfo);
+        }
+        if (isNotNull(serverState.bpm) && serverState.bpm != 0) {
+            processTempoChange(serverState.bpm);
+        }
         if (isNotNull(serverState.actions)) {
             processSeverActions(serverState.actions);
         }
@@ -362,13 +370,193 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         state.tempo = bpm;
         s.setElementText(config.idTempoBpm, bpm);
     }
+    function processTempoChange(tempo) {
+        var bpm = u.toInt(tempo);
+        if(isNull(bpm)) {
+            return;
+        }
+        var previousBpm = state.tempo;
+        var modifier = bpm/previousBpm;
+        state.tempoModifier = modifier;
+        setBpm(bpm);
+        if(state.isRunning) {
+            setStaveTimelinesTempo(modifier);
+        } else {
+            resetStaveTimelines();
+        }
+    }
+    function processMapinfo(mapInfo) {
+        if (isNull(mapInfo.map) || isNull(mapInfo.pageId)) {
+            return;
+        }
+        var pageId = mapInfo.pageId;
+        var staveId = mapInfo.staveId;
+        var mapStr = mapInfo.map;
+        var stave = state[staveId];
+        if(isNull(stave)) {
+            return;
+        }
+        var xLeftMargin =  stave.config.xLeftMargin;
+
+        var map = JSON.parse(JSON.stringify(mapStr));
+        if (!u.isArray(map)) {
+            return;
+        }
+        var beatMap = {};
+        for (var i = 0; i < map.length; i++) {
+            addMapLement(beatMap, map[i], xLeftMargin);
+        }
+        // TODO do we need to cache beatMaps ???
+        state.part.pageBeatMaps[pageId] = beatMap;
+        stave.beatMap = beatMap;
+        initStaveTimelines(staveId);
+    }
+    function addMapLement(beatMap, mapElement, xMargin) {
+        if (isNull(beatMap) || isNull(mapElement) || isNull(mapElement.beatStartNum)) {
+            return;
+        }
+        var startBeat = mapElement.beatStartNum;
+        var xStart = mapElement.xStart + xMargin;
+        var xEnd = mapElement.xEnd + xMargin;
+        var zsMapElement = new ZsTsMapElement(xStart, xEnd, mapElement.yStart, mapElement.yEnd, mapElement.beatStartNum, mapElement.beatStartDenom, mapElement.beatEndNum, mapElement.beatEndDenom);
+        beatMap[startBeat] = zsMapElement;
+    }
+    function setStaveTimelinesTempo(modifier) {
+        setTimelineTempoMod(state.topStave.timeline, modifier);
+        setTimelineTempoMod(state.bottomStave.timeline, modifier);
+    }
+    function setTimelineTempoMod(tl, mod) {
+        if(isNull(tl)) {
+            return;
+        }
+        var currentTimeScale = tl.timeScale();
+        var newTimeScale = currentTimeScale * mod;
+        tl.timeScale(newTimeScale);
+    }
+    function resetStaveTimelines() {
+        createStaveTimeline(state.topStave);
+        createStaveTimeline(state.bottomStave);
+    }
+    function initStaveTimelines(staveId) {
+        if(isNull(staveId)) {
+            return;
+        }
+        createStaveTimeline(state[staveId]);
+    }
+    function createStaveTimeline(stave) {
+        if(isNull(stave)) {
+            return;
+        }
+        var staveTimeline = gsap.timeline({onComplete: onTimelineComplete, onCompleteParams: [stave.id], paused: true});
+        var beatMaps = stave.beatMap;
+        if(isNull(beatMaps)) {
+            return;
+        }
+        var lineId = stave.config.positionLineId;
+        var ballId = stave.config.beatBallId;
+        var ballYmax = stave.config.ballYmax;
+        
+        var isFirstBeat = true;
+        for (var beat in beatMaps){
+            var beatMap = beatMaps[beat];            
+            var bpm = state.tempo;
+            var beatDurationSec = m.getBeatDurationSec(bpm);
+            var startBeat = beatMap.beatStartNum;
+
+            if(isFirstBeat) {
+                var beatId = config.beatIdPrefix + (startBeat - 1);
+                var endX = beatMap.xStart;
+                var startBeatPositionLineTween = createPositionLineTween(lineId, 0, endX, beatId, 0);                    
+                staveTimeline.add(startBeatPositionLineTween, TL_START_OF_PREVIOUS);
+                var startPositionBallXTween = createPositionBallXTween(ballId, 0, endX, beatId);
+                staveTimeline.add(startPositionBallXTween, TL_END_OF_PREVIOUS);
+                isFirstBeat = false;
+            }
+            
+            var endX = beatMap.xEnd;
+            var beatId = config.beatIdPrefix + startBeat;
+            var tweenId = config.tweenIdPrefix + beatId;
+            var beatPositionLineTween = createPositionLineTween(lineId, beatDurationSec, endX, beatId, startBeat);
+            var beatPositionBallXTween = createPositionBallXTween(ballId, beatDurationSec, endX, beatId);
+            var beatPositionBallYTween = createPositionBallYTween(ballId, beatDurationSec/2, ballYmax, beatId);
+            var tweenId = beatPositionLineTween.vars.id;
+            staveTimeline.addLabel(tweenId, TL_END_OF_PREVIOUS);
+            staveTimeline.add(beatPositionLineTween, TL_END_OF_PREVIOUS);
+            staveTimeline.add(beatPositionBallXTween, TL_START_OF_PREVIOUS);
+            staveTimeline.add(beatPositionBallYTween, tweenId);
+        }
+        stave.timeline = staveTimeline;
+    }
+    function createPositionLineTween(lineId, beatDurationSec, endX, beatId, beatNo) {
+        var tweenId = config.tweenIdPrefix + beatId;
+        log("createPositionLineTween: " + tweenId);
+        return gsap.to(u.toCssIdQuery(lineId), {
+            id: tweenId,
+            duration: beatDurationSec,
+            attr: {"x1":endX, "x2":endX},
+            ease: "none",
+            onStart: onBeatStart,
+            onStartParams: [beatId, beatNo],
+            onComplete: onBeatEnd,
+            onCompleteParams: [beatId, beatNo],            
+        });
+    }
+    function createPositionBallXTween(ballId, beatDurationSec, endX, beatId) {
+        var tweenId = config.ballTweenIdPrefix + beatId;
+        log("createPositionBallXTween: " + tweenId);
+        return gsap.to(u.toCssIdQuery(ballId), {
+            duration: beatDurationSec,
+            attr: {"cx":endX},
+            ease: "none",
+        });
+    }
+    function createPositionBallYTween(ballId, beatDurationSec, endY, beatId) {
+        var tweenId = config.ballTweenIdPrefix + beatId;
+        log("createPositionBallYTween: " + tweenId);
+        return gsap.to(u.toCssIdQuery(ballId), {
+            duration: beatDurationSec,
+            attr: {"cy":endY, "r":2},
+            ease: "power1.out",
+            autoAlpha: 0.5,
+            repeat: 1, 
+            yoyo: true,
+        });
+    }
+    function onTimelineComplete(staveid) {
+        log("onTimelineComplete stave: " + staveid);
+        var stave = state[staveid];
+        if(isNotNull(stave)) {
+            stave.isRunning = false;
+        }
+    }
+    function onBeatStart(beatId, beatNo) {
+        var currentTime = a.getCurrentTime();
+        state.audioTlBeatTime = currentTime;
+        log("onBeatStart: beat: " + beatId + " beatNo: " + beatNo + " beatTime: " + currentTime);
+        setCurrentBeat(beatNo, beatId);
+    }
+    function onBeatEnd(beatId, beatNo) {
+        var now = a.getCurrentTime();
+        var diff = now - state.startTimeTl;
+        log("onBeatEnd: beat: " + beatId + " beatNo: " + beatNo + " elapsedTime: " + diff);
+    }
+    function setCurrentBeat(beatNo, beatId) {
+        if(!u.isNumeric(beatNo)) {
+            return;
+        }
+        if(u.isNull(beatId)) {
+            beatId = config.beatIdPrefix + beatNo;
+        }
+        state.currentBeatId = beatId;
+        state.currentBeatNo = beatNo;
+    }
     function processPageinfo(pageInfo) {
         if (isNull(pageInfo.staveId)) {
             return;
         }
         var staveId = pageInfo.staveId;
         var stave = state[staveId];
-        if(isNull(stave)) {
+        if (isNull(stave)) {
             logError("processPageinfo: Invalid stave for id: {}", staveId);
             return;
         }
@@ -381,18 +569,18 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         showStavePage(stave);
     }
     function showStavePage(stave) {
-        if(isNull(stave)) {
+        if (isNull(stave)) {
             return;
         }
 
         var conf = stave.config;
-        if(isNull(conf)) {
+        if (isNull(conf)) {
             return;
         }
 
         var imgSrc = null;
-        var pageImg = getPageImage(stave.pageId) 
-        if(isNull(pageImg)) {
+        var pageImg = getPageImage(stave.pageId)
+        if (isNull(pageImg)) {
             imgSrc = createStaveImgUrl(stave.fileName);
         } else {
             imgSrc = pageImg.src;
@@ -400,32 +588,32 @@ var zscore = (function (u, n, s, a, m, win, doc) {
 
         var imgElement = u.getElement(conf.imgId);
         imgElement.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", imgSrc);
-        imgElement.setAttribute("href", imgSrc); 
+        imgElement.setAttribute("href", imgSrc);
     }
     function createStaveImgUrl(fileName) {
         return state.scoreDir + state.score.noSpaceTitle + SLASH + fileName;
     }
     function getPageImage(pageId) {
         var page = state.part.pages[pageId];
-        if(isNull(page)) {
+        if (isNull(page)) {
             return null;
         }
         return page.img;
     }
     function onPageImageLoad(pageId) {
         var page = state.part.pages[pageId]
-        if(isNotNull(page)) {
+        if (isNotNull(page)) {
             page.isLoaded = true;
         }
 
         state.pageNoToLoad--;
-        if(state.pageNoToLoad === 0) {
+        if (state.pageNoToLoad === 0) {
             onPageLoadComplete();
         }
         notifyPageLoadListeners(state.pageNoToLoad);
     }
     function notifyPageLoadListeners(noPagesToLoad) {
-        if(noPagesToLoad > 0) {
+        if (noPagesToLoad > 0) {
             var txt = LOADING + " " + noPagesToLoad;
             setServerStatusView(config.errorRectStyle, config.errorBtnAttrib, config.errorTxtStyle, txt);
         } else {
@@ -439,14 +627,14 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         for (var key in pages) {
             if (pages.hasOwnProperty(key)) {
                 var page = pages[key];
-                if(!page.isLoaded) {
+                if (!page.isLoaded) {
                     log("onPageLoadComplete: page: " + key + " is not loaded, retying load");
                     loadPageNo(page.no);
                     isOk = false;
                 }
             }
         }
-        if(isOk) {
+        if (isOk) {
             log("All Pages loaded: ");
             state.isReady = true;
             sendReady();
@@ -484,7 +672,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     function loadPartPages() {
         var part = state.part;
         var pageRanges = part.pageRanges;
-        if(!u.isArray(pageRanges)) {
+        if (!u.isArray(pageRanges)) {
             return;
         }
         for (var i = 0; i < pageRanges.length; i++) {
@@ -504,15 +692,15 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         loadPage(page);
     }
     function loadPageRange(pgRange) {
-        if(!u.isObject(pgRange)) {
+        if (!u.isObject(pgRange)) {
             return;
         }
         var startPage = 1;
         var endPage = 1;
-        if(isNotNull(pgRange.start)) {
+        if (isNotNull(pgRange.start)) {
             startPage = u.toInt(pgRange.start);
         }
-        if(isNotNull(pgRange.end)) {
+        if (isNotNull(pgRange.end)) {
             endPage = u.toInt(pgRange.end)
         }
         var pagesToLoad = state.pageNoToLoad + (endPage - startPage + 1);
@@ -522,15 +710,15 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         }
     }
     function loadPageNo(pageNo) {
-        var page = getOrCreatePage(pageNo); 
+        var page = getOrCreatePage(pageNo);
         loadPage(page);
     }
     function loadPage(page) {
-        if(isNull(page)) {
+        if (isNull(page)) {
             return;
         }
         var imgUrl = page.imgFileUrl;
-        if(isNull(imgUrl)) {
+        if (isNull(imgUrl)) {
             return;
         }
         page.loadImg(imgUrl, page.id);
@@ -538,14 +726,14 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     function getOrCreatePage(pageNo) {
         var pageId = createPageId(pageNo);
         var page = state.part.pages[pageId];
-        if(isNotNull(page)) {
+        if (isNotNull(page)) {
             return page;
         }
         var imgFileName = state.part.imgPageNameToken;
-        if(isNull(imgFileName)) {
+        if (isNull(imgFileName)) {
             imgFileName = createDefaultPageImgFileName(pageNo);
         } else {
-            imgFileName = u.replace(imgFileName, config.pageNoToken, ""+pageNo);
+            imgFileName = u.replace(imgFileName, config.pageNoToken, "" + pageNo);
         }
         var imgFileUrl = state.part.imgDir + imgFileName;
         var page = new ZsPage(pageId, pageNo, imgFileName, imgFileUrl)
@@ -556,7 +744,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         var pageNo = state.part.contPageNo;
         var pageId = createPageId(pageNo);
         var page = state.part.pages[pageId];
-        if(isNotNull(page)) {
+        if (isNotNull(page)) {
             return page;
         }
         var imgFileName = state.part.imgContPageName;
@@ -569,7 +757,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         var pageNo = state.part.blankPageNo;
         var pageId = createPageId(pageNo);
         var page = state.part.pages[pageId];
-        if(isNotNull(page)) {
+        if (isNotNull(page)) {
             return page;
         }
         var imgFileName = config.blankPageUrl;
@@ -579,7 +767,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         return page;
     }
     function createDefaultPageImgFileName(pageNo) {
-        return state.score.noSpaceTitle  + UNDERSCORE + instrumentName + "_page" + pageNo + ".png";
+        return state.score.noSpaceTitle + UNDERSCORE + instrumentName + "_page" + pageNo + ".png";
     }
     function createPageId(pageNo) {
         return config.pageIdPrefix + pageNo;
@@ -590,7 +778,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         }
         var startPage = pgRange.start;
         var endPage = pgRange.end;
-        var pr = {start: startPage, end: endPage};
+        var pr = { start: startPage, end: endPage };
         state.part.pageRanges = [];
         state.part.pageRanges.push(pr);
     }
