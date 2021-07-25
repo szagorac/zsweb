@@ -23,10 +23,16 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     const CLR_YELLOW = "yellow";
     const CLR_WHITE = "white";
     const CLR_BLACK = "black";
+    const CLR_BLUE = "blue";
+    const CLR_GREY = "grey";
     const CLR_NONE = "none";
+    const FILL_ACTIVE = CLR_NONE;
+    const FILL_INACTIVE = CLR_WHITE;
     const FILL_CONNECTED = CLR_GREEN;
     const FILL_DISCONNECTED = CLR_RED;
     const FILL_ERROR = CLR_ORANGE;
+    const STROKE_ACTIVE = CLR_BLUE;
+    const STROKE_INACTIVE = CLR_GREY;
     const STROKE_CONNECTED = CLR_GREEN;
     const STROKE_DISCONNECTED = CLR_RED;
     const STROKE_ERROR = CLR_ORANGE;
@@ -41,6 +47,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     const EVENT_ID_PING = "PING";
     const EVENT_PARAM_PART = "part";
     const EVENT_PARAM_SERVER_TIME = "serverTime";
+    const EVENT_PARAM_IS_ACTIVE = "isActive";
+    const EVENT_PARAM_IS_PLAY = "isPlay";
 
     // const RUN_MODE = "DEV";
     // const RUN_MODE = "PROD";
@@ -87,19 +95,21 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         connectedTxtStyle: { "fill": TXT_FILL_CONNECTED },
         disconnectedTxtStyle: { "fill": TXT_FILL_DISCONNECTED },
         errorTxtStyle: { "fill": TXT_FILL_ERROR },
+        activeStaveStyle: { "fill": FILL_ACTIVE, "stroke": STROKE_ACTIVE, "stroke-width": "1px", "visibility": "visible", "opacity": 0.5 },
+        inactiveStaveStyle: { "fill": FILL_INACTIVE, "stroke": STROKE_INACTIVE, "stroke-width": "1px", "visibility": "visible", "opacity": 0.4 },
         connectedBtnAttrib: { "filter": "" },
         disconnectedBtnAttrib: { "filter": "url(#dropshadow)" },
         errorBtnAttrib: { "filter": "url(#dropshadow)" },
         topStave: { gId: "stvTop", imgId: "stvTopImg", startLineId: "stvTopStartLine", positionLineId: "stvTopPosLine", beatBallId: "stvTopBeatBall", maskId: "stvTopMask", ballYmax: 84, xLeftMargin: 31.5, posLineConf: {x1: "95", y1: "80", x2: "95", y2: "281"}, posBallConf: {cx: "95", cy: "110", r: "4"} },
-        bottomStave: { gId: "stvBot", imgId: "stvBotImg", startLineId: "stvBotStartLine", positionLineId: "stvBotPosLine", beatBallId: "stvBotBeatBall", maskId: "stvBotMask", ballYmax: 84, xLeftMargin: 31.5, posLineConf: {x1: "95", y1: "301", x2: "95", y2: "502"}, posBallConf: {cx: "95", cy: "331", r: "4"} },
+        bottomStave: { gId: "stvBot", imgId: "stvBotImg", startLineId: "stvBotStartLine", positionLineId: "stvBotPosLine", beatBallId: "stvBotBeatBall", maskId: "stvBotMask", ballYmax: 305, xLeftMargin: 31.5, posLineConf: {x1: "95", y1: "301", x2: "95", y2: "502"}, posBallConf: {cx: "95", cy: "331", r: "4"} },
     }
     var state = {
-        isRunning: false,
+        isPlaying: false,
         isReady: false,
         score: { title: "ZScore", noSpaceTitle: "ZScore", instrument: "Part View", parts: ["Part View"], firstPageNo: 1, lastPageNo: 2 },
         part: { name: "Part View", imgDir: null, imgPageNameToken: null, imgContPageName: null, blankPageNo: 0, contPageNo: 6666, pageRanges: [{ start: 1, end: 1 }], pages: {}, pageBeatMaps: {} },
-        topStave: { id: "topStave", config: config.topStave, pageId: "0", filename: "img/blankStave.png", beatMap: null, timeline: null, isActive: true, isRunning: false},
-        bottomStave: { id: "bottomStave", config: config.bottomStave, pageId: "0", filename: "img/blankStave.png", beatMap: null, timeline: null, isActive: false, isRunning: false },
+        topStave: { id: "topStave", config: config.topStave, pageId: "0", filename: "img/blankStave.png", beatMap: null, timeline: null, isActive: true, isPlaying: false},
+        bottomStave: { id: "bottomStave", config: config.bottomStave, pageId: "0", filename: "img/blankStave.png", beatMap: null, timeline: null, isActive: false, isPlaying: false },
         startTimeTl: 0,
         currentBeatId: "b0",
         currentBeatNo: 0,
@@ -395,7 +405,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         var modifier = bpm/previousBpm;
         state.tempoModifier = modifier;
         setBpm(bpm);
-        if(state.isRunning) {
+        if(state.isPlaying) {
             setStaveTimelinesTempo(modifier);
         } else {
             resetStaveTimelines();
@@ -900,15 +910,49 @@ var zscore = (function (u, n, s, a, m, win, doc) {
                 break;
             case "STOP":
                 onStop();
-                break;                
+                break;
             case "SEMAPHORE_ON":
                 onSemaphoreOn(params);
                 break;
             case "SEMAPHORE_OFF":
                 onSemaphoreOff(params);
-                break;                
+                break;
+            case "ACTIVATE":
+                onActivate(targets, params);
+                break;                                
             default:
                 logError("doAction: Unknown actionType: " + actionType);
+        }
+    }
+    function onActivate(targets, params) {
+        if(isNull(params) || isNull(targets)) {
+            return;
+        }
+        if (u.isArray(targets)) {
+            for (var i = 0; i < targets.length; i++) {
+                activate(targets[i], params);
+            }
+        } else {
+            activate(targets, params);
+        }
+    }
+    function activate(target, params) {
+        var stave = state[target];
+        var isActive = params[EVENT_PARAM_IS_ACTIVE];
+        var isPlay = params[EVENT_PARAM_IS_PLAY];
+        activateStave(stave, isActive, isPlay);
+    }
+    function activateStave(stave, isActive, isPlay) {
+        if(isNull(stave) || isNull(isActive) || isNull(isPlay)) {
+            return;
+        }
+        if(isActive) {
+            u.setElementIdStyleProperty(stave.config.maskId, config.activeStaveStyle);
+        } else {
+            u.setElementIdStyleProperty(stave.config.maskId, config.inactiveStaveStyle);
+        }
+        if(isPlay) {
+            playTimeline(stave.timeline);
         }
     }
     function onSemaphoreOn(params) {
@@ -964,20 +1008,21 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         return colour;
     }
     function onStop() {
-        stopStaveTimelines();
+        stopStaves();
+        state.isPlaying = false;
         setStopSemaphore();
         resetState();
     }
     function onStart(targets) {
         if (u.isArray(targets)) {
             for (var i = 0; i < targets.length; i++) {
-                start(targets[i]);
+                play(targets[i]);
             }
         } else {
-            start(targets);
+            play(targets);
         }
     }
-    function start(target) {
+    function play(target) {
         if(isNull(target)) {
             return;
         }
@@ -989,10 +1034,10 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         if(isNull(tl)) {
             return;
         }
-        startTimeline(tl);
-        state.isRunning = true;
+        playTimeline(tl);
+        state.isPlaying = true;
     }
-    function startTimeline(timeline) {
+    function playTimeline(timeline) {
         if (isNull(timeline)) {
             logError("startTimeline: invalid timeline");
             return;
@@ -1004,9 +1049,11 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             timeline.play(0);
         }
     }
-    function stopStaveTimelines() {
+    function stopStaves() {
         stopTimeline(state.topStave.timeline);
         stopTimeline(state.bottomStave.timeline);
+        state.bottomStave.isPlaying = false;
+        state.topStave.isPlaying = false;
     }
     function stopTimeline(timeline) {
         if (isNull(timeline)) {

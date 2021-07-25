@@ -788,6 +788,9 @@ var zsUtil = (function (console, win, doc) {
             }
         }
     }
+    function _setElementIdStyleProperty(elementId, attrAssocArr) {
+        _setElementStyleProperty(_getElement(elementId), attrAssocArr) 
+    }
     function _setElementStyleProperty(element, attrAssocArr) {
         if (_isNull(element) || _isNull(attrAssocArr)) {
             _logError("setElementAttributes: invalid inputs");
@@ -1317,6 +1320,9 @@ var zsUtil = (function (console, win, doc) {
         },
         setElementStyleProperty: function (element, attrAssocArr) {
             _setElementStyleProperty(element, attrAssocArr);
+        },
+        setElementIdStyleProperty: function (elementId, attrAssocArr) {
+            _setElementIdStyleProperty(elementId, attrAssocArr);
         },
         addChildToParent: function (parent, child) {
             _addChildToParent(parent, child);
