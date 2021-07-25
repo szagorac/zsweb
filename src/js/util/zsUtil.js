@@ -23,7 +23,7 @@ var zsUtil = (function (console, win, doc) {
     const MARKUP_PREFIX = "</";
     const T_URL_PARAM = "t=";
     const THAU = 1000;
-    const STYLE_VISIBLE = { "visibility": "visible", "opacity": 1 };
+    const STYLE_VISIBLE = { "visibility": "visible" };
     const STYLE_INVISIBLE = { "visibility": "hidden" };
     const _RUN_MODE = {
         DEV: 'dev',
@@ -871,14 +871,23 @@ var zsUtil = (function (console, win, doc) {
         }
         return el;
     }
+    function _makeElementVisible(element) {
+        _setElementVisibility(element, true);
+    }
+    function _makeElementInVisible(element) {
+        _setElementVisibility(element, false);
+    }
     function _makeVisible(elementId) {
-        _setElementVisibility(elementId, true);
+        _setElementIdVisibility(elementId, true);
     }
     function _makeInVisible(elementId) {
-        _setElementVisibility(elementId, false);
+        _setElementIdVisibility(elementId, false);
     }
-    function _setElementVisibility(elementId, isVisible) {
+    function _setElementIdVisibility(elementId, isVisible) {
         var element = _getElement(elementId);
+        _setElementVisibility(element, isVisible);
+    }
+    function _setElementVisibility(element, isVisible) {
         if (_isNull(element)) {
             return;;
         }
@@ -887,7 +896,7 @@ var zsUtil = (function (console, win, doc) {
             attrs = STYLE_VISIBLE;
         }
         _setElementStyleProperty(element, attrs);
-    }    
+    }
     function _setText(element, txt) {
         if (_isNull(element) || !_isString(txt)) {
             return;;
@@ -1224,6 +1233,12 @@ var zsUtil = (function (console, win, doc) {
         },
         makeInVisible: function (elementId) {
             _makeInVisible(elementId);
+        },
+        makeElementVisible: function (element) {
+            _makeElementVisible(element);
+        },
+        makeElementInVisible: function (element) {
+            _makeElementInVisible(element);
         },
         setText: function (element, txt) {
             _setText(element, txt);

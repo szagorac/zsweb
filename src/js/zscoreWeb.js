@@ -15,6 +15,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     const CONNECT = "Connect";
     const RECONNECTING = "Reconnecting";
     const ERROR = "Error";
+    const VISIBLE = "visible";
+    const HIDDEN = "hidden";
     const TL_START_OF_PREVIOUS = "<";
     const TL_END_OF_PREVIOUS = ">";
     const CLR_GREEN = "green";
@@ -108,7 +110,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         isPlaying: false,
         isReady: false,
         score: { title: "ZScore", noSpaceTitle: "ZScore", instrument: "Part View", parts: ["Part View"], firstPageNo: 1, lastPageNo: 2 },
-        part: { name: "Part View", imgDir: null, imgPageNameToken: null, imgContPageName: null, blankPageNo: 0, contPageNo: 6666, pageRanges: [{ start: 1, end: 1 }], pages: {}, pageBeatMaps: {} },
+        part: { name: "Part View", imgDir: null, imgPageNameToken: null, imgContPageName: null, blankPageNo: 0, contPageNo: 6666, pageRanges: [{ start: 1, end: 1 }], pages: {} },
         topStave: { id: "topStave", config: config.topStave, pageId: "0", filename: "img/blankStave.png", beatMap: null, timeline: null, isActive: true, isPlaying: false, currentBeat: null},
         bottomStave: { id: "bottomStave", config: config.bottomStave, pageId: "0", filename: "img/blankStave.png", beatMap: null, timeline: null, isActive: false, isPlaying: false, currentBeat: null },
         startTimeTl: 0,
@@ -433,8 +435,6 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         for (var i = 0; i < map.length; i++) {
             addMapLement(beatMap, map[i], xLeftMargin);
         }
-        // TODO do we need to cache beatMaps ???
-        state.part.pageBeatMaps[pageId] = beatMap;
         stave.beatMap = beatMap;
         initStaveTimelines(staveId);
     }
@@ -445,7 +445,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         var startBeat = mapElement.beatStartNum;
         var xStart = mapElement.xStart + xMargin;
         var xEnd = mapElement.xEnd + xMargin;
-        var zsMapElement = new ZsTsMapElement(xStart, xEnd, mapElement.yStart, mapElement.yEnd, mapElement.beatStartNum, mapElement.beatStartDenom, mapElement.beatEndNum, mapElement.beatEndDenom);
+        var zsMapElement = new ZsTsMapElement(xStart, xEnd, mapElement.yStart, mapElement.yEnd, startBeat, mapElement.beatStartDenom, mapElement.beatEndNum, mapElement.beatEndDenom);
         beatMap[startBeat] = zsMapElement;
     }
     function setStaveTimelinesTempo(modifier) {
@@ -927,8 +927,52 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             case "BEAT":
                 onServerBeat(targets, params);
                 break;
+            case "START_MARK":
+                onStartMark(targets, params);
+                break;                                
             default:
                 logError("doAction: Unknown actionType: " + actionType);
+        }
+    }
+    function onStartMark(targets, params) {
+        if(isNull(params) || isNull(targets)) {
+            return;
+        }
+        if (u.isArray(targets)) {
+            for (var i = 0; i < targets.length; i++) {
+                setStartMark(targets[i], params);
+            }
+        } else {
+            setStartMark(targets, params);
+        }
+    }
+    function setStartMark(target, params) {
+        var stave = state[target];
+        var beatNo = params[EVENT_PARAM_BEAT_NO];
+        if(isNull(stave) || isNull(beatNo)) {
+            return;
+        }
+        var beatMap = stave.beatMap;
+        if(isNull(beatMap)) {
+            return;
+        }
+        var mapElement = beatMap[beatNo]
+        if(isNull(mapElement)) {
+            return;
+        }
+        var startX = mapElement.xStart - 1;
+        var startLine = getStaveStartMark(stave);
+        s.setLineX(startLine, startX, startX);
+        setStaveStartMarkVisiblity(startLine, true);
+    }
+    function getStaveStartMark(stave) {
+        return u.getElement(stave.config.startLineId);
+    }
+    function setStaveStartMarkVisiblity(startLine, isVisible) {
+        if(isVisible) {
+            u.makeElementVisible(startLine);
+        } else {
+            u.makeElementInVisible(startLine);
         }
     }
     function onServerBeat(targets, params) {
@@ -995,6 +1039,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             u.setElementIdStyleProperty(stave.config.maskId, config.activeStaveStyle);
         } else {
             u.setElementIdStyleProperty(stave.config.maskId, config.inactiveStaveStyle);
+            var startLine = getStaveStartMark(stave);
+            setStaveStartMarkVisiblity(startLine, false);
         }
         if(isPlay) {
             playTimeline(stave.timeline);
