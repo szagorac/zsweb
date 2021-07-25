@@ -31,6 +31,7 @@ var zsSvg = (function (u, doc) {
     const SVG_PARAM_Y1 = "y1";
     const SVG_PARAM_X2 = "x2";
     const SVG_PARAM_Y2 = "y2";
+    const SVG_PARAM_FILL = "fill";
 
     const SVG_PATH_ABS_M = "M";
     const SVG_PATH_ABS_A = "A";
@@ -156,6 +157,15 @@ var zsSvg = (function (u, doc) {
             return;
         }
         element.textContent = txt;
+    }
+    function _setElementColour(elementId, colour) {
+        var element = u.getElement(elementId);
+        if(u.isNull(element)) {
+            return;
+        }
+        var params = {};
+        params.fill = colour;
+        u.setElementStyleProperty(element, params)
     }
     function _createArc(x, y, radius, startAngle, endAngle) {
         var start = u.polarToCartesian(x, y, radius, endAngle);
@@ -324,6 +334,9 @@ var zsSvg = (function (u, doc) {
         }, 
         setElementText: function (elementId, txt) {
             return  _setElementText(elementId, txt);
+        }, 
+        setElementColour: function (elementId, colour) {
+            return  _setElementColour(elementId, colour);
         },       
     }
 }(zsUtil, document));

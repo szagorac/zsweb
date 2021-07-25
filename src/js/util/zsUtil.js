@@ -769,6 +769,10 @@ var zsUtil = (function (console, win, doc) {
     function _isSafari(navigator) {
         return navigator.userAgent.indexOf('Safari') != -1 && navigator.userAgent.indexOf('Chrome') == -1;
     }
+    function _setElementIdAttributes(elementId, attrAssocArr) {
+        var element = _getElement(elementId);
+        _setElementAttributes(element, attrAssocArr);
+    }
     function _setElementAttributes(element, attrAssocArr) {
         if (_isNull(element) || _isNull(attrAssocArr)) {
             _logError("setElementAttributes: invalid inputs");
@@ -1307,6 +1311,9 @@ var zsUtil = (function (console, win, doc) {
         },
         setElementAttributes: function (element, attrAssocArr) {
             _setElementAttributes(element, attrAssocArr);
+        },
+        setElementIdAttributes: function (elementId, attrAssocArr) {
+            _setElementIdAttributes(elementId, attrAssocArr);
         },
         setElementStyleProperty: function (element, attrAssocArr) {
             _setElementStyleProperty(element, attrAssocArr);

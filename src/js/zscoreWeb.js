@@ -20,8 +20,10 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     const CLR_GREEN = "green";
     const CLR_RED = "red";
     const CLR_ORANGE = "orange";
+    const CLR_YELLOW = "yellow";
     const CLR_WHITE = "white";
     const CLR_BLACK = "black";
+    const CLR_NONE = "none";
     const FILL_CONNECTED = CLR_GREEN;
     const FILL_DISCONNECTED = CLR_RED;
     const FILL_ERROR = CLR_ORANGE;
@@ -76,6 +78,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         idPartsListOuterDiv: "partListOuterDiv",
         idInstrument: "part",
         idTempoBpm: "tmpBpm",
+        idSemaphorePrefix: "semC",
         blankPageUrl: "img/blankStave.png",
         filterOutParts: [AV, FULL_SCORE],
         connectedRectStyle: { "fill": FILL_CONNECTED, "stroke": STROKE_CONNECTED, "stroke-width": "0px", "visibility": "visible", "opacity": 1 },
@@ -87,8 +90,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         connectedBtnAttrib: { "filter": "" },
         disconnectedBtnAttrib: { "filter": "url(#dropshadow)" },
         errorBtnAttrib: { "filter": "url(#dropshadow)" },
-        topStave: { gId: "stvTop", imgId: "stvTopImg", startLineId: "stvTopStartLine", positionLineId: "stvTopPosLine", beatBallId: "stvTopBeatBall", maskId: "stvTopMask", ballYmax: 84, xLeftMargin: 31.5 },
-        bottomStave: { gId: "stvBot", imgId: "stvBotImg", startLineId: "stvBotStartLine", positionLineId: "stvBotPosLine", beatBallId: "stvBotBeatBall", maskId: "stvBotMask", ballYmax: 84, xLeftMargin: 31.5 },
+        topStave: { gId: "stvTop", imgId: "stvTopImg", startLineId: "stvTopStartLine", positionLineId: "stvTopPosLine", beatBallId: "stvTopBeatBall", maskId: "stvTopMask", ballYmax: 84, xLeftMargin: 31.5, posLineConf: {x1: "95", y1: "80", x2: "95", y2: "281"}, posBallConf: {cx: "95", cy: "110", r: "4"} },
+        bottomStave: { gId: "stvBot", imgId: "stvBotImg", startLineId: "stvBotStartLine", positionLineId: "stvBotPosLine", beatBallId: "stvBotBeatBall", maskId: "stvBotMask", ballYmax: 84, xLeftMargin: 31.5, posLineConf: {x1: "95", y1: "301", x2: "95", y2: "502"}, posBallConf: {cx: "95", cy: "331", r: "4"} },
     }
     var state = {
         isRunning: false,
@@ -179,6 +182,19 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         initAudio();
 
         state.isInitialised = true;
+    }
+    function resetState() {
+        resetStave(state.topStave);
+        resetStave(state.bottomStave);
+    }
+    function resetStave(stave) {
+        if(isNull(stave) || isNull(stave.config)) {
+            return;
+        }
+
+        var conf = stave.config;
+        u.setElementIdAttributes(conf.positionLineId, conf.posLineConf);
+        u.setElementIdAttributes(conf.beatBallId, conf.posBallConf);
     }
     function onStateBtnClick() {
         if (state.isInitialised) {
@@ -489,7 +505,6 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     }
     function createPositionLineTween(lineId, beatDurationSec, endX, beatId, beatNo) {
         var tweenId = config.tweenIdPrefix + beatId;
-        log("createPositionLineTween: " + tweenId);
         return gsap.to(u.toCssIdQuery(lineId), {
             id: tweenId,
             duration: beatDurationSec,
@@ -503,8 +518,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     }
     function createPositionBallXTween(ballId, beatDurationSec, endX, beatId) {
         var tweenId = config.ballTweenIdPrefix + beatId;
-        log("createPositionBallXTween: " + tweenId);
         return gsap.to(u.toCssIdQuery(ballId), {
+            id: tweenId,
             duration: beatDurationSec,
             attr: {"cx":endX},
             ease: "none",
@@ -512,8 +527,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     }
     function createPositionBallYTween(ballId, beatDurationSec, endY, beatId) {
         var tweenId = config.ballTweenIdPrefix + beatId;
-        log("createPositionBallYTween: " + tweenId);
         return gsap.to(u.toCssIdQuery(ballId), {
+            id: tweenId,            
             duration: beatDurationSec,
             attr: {"cy":endY, "r":2},
             ease: "power1.out",
@@ -528,17 +543,20 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         if(isNotNull(stave)) {
             stave.isRunning = false;
         }
+        if(isNotNull(stave.timeline)) {
+            stave.timeline.pause(0);
+        }
     }
     function onBeatStart(beatId, beatNo) {
         var currentTime = a.getCurrentTime();
         state.audioTlBeatTime = currentTime;
-        log("onBeatStart: beat: " + beatId + " beatNo: " + beatNo + " beatTime: " + currentTime);
+        logDebug("onBeatStart: beat: " + beatId + " beatNo: " + beatNo + " beatTime: " + currentTime);
         setCurrentBeat(beatNo, beatId);
     }
     function onBeatEnd(beatId, beatNo) {
         var now = a.getCurrentTime();
         var diff = now - state.startTimeTl;
-        log("onBeatEnd: beat: " + beatId + " beatNo: " + beatNo + " elapsedTime: " + diff);
+        logDebug("onBeatEnd: beat: " + beatId + " beatNo: " + beatNo + " elapsedTime: " + diff);
     }
     function setCurrentBeat(beatNo, beatId) {
         if(!u.isNumeric(beatNo)) {
@@ -877,9 +895,125 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             case "PING":
                 onPing(params);
                 break;
+            case "START":
+                onStart(targets);
+                break;
+            case "STOP":
+                onStop();
+                break;                
+            case "SEMAPHORE_ON":
+                onSemaphoreOn(params);
+                break;
+            case "SEMAPHORE_OFF":
+                onSemaphoreOff(params);
+                break;                
             default:
                 logError("doAction: Unknown actionType: " + actionType);
         }
+    }
+    function onSemaphoreOn(params) {
+        if(isNull(params)) {
+            return;
+        }
+        processSemaphore(params.lightNo, params.colourId);
+    }
+    function onSemaphoreOff(params) {
+        if(isNull(params)) {
+            return;
+        }
+        showSemaphore(params.lightNo, CLR_NONE);
+    }
+    function setStopSemaphore() {
+        showSemaphore(4, CLR_NONE);
+        showSemaphore(1, CLR_RED);
+    }
+    function processSemaphore(lightNo, colourId) {
+        var colour = getColour(colourId);
+        showSemaphore(lightNo, colour);
+    }
+    function showSemaphore(lightNo, colour) {
+        if(isNull(lightNo) || isNull(colour)) {
+            return;
+        }
+        var c = u.toInt(lightNo);
+        for (var i = 1; i <= c; i++) {
+            var lightId = config.idSemaphorePrefix + i;
+            s.setElementColour(lightId, colour);
+        }
+    }
+    function getColour(colourId) {
+        if (!colourId) {
+            colourId = 1;
+        }
+    
+        var colour;
+        switch (colourId) {
+            case 4:
+                colour = CLR_RED;
+                break;
+            case 3:
+                colour = CLR_ORANGE;
+                break;
+            case 2:
+                colour = CLR_YELLOW;
+                break;
+            case 1:
+            default:
+                colour = CLR_GREEN;
+        }
+        return colour;
+    }
+    function onStop() {
+        stopStaveTimelines();
+        setStopSemaphore();
+        resetState();
+    }
+    function onStart(targets) {
+        if (u.isArray(targets)) {
+            for (var i = 0; i < targets.length; i++) {
+                start(targets[i]);
+            }
+        } else {
+            start(targets);
+        }
+    }
+    function start(target) {
+        if(isNull(target)) {
+            return;
+        }
+        var stave = state[target];
+        if(isNull(stave)) {
+            return;
+        }
+        var tl = stave.timeline;
+        if(isNull(tl)) {
+            return;
+        }
+        startTimeline(tl);
+        state.isRunning = true;
+    }
+    function startTimeline(timeline) {
+        if (isNull(timeline)) {
+            logError("startTimeline: invalid timeline");
+            return;
+        }
+        var progress = timeline.progress();
+        if (progress > 0 && progress < 1) {
+            timeline.resume();
+        } else {
+            timeline.play(0);
+        }
+    }
+    function stopStaveTimelines() {
+        stopTimeline(state.topStave.timeline);
+        stopTimeline(state.bottomStave.timeline);
+    }
+    function stopTimeline(timeline) {
+        if (isNull(timeline)) {
+            logError("stopTimeline: invalid timeline");
+            return;
+        }
+        timeline.pause();
     }
     function onPing(params) {
         if (!u.isObject(params)) {
@@ -906,6 +1040,9 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     }
     function log(val) {
         u.log(val);
+    }
+    function logDebug(val) {
+        u.logDebug(val);
     }
     // Public members if any??
     return {
