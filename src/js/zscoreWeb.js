@@ -49,6 +49,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     const EVENT_PARAM_SERVER_TIME = "serverTime";
     const EVENT_PARAM_IS_ACTIVE = "isActive";
     const EVENT_PARAM_IS_PLAY = "isPlay";
+    const EVENT_PARAM_BEAT_NO = "beatNo";
 
     // const RUN_MODE = "DEV";
     // const RUN_MODE = "PROD";
@@ -108,8 +109,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         isReady: false,
         score: { title: "ZScore", noSpaceTitle: "ZScore", instrument: "Part View", parts: ["Part View"], firstPageNo: 1, lastPageNo: 2 },
         part: { name: "Part View", imgDir: null, imgPageNameToken: null, imgContPageName: null, blankPageNo: 0, contPageNo: 6666, pageRanges: [{ start: 1, end: 1 }], pages: {}, pageBeatMaps: {} },
-        topStave: { id: "topStave", config: config.topStave, pageId: "0", filename: "img/blankStave.png", beatMap: null, timeline: null, isActive: true, isPlaying: false},
-        bottomStave: { id: "bottomStave", config: config.bottomStave, pageId: "0", filename: "img/blankStave.png", beatMap: null, timeline: null, isActive: false, isPlaying: false },
+        topStave: { id: "topStave", config: config.topStave, pageId: "0", filename: "img/blankStave.png", beatMap: null, timeline: null, isActive: true, isPlaying: false, currentBeat: null},
+        bottomStave: { id: "bottomStave", config: config.bottomStave, pageId: "0", filename: "img/blankStave.png", beatMap: null, timeline: null, isActive: false, isPlaying: false, currentBeat: null },
         startTimeTl: 0,
         currentBeatId: "b0",
         currentBeatNo: 0,
@@ -511,6 +512,9 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             staveTimeline.add(beatPositionBallXTween, TL_START_OF_PREVIOUS);
             staveTimeline.add(beatPositionBallYTween, tweenId);
         }
+        if(isNotNull(stave.currentBeat)) {
+            setTimelineBeat(staveTimeline, stave.currentBeat);
+        }
         stave.timeline = staveTimeline;
     }
     function createPositionLineTween(lineId, beatDurationSec, endX, beatId, beatNo) {
@@ -548,7 +552,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         });
     }
     function onTimelineComplete(staveid) {
-        log("onTimelineComplete stave: " + staveid);
+        logDebug("onTimelineComplete stave: " + staveid);
         var stave = state[staveid];
         if(isNotNull(stave)) {
             stave.isRunning = false;
@@ -919,9 +923,50 @@ var zscore = (function (u, n, s, a, m, win, doc) {
                 break;
             case "ACTIVATE":
                 onActivate(targets, params);
-                break;                                
+                break;
+            case "BEAT":
+                onServerBeat(targets, params);
+                break;
             default:
                 logError("doAction: Unknown actionType: " + actionType);
+        }
+    }
+    function onServerBeat(targets, params) {
+        if(isNull(params) || isNull(targets)) {
+            return;
+        }
+        if (u.isArray(targets)) {
+            for (var i = 0; i < targets.length; i++) {
+                serverBeat(targets[i], params);
+            }
+        } else {
+            serverBeat(targets, params);
+        }
+    }
+    function serverBeat(target, params) {
+        var stave = state[target];
+        var beatNo = params[EVENT_PARAM_BEAT_NO];
+        setStaveBeat(stave, beatNo);
+    }
+    function setStaveBeat(stave, beatNo) {
+        if(isNull(stave) || isNull(beatNo)) {
+            return;
+        }
+        var currentTime = a.getCurrentTime();
+        logDebug("setStaveBeat: stave: " + stave.id + " beat: " + beatNo + " time: " + currentTime);
+        setTimelineBeat(stave.timeline, beatNo);
+        stave.currentBeat = beatNo;        
+    }
+    function setTimelineBeat(timeline, beatNo) {
+        if(isNull(timeline)) {
+            return;
+        }
+        var beatLabel = config.tweenIdPrefix + config.beatIdPrefix + beatNo;
+        var labels = timeline.labels;
+        if(beatLabel in labels) {
+            timeline.seek(beatLabel);     
+        } else {
+           logDebug("setTimelineBeat: Invalid beat " + beatLabel);
         }
     }
     function onActivate(targets, params) {
