@@ -17,6 +17,9 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     const ERROR = "Error";
     const VISIBLE = "visible";
     const HIDDEN = "hidden";
+    const NONE = "none";
+    const FILL = "fill";
+    const STROKE = "stroke";
     const TL_START_OF_PREVIOUS = "<";
     const TL_END_OF_PREVIOUS = ">";
     const CLR_GREEN = "green";
@@ -27,7 +30,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     const CLR_BLACK = "black";
     const CLR_BLUE = "blue";
     const CLR_GREY = "grey";
-    const CLR_NONE = "none";
+    const CLR_LIGHT_GREY = "lightgrey";
+    const CLR_NONE = NONE;
     const FILL_ACTIVE = CLR_NONE;
     const FILL_INACTIVE = CLR_WHITE;
     const FILL_CONNECTED = CLR_GREEN;
@@ -52,6 +56,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     const EVENT_PARAM_IS_ACTIVE = "isActive";
     const EVENT_PARAM_IS_PLAY = "isPlay";
     const EVENT_PARAM_BEAT_NO = "beatNo";
+    const EVENT_PARAM_CSV_INSTRUMENTS = "csvInstruments";
 
     // const RUN_MODE = "DEV";
     // const RUN_MODE = "PROD";
@@ -87,19 +92,29 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         idServerStatusBtn: "srvrStatBtn",
         idParts: "parts",
         idPartsListOuterDiv: "partListOuterDiv",
-        idInstrument: "part",
+        idInstrument: "part",        
+        idInstControls: "instControls",
+        idInstSlotPrefix: "instSlot",        
+        idInstSlotTxtPrefix: "instSlotTxt",
+        idInstSlotBtnPrefix: "instSlotRect",
         idTempoBpm: "tmpBpm",
         idSemaphorePrefix: "semC",
         blankPageUrl: "img/blankStave.png",
         filterOutParts: [AV, FULL_SCORE],
-        connectedRectStyle: { "fill": FILL_CONNECTED, "stroke": STROKE_CONNECTED, "stroke-width": "0px", "visibility": "visible", "opacity": 1 },
-        disconnectedRectStyle: { "fill": FILL_DISCONNECTED, "stroke": STROKE_DISCONNECTED, "stroke-width": "1px", "visibility": "visible", "opacity": 1 },
-        errorRectStyle: { "fill": FILL_ERROR, "stroke": STROKE_ERROR, "stroke-width": "1px", "visibility": "visible", "opacity": 1 },
+        connectedRectStyle: { "fill": FILL_CONNECTED, "stroke": STROKE_CONNECTED, "stroke-width": "0px", "visibility": VISIBLE, "opacity": 1 },
+        disconnectedRectStyle: { "fill": FILL_DISCONNECTED, "stroke": STROKE_DISCONNECTED, "stroke-width": "1px", "visibility": VISIBLE, "opacity": 1 },
+        errorRectStyle: { "fill": FILL_ERROR, "stroke": STROKE_ERROR, "stroke-width": "1px", "visibility": VISIBLE, "opacity": 1 },
         connectedTxtStyle: { "fill": TXT_FILL_CONNECTED },
         disconnectedTxtStyle: { "fill": TXT_FILL_DISCONNECTED },
         errorTxtStyle: { "fill": TXT_FILL_ERROR },
-        activeStaveStyle: { "fill": FILL_ACTIVE, "stroke": STROKE_ACTIVE, "stroke-width": "1px", "visibility": "visible", "opacity": 0.5 },
-        inactiveStaveStyle: { "fill": FILL_INACTIVE, "stroke": STROKE_INACTIVE, "stroke-width": "1px", "visibility": "visible", "opacity": 0.4 },
+        activeStaveStyle: { "fill": FILL_ACTIVE, "stroke": STROKE_ACTIVE, "stroke-width": "1px", "visibility": VISIBLE, "opacity": 0.5 },
+        inactiveStaveStyle: { "fill": FILL_INACTIVE, "stroke": STROKE_INACTIVE, "stroke-width": "1px", "visibility": VISIBLE, "opacity": 0.4 },
+        instSlotBtnActiveStyle: { "fill": CLR_WHITE, "stroke": CLR_BLACK, "stroke-width": "1px", "visibility": VISIBLE, "opacity": 1.0 },
+        instSlotBtnInActiveStyle: { "fill": CLR_LIGHT_GREY, "stroke": NONE, "visibility": VISIBLE, "opacity": 1.0 },
+        instSlotTxtActiveStyle: { "fill": CLR_BLACK, "visibility": VISIBLE, "opacity": 1.0 },
+        instSlotTxtInActiveStyle: { "fill": CLR_BLACK, "stroke": NONE, "visibility": HIDDEN, "opacity": 0.0 },
+        instSlotActiveBtnAttrib: { "filter": "url(#dropshadow)" },
+        instSlotInActiveBtnAttrib: { "filter": "none" },
         connectedBtnAttrib: { "filter": "" },
         disconnectedBtnAttrib: { "filter": "url(#dropshadow)" },
         errorBtnAttrib: { "filter": "url(#dropshadow)" },
@@ -600,6 +615,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         }
         if (isNotNull(pageInfo.rndPageId)) {
             stave.rndPageId = pageInfo.rndPageId;
+        } else {
+            stave.rndPageId = null;
         }
         showStavePage(stave);
     }
@@ -824,10 +841,19 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     function processinstruments(instruments) {
         var parts = [];
         if (!u.isArray(instruments)) {
-            parts.push(instruments);
+            if (!u.arrContains(config.filterOutParts, part)) {
+                parts.push(instruments);
+            }            
         } else {
-            parts = instruments;
+            for (var i = 0; i < instruments.length; i++) {
+                var part = instruments[i]
+                if (u.arrContains(config.filterOutParts, part)) {
+                    continue;
+                }
+                parts.push(part);
+            }
         }
+
         if (!u.arrEquals(state.score.parts, parts)) {
             state.score.parts = parts;
         }
@@ -936,10 +962,95 @@ var zscore = (function (u, n, s, a, m, win, doc) {
                 break;
             case "START_MARK":
                 onStartMark(targets, params);
-                break;                                
+                break;
+            case "INSTRUMENT_SLOTS":
+                onInstrumentSlots(params);
+                break;
+            case "RESET_INSTRUMENT_SLOTS":
+                onResetInstrumentSlots();
+                break;
             default:
                 logError("doAction: Unknown actionType: " + actionType);
         }
+    }    
+    function onResetInstrumentSlots() {
+        resetInstrumentSlots();
+        hideInstrumentSlots();
+    }
+    function onInstrumentSlots(params) {
+        if(isNull(params)) {
+            return;
+        }
+        var csvInstruments = params[EVENT_PARAM_CSV_INSTRUMENTS];
+        setInstrumentSlots(csvInstruments);
+        showInstrumentSlots();
+    }
+    function showInstrumentSlots() {        
+        u.makeVisible(config.idInstControls);
+    }
+    function hideInstrumentSlots() {
+        u.makeInVisible(config.idInstControls);
+    }
+    function setInstrumentSlots(csvInstruments) {
+        if(isNull(csvInstruments)) {
+            return;
+        }
+        var insts = u.csvToArr(csvInstruments);
+        if(isNull(insts) || insts.length <= 0) {
+            return;
+        }
+        var parts = state.score.parts;
+        if(isNull(parts) || parts.length <= 0) {
+            return;
+        }
+        for (var i = 0; i < parts.length; i++) {
+            var slotNo = i + 1;
+            if(i < insts.length) {
+                setActiveInstrumentSlot(insts[i], slotNo);
+            } else {
+                disableInstrumentSlot(slotNo);
+            }
+        }
+    }    
+    function resetInstrumentSlots() {
+        var parts = state.score.parts;
+        if(isNull(parts) || parts.length <= 0) {
+            return;
+        }
+        for (var i = 0; i < parts.length; i++) {
+            var slotNo = i + 1;
+            hideInstrumentSlot(slotNo);
+        }
+    }
+    function setActiveInstrumentSlot(instrument, slotNo) {
+        if(isNull(instrument) || isNull(slotNo)) {
+            return;
+        }
+        var txtId = config.idInstSlotTxtPrefix + slotNo;
+        var btnId = config.idInstSlotBtnPrefix + slotNo;
+        var slotId = config.idInstSlotPrefix + slotNo;
+        u.setElementIdAttributes(slotId, config.instSlotActiveBtnAttrib);
+        s.setElementText(txtId, instrument.trim());
+        u.setElementIdStyleProperty(txtId, config.instSlotTxtActiveStyle);
+        u.setElementIdStyleProperty(btnId, config.instSlotBtnActiveStyle);
+    }
+    function disableInstrumentSlot(slotNo) {
+        var txtId = config.idInstSlotTxtPrefix + slotNo;
+        var btnId = config.idInstSlotBtnPrefix + slotNo;
+        var slotId = config.idInstSlotPrefix + slotNo;
+        
+        u.setElementIdAttributes(slotId, config.instSlotInActiveBtnAttrib);
+        s.setElementText(txtId, EMPTY);
+        u.setElementIdStyleProperty(txtId, config.instSlotTxtInActiveStyle);
+        u.setElementIdStyleProperty(btnId, config.instSlotBtnInActiveStyle);
+    }
+    function hideInstrumentSlot(slotNo) {
+        var txtId = config.idInstSlotTxtPrefix + slotNo;
+        var btnId = config.idInstSlotBtnPrefix + slotNo;
+        var slotId = config.idInstSlotPrefix + slotNo;        
+        u.makeInVisible(txtId);
+        u.makeInVisible(btnId);
+        u.makeInVisible(slotId);
     }
     function onStartMark(targets, params) {
         if(isNull(params) || isNull(targets)) {
@@ -954,6 +1065,9 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         }
     }
     function setStartMark(target, params) {
+        if(isNull(params)) {
+            return;
+        }
         var stave = state[target];
         var beatNo = params[EVENT_PARAM_BEAT_NO];
         if(isNull(stave) || isNull(beatNo)) {

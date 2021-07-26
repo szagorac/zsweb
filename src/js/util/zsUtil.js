@@ -6,6 +6,7 @@ var zsUtil = (function (console, win, doc) {
     const ERROR_TXT = "I'm sorry Dave, I'm afraid I can't do that.";
     const EMPTY = "";
     const SPACE = " ";
+    const COMMA = ",";
     const SEMICOL = ";";
     const QMARK = "?";
     const AMP = "&";
@@ -1189,6 +1190,12 @@ var zsUtil = (function (console, win, doc) {
     function _interpolateLinear(v1, v2, decMid) {
         return v1 * (1 - decMid) + v2 * decMid;
     }
+    function _csvToArr(csvStr) {
+        if (!csvStr) {
+            return [];
+        }    
+        return csvStr.split(COMMA);
+    }
 
     // PUBLIC API
     return {
@@ -1434,6 +1441,9 @@ var zsUtil = (function (console, win, doc) {
             }
             return HASH + id;
         },
+        csvToArr: function (csvStr) {
+            return _csvToArr(csvStr);
+        },        
         toStr: function (val) {
             return String(val);
         },
