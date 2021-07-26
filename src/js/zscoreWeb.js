@@ -111,8 +111,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         isReady: false,
         score: { title: "ZScore", noSpaceTitle: "ZScore", instrument: "Part View", parts: ["Part View"], firstPageNo: 1, lastPageNo: 2 },
         part: { name: "Part View", imgDir: null, imgPageNameToken: null, imgContPageName: null, blankPageNo: 0, contPageNo: 6666, pageRanges: [{ start: 1, end: 1 }], pages: {} },
-        topStave: { id: "topStave", config: config.topStave, pageId: "0", filename: "img/blankStave.png", beatMap: null, timeline: null, isActive: true, isPlaying: false, currentBeat: null},
-        bottomStave: { id: "bottomStave", config: config.bottomStave, pageId: "0", filename: "img/blankStave.png", beatMap: null, timeline: null, isActive: false, isPlaying: false, currentBeat: null },
+        topStave: { id: "topStave", config: config.topStave, pageId: "p0", rndPageId: null, filename: "img/blankStave.png", beatMap: null, timeline: null, isActive: true, isPlaying: false, currentBeat: null},
+        bottomStave: { id: "bottomStave", config: config.bottomStave, pageId: "p0", rndPageId: null, filename: "img/blankStave.png", beatMap: null, timeline: null, isActive: false, isPlaying: false, currentBeat: null },
         startTimeTl: 0,
         currentBeatId: "b0",
         currentBeatNo: 0,
@@ -598,6 +598,9 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         if (isNotNull(pageInfo.pageId)) {
             stave.pageId = pageInfo.pageId;
         }
+        if (isNotNull(pageInfo.rndPageId)) {
+            stave.rndPageId = pageInfo.rndPageId;
+        }
         showStavePage(stave);
     }
     function showStavePage(stave) {
@@ -610,8 +613,12 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             return;
         }
 
-        var imgSrc = null;
-        var pageImg = getPageImage(stave.pageId)
+        var imgSrc = null;        
+        var showPageId = stave.pageId;
+        if(isNotNull(stave.rndPageId)) {
+            showPageId = stave.rndPageId;
+        }
+        var pageImg = getPageImage(showPageId)
         if (isNull(pageImg)) {
             imgSrc = createStaveImgUrl(stave.fileName);
         } else {
