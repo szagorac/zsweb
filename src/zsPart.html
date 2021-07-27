@@ -58,7 +58,7 @@
             <!-- title -->
             <g id="header">
                 <text id="title" x="50%" y="28" dominant-baseline="middle" text-anchor="middle" font-size="1.5em">ZScore</text> 
-                <text id="part" x="50%" y="60" dominant-baseline="middle" text-anchor="middle">Part View</text> 
+                <text id="part" x="50%" y="60" dominant-baseline="middle" text-anchor="middle" font-size="1.1em">Part View</text> 
             </g>
             
             <!-- top controls -->
@@ -76,9 +76,9 @@
                 <text id="tmpBpm" x="115" y="65" dominant-baseline="middle" font-size="1.5em" text-anchor="start">0</text> 
             </g>
             <!-- status -->
-            <g id="srvrStatus">       
-                <g id="srvrStatBtn" class="srvr-status-svg-btn" filter="url(#dropshadow)">                
-                    <rect id="srvrStatusRect" x="702" y="13" width="80" height="30" fill="red" style="stroke-width:1;stroke:red" onclick="stateBtnClick();" rx="5"/>                        
+            <g id="srvrStatus">
+                <g id="srvrStatBtn" class="srvr-status-svg-btn" filter="url(#dropshadow)">
+                    <rect id="srvrStatusRect" x="702" y="13" width="80" height="30" fill="red" style="stroke-width:1;stroke:red" onclick="stateBtnClick();" rx="5"/>
                     <text id="srvrStatusTxt" x="742" y="30" dominant-baseline="middle" text-anchor="middle" font-size="0.8em" fill="white" pointer-events="none">Connect</text>
                 </g>
             </g> 
@@ -96,39 +96,40 @@
                 <g id="stvBot">
                     <image id="stvBotImg" xlink:href="img/blankStave.png" preserveAspectRatio="xMidYMid meet" width="752" height="211" x="30" y="301" />
                     <line id="stvBotStartLine" x1="95" y1="301" x2="95" y2="502" stroke="blue" style="opacity:0.2;stroke-width:3"/>
-                    <line id="stvBotPosLine" x1="95" y1="301" x2="95" y2="502" stroke="purple" style="opacity:0.3;stroke-width:2"/>            
+                    <line id="stvBotPosLine" x1="95" y1="301" x2="95" y2="502" stroke="purple" style="opacity:0.3;stroke-width:2"/>
                     <circle id="stvBotBeatBall" cx="95" cy="331" r="4" stroke="none" fill="purple" style="opacity:1.0"/>
                     <rect id="stvBotMask" x="-1000" y="300" width="2812" height="203" fill="white" style="opacity:0.4;stroke-width:1;stroke:grey"/>
                 </g>
             </g>
             
+
             <!-- bottom controls -->
+            <rect id="controlsFrame" x="196" y="527" width="420" height="50" fill="none" style="stroke-width:1;stroke:black;opacity:0.3" rx="10"/>
             <g id="instControls" style="visibility: hidden;">
-                <g id="instSlot1" class="inst-svg-btn" filter="url(#dropshadow)">             
-                    <rect id="instSlotRect1" x="216" y="537" width="80" height="30" fill="white" style="stroke-width:1;stroke:rgb(0,0,0)" rx="10" onclick="onInstrumentSelect('inst1');"/>                        
-                    <text id="instSlotTxt1" x="256" y="554" dominant-baseline="middle" text-anchor="middle" font-size="1em" fill="black" pointer-events="none">Violin1</text>
+                <g id="instSlot1" class="inst-svg-btn" filter="url(#dropshadow)">
+                    <rect id="instSlotRect1" x="216" y="537" width="80" height="30" fill="white" style="stroke-width:1;stroke:rgb(0,0,0)" rx="10" onclick="onInstrumentSelect(1, 'inst1');"/>
+                    <text id="instSlotTxt1" x="256" y="554" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="1.1em" fill="black" pointer-events="none">Violin1</text>
                 </g>
-                <g id="instSlot2" class="inst-svg-btn" filter="url(#dropshadow)">              
-                    <rect id="instSlotRect2" x="316" y="537" width="80" height="30" fill="white" style="stroke-width:1;stroke:rgb(0,0,0)" rx="10" onclick="onInstrumentSelect('inst2');"/>                        
-                    <text id="instSlotTxt2" x="356" y="554" dominant-baseline="middle" text-anchor="middle" font-size="1em" fill="black" pointer-events="none">Violin2</text>
+                <g id="instSlot2" class="inst-svg-btn" filter="url(#dropshadow)">
+                    <rect id="instSlotRect2" x="316" y="537" width="80" height="30" fill="white" style="stroke-width:1;stroke:rgb(0,0,0)" rx="10" onclick="onInstrumentSelect(2, 'inst2');"/>
+                    <text id="instSlotTxt2" x="356" y="554" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="1.1em" fill="black" pointer-events="none">Violin2</text>
                 </g>
-                <g id="instSlot3" class="inst-svg-btn" filter="url(#dropshadow)">              
-                    <rect id="instSlotRect3" x="416" y="537" width="80" height="30" fill="white" style="stroke-width:1;stroke:rgb(0,0,0)" rx="10" onclick="onInstrumentSelect('inst3');"/>                        
-                    <text id="instSlotTxt3" x="456" y="554" dominant-baseline="middle" text-anchor="middle" font-size="1em" fill="black" pointer-events="none">Viola</text>
+                <g id="instSlot3" class="inst-svg-btn" filter="url(#dropshadow)">
+                    <rect id="instSlotRect3" x="416" y="537" width="80" height="30" fill="white" style="stroke-width:1;stroke:rgb(0,0,0)" rx="10" onclick="onInstrumentSelect(3, 'inst3');"/>
+                    <text id="instSlotTxt3" x="456" y="554" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="1.1em" fill="black" pointer-events="none">Viola</text>
                 </g>
-                <g id="instSlot4" class="inst-svg-btn-dis" filter="none">              
-                    <rect id="instSlotRect4" x="516" y="537" width="80" height="30" fill="lightgrey" style="stroke:none" rx="10" onclick=""/>                        
-                    <text id="instSlotTxt4" x="556" y="554" dominant-baseline="middle" text-anchor="middle"  style="visibility: hidden;" font-size="1em" fill="black" pointer-events="none">Cello</text>
-                </g>                                
+                <g id="instSlot4" class="inst-svg-btn-dis" filter="none">
+                    <rect id="instSlotRect4" x="516" y="537" width="80" height="30" fill="lightgrey" style="stroke:none" rx="10" onclick="onInstrumentSelect(4, 'inst4');"/>
+                    <text id="instSlotTxt4" x="556" y="554" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="1.1em" fill="black" pointer-events="none">Cello</text>
+                </g>
             </g>
-           
         </svg>    
     </div>
     <div id="partListOuterDiv" class="outer" style="visibility: hidden;">
         <div class="middle">
-            <div class="part-list">               
+            <div class="part-list">
                 <div class="part-list-content">Select part: </div>
-                <div id="parts">                    
+                <div id="parts">
                 </div>
             </div>
         </div>
@@ -166,9 +167,9 @@
                 }
             }
         }      
-        function onInstrumentSelect(inst) {
+        function onInstrumentSelect(slotNo, inst) {
             try {
-                zscore.onInstrumentSelect(inst);
+                zscore.onInstrumentSelect(slotNo, inst);
             } catch(err) {
                 if(zsUtil) {
                     zsUtil.logException(err, "Failed onInstrumentSelect: " + inst);

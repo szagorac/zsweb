@@ -18,6 +18,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     const VISIBLE = "visible";
     const HIDDEN = "hidden";
     const NONE = "none";
+    const ON_CLICK = "onclick";    
     const FILL = "fill";
     const STROKE = "stroke";
     const TL_START_OF_PREVIOUS = "<";
@@ -31,6 +32,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     const CLR_BLUE = "blue";
     const CLR_GREY = "grey";
     const CLR_LIGHT_GREY = "lightgrey";
+    const CLR_LAWN_GREEN = "lawngreen";
     const CLR_NONE = NONE;
     const FILL_ACTIVE = CLR_NONE;
     const FILL_INACTIVE = CLR_WHITE;
@@ -51,15 +53,15 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     const EVENT_ID_PART_REG = "PART_REG";
     const EVENT_ID_PART_READY = "PART_READY";
     const EVENT_ID_PING = "PING";
+    const EVENT_ID_SELECT_ISLOT = "SELECT_ISLOT";
     const EVENT_PARAM_PART = "part";
     const EVENT_PARAM_SERVER_TIME = "serverTime";
     const EVENT_PARAM_IS_ACTIVE = "isActive";
     const EVENT_PARAM_IS_PLAY = "isPlay";
     const EVENT_PARAM_BEAT_NO = "beatNo";
     const EVENT_PARAM_CSV_INSTRUMENTS = "csvInstruments";
-
-    // const RUN_MODE = "DEV";
-    // const RUN_MODE = "PROD";
+    const EVENT_PARAM_SLOT_NO = "slotNo";
+    const EVENT_PARAM_SLOT_INSTRUMENT = "slotInstrument";
 
     var AUDIO_FLIES = [
         '/audio/violin-tuning.mp3',
@@ -79,6 +81,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         appUrlSse: "/sse",
         appUrlWebsockets: "/wsoc",
         pageNoToken: "@PgNo@",
+        instToken: "@Inst@",
+        slotNoToken: "@SlotNo@",
         pageIdPrefix: "p",
         tsBaseBeatDenom: 8,
         tsY: 0,
@@ -110,11 +114,12 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         activeStaveStyle: { "fill": FILL_ACTIVE, "stroke": STROKE_ACTIVE, "stroke-width": "1px", "visibility": VISIBLE, "opacity": 0.5 },
         inactiveStaveStyle: { "fill": FILL_INACTIVE, "stroke": STROKE_INACTIVE, "stroke-width": "1px", "visibility": VISIBLE, "opacity": 0.4 },
         instSlotBtnActiveStyle: { "fill": CLR_WHITE, "stroke": CLR_BLACK, "stroke-width": "1px", "visibility": VISIBLE, "opacity": 1.0 },
+        instSlotBtnActiveInstStyle: { "fill": "#d7f2cd", "stroke": CLR_BLACK, "stroke-width": "1px", "visibility": VISIBLE, "opacity": 1.0 },
         instSlotBtnInActiveStyle: { "fill": CLR_LIGHT_GREY, "stroke": NONE, "visibility": VISIBLE, "opacity": 1.0 },
         instSlotTxtActiveStyle: { "fill": CLR_BLACK, "visibility": VISIBLE, "opacity": 1.0 },
         instSlotTxtInActiveStyle: { "fill": CLR_BLACK, "stroke": NONE, "visibility": HIDDEN, "opacity": 0.0 },
-        instSlotActiveBtnAttrib: { "filter": "url(#dropshadow)" },
-        instSlotInActiveBtnAttrib: { "filter": "none" },
+        instSlotActiveAttrib: { "filter": "url(#dropshadow)" },
+        instSlotInActiveAttrib: { "filter": "none" },
         connectedBtnAttrib: { "filter": "" },
         disconnectedBtnAttrib: { "filter": "url(#dropshadow)" },
         errorBtnAttrib: { "filter": "url(#dropshadow)" },
@@ -179,6 +184,12 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         this.id = "partBtn" + btnNo;
         this.class = "partListButton";
         this.onclick = "onPartSelect('" + partName + "')";
+    }
+    function InstSlotActiveAttrs(slotNo, instrument) {
+        this.onclick = "onInstrumentSelect(" + slotNo + ",'" + instrument + "')";
+    }
+    function InstSlotInActiveAttrs() {
+        this.onclick = "";
     }
     function EventParams() {
     }
@@ -245,8 +256,11 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         registerPart(part);
         u.makeInVisible(config.idPartsListOuterDiv);
     }
-    function onInstrumentSelection(instrument) {
-
+    function onInstrumentSelection(slotNo, instrument) {
+        if(isNull(slotNo) || isNull(instrument) || isNull(state.part.name)) {
+            return;
+        }
+        sendInstrumentSlot(slotNo, instrument, state.part.name);
     }
     function resetAll() {
         resetAudio();
@@ -910,6 +924,13 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         evParams[EVENT_PARAM_SERVER_TIME] = serverTime;
         n.sendEvent(EVENT_ID_PING, evParams);
     }
+    function sendInstrumentSlot(slotNo, slotInstrument, thisPart) {
+        var evParams = new EventParams();
+        evParams[EVENT_PARAM_SLOT_NO] = slotNo;
+        evParams[EVENT_PARAM_SLOT_INSTRUMENT] = slotInstrument;
+        evParams[EVENT_PARAM_PART] = thisPart;
+        n.sendEvent(EVENT_ID_SELECT_ISLOT, evParams);
+    }
     function processSeverActions(actions) {
         var id = null;
         var type = null;
@@ -1029,20 +1050,34 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         var txtId = config.idInstSlotTxtPrefix + slotNo;
         var btnId = config.idInstSlotBtnPrefix + slotNo;
         var slotId = config.idInstSlotPrefix + slotNo;
-        u.setElementIdAttributes(slotId, config.instSlotActiveBtnAttrib);
+        var isThisInst = (instrument === state.part.name);
+        u.makeVisible(txtId);
+        u.makeVisible(btnId);
+        u.makeVisible(slotId);
+        u.setElementIdAttributes(slotId, config.instSlotActiveAttrib);
         s.setElementText(txtId, instrument.trim());
         u.setElementIdStyleProperty(txtId, config.instSlotTxtActiveStyle);
-        u.setElementIdStyleProperty(btnId, config.instSlotBtnActiveStyle);
+        if(isThisInst) {
+            u.setElementIdStyleProperty(btnId, config.instSlotBtnActiveInstStyle);
+        } else {
+            u.setElementIdStyleProperty(btnId, config.instSlotBtnActiveStyle);
+        }
+        var attrs = new InstSlotActiveAttrs(slotNo, instrument);
+        u.setElementIdAttributes(btnId, attrs);
     }
     function disableInstrumentSlot(slotNo) {
         var txtId = config.idInstSlotTxtPrefix + slotNo;
         var btnId = config.idInstSlotBtnPrefix + slotNo;
         var slotId = config.idInstSlotPrefix + slotNo;
-        
-        u.setElementIdAttributes(slotId, config.instSlotInActiveBtnAttrib);
+        u.makeVisible(txtId);
+        u.makeVisible(btnId);
+        u.makeVisible(slotId);
+        u.setElementIdAttributes(slotId, config.instSlotInActiveAttrib);
         s.setElementText(txtId, EMPTY);
         u.setElementIdStyleProperty(txtId, config.instSlotTxtInActiveStyle);
         u.setElementIdStyleProperty(btnId, config.instSlotBtnInActiveStyle);
+        var attrs = new InstSlotInActiveAttrs();
+        u.setElementIdAttributes(btnId, attrs);
     }
     function hideInstrumentSlot(slotNo) {
         var txtId = config.idInstSlotTxtPrefix + slotNo;
@@ -1051,6 +1086,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         u.makeInVisible(txtId);
         u.makeInVisible(btnId);
         u.makeInVisible(slotId);
+        var attrs = new InstSlotInActiveAttrs();
+        u.setElementIdAttributes(btnId, attrs);
     }
     function onStartMark(targets, params) {
         if(isNull(params) || isNull(targets)) {
@@ -1311,8 +1348,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         onPartSelect: function (part) {
             onPartSelection(part);
         },
-        onInstrumentSelect: function (instrument) {
-            onInstrumentSelection(instrument);
+        onInstrumentSelect: function (slotNo, instrument) {
+            onInstrumentSelection(slotNo, instrument);
         },
     }
 }(zsUtil, zsNet, zsSvg, zsAudio, zsMusic, window, document));
