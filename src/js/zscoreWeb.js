@@ -62,6 +62,14 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     const EVENT_PARAM_CSV_INSTRUMENTS = "csvInstruments";
     const EVENT_PARAM_SLOT_NO = "slotNo";
     const EVENT_PARAM_SLOT_INSTRUMENT = "slotInstrument";
+    const EVENT_PARAM_OVERLAY_TYPE = "overlayType";
+    const EVENT_PARAM_OVERLAY_ELEMENT = "overlayElement";
+    const EVENT_PARAM_OVERLAY_LINE_Y = "overlayLineY";
+    const EVENT_PARAM_IS_ENABLED = "isEnabled";
+    const EVENT_PARAM_OPACITY = "opacity";
+
+    const DEFAULT_PAGE_IMG_URL = "img/blankStave.png";
+    const DEFAULT_PAGE_ID = "p0";
 
     var AUDIO_FLIES = [
         '/audio/violin-tuning.mp3',
@@ -123,16 +131,16 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         connectedBtnAttrib: { "filter": "" },
         disconnectedBtnAttrib: { "filter": "url(#dropshadow)" },
         errorBtnAttrib: { "filter": "url(#dropshadow)" },
-        topStave: { gId: "stvTop", imgId: "stvTopImg", startLineId: "stvTopStartLine", positionLineId: "stvTopPosLine", beatBallId: "stvTopBeatBall", maskId: "stvTopMask", ballYmax: 84, xLeftMargin: 31.5, posLineConf: {x1: "95", y1: "80", x2: "95", y2: "281"}, posBallConf: {cx: "95", cy: "110", r: "4"} },
-        bottomStave: { gId: "stvBot", imgId: "stvBotImg", startLineId: "stvBotStartLine", positionLineId: "stvBotPosLine", beatBallId: "stvBotBeatBall", maskId: "stvBotMask", ballYmax: 305, xLeftMargin: 31.5, posLineConf: {x1: "95", y1: "301", x2: "95", y2: "502"}, posBallConf: {cx: "95", cy: "331", r: "4"} },
+        topStave: { gId: "stvTop", imgId: "stvTopImg", startLineId: "stvTopStartLine", positionLineId: "stvTopPosLine", beatBallId: "stvTopBeatBall", maskId: "stvTopMask", ovrlPosId: "ovrlTopPos", ballYmax: 84, xLeftMargin: 31.5, posLineConf: {x1: "95", y1: "80", x2: "95", y2: "281"}, posBallConf: {cx: "95", cy: "110", r: "4"} },
+        bottomStave: { gId: "stvBot", imgId: "stvBotImg", startLineId: "stvBotStartLine", positionLineId: "stvBotPosLine", beatBallId: "stvBotBeatBall", maskId: "stvBotMask", ovrlPosId: "ovrlBotPos", ballYmax: 305, xLeftMargin: 31.5, posLineConf: {x1: "95", y1: "301", x2: "95", y2: "502"}, posBallConf: {cx: "95", cy: "331", r: "4"} },
     }
     var state = {
         isPlaying: false,
         isReady: false,
         score: { title: "ZScore", noSpaceTitle: "ZScore", instrument: "Part View", parts: ["Part View"], firstPageNo: 1, lastPageNo: 2 },
         part: { name: "Part View", imgDir: null, imgPageNameToken: null, imgContPageName: null, blankPageNo: 0, contPageNo: 6666, pageRanges: [{ start: 1, end: 1 }], pages: {} },
-        topStave: { id: "topStave", config: config.topStave, pageId: "p0", rndPageId: null, filename: "img/blankStave.png", beatMap: null, timeline: null, isActive: true, isPlaying: false, currentBeat: null},
-        bottomStave: { id: "bottomStave", config: config.bottomStave, pageId: "p0", rndPageId: null, filename: "img/blankStave.png", beatMap: null, timeline: null, isActive: false, isPlaying: false, currentBeat: null },
+        topStave: { id: "topStave", config: config.topStave, pageId: DEFAULT_PAGE_ID, rndPageId: null, filename: DEFAULT_PAGE_IMG_URL, beatMap: null, timeline: null, isActive: true, isPlaying: false, currentBeat: null},
+        bottomStave: { id: "bottomStave", config: config.bottomStave, pageId: DEFAULT_PAGE_ID, rndPageId: null, filename: DEFAULT_PAGE_IMG_URL, beatMap: null, timeline: null, isActive: false, isPlaying: false, currentBeat: null },
         startTimeTl: 0,
         currentBeatId: "b0",
         currentBeatNo: 0,
@@ -222,11 +230,11 @@ var zscore = (function (u, n, s, a, m, win, doc) {
 
         state.isInitialised = true;
     }
-    function resetState() {
-        resetStave(state.topStave);
-        resetStave(state.bottomStave);
+    function resetStateOnStop() {
+        resetStaveOnStop(state.topStave);
+        resetStaveOnStop(state.bottomStave);
     }
-    function resetStave(stave) {
+    function resetStaveOnStop(stave) {
         if(isNull(stave) || isNull(stave.config)) {
             return;
         }
@@ -660,6 +668,20 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         imgElement.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", imgSrc);
         imgElement.setAttribute("href", imgSrc);
     }
+    function showDefaultStavePage(stave) {
+        if (isNull(stave)) {
+            return;
+        }
+
+        var conf = stave.config;
+        if (isNull(conf)) {
+            return;
+        }
+        var imgSrc = stave.fileName;
+        var imgElement = u.getElement(conf.imgId);
+        imgElement.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", imgSrc);
+        imgElement.setAttribute("href", imgSrc);
+    }
     function createStaveImgUrl(fileName) {
         return state.scoreDir + state.score.noSpaceTitle + SLASH + fileName;
     }
@@ -987,13 +1009,106 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             case "INSTRUMENT_SLOTS":
                 onInstrumentSlots(params);
                 break;
-            case "RESET_INSTRUMENT_SLOTS":
+            case "RESET_INSTRUMENT_SLOTS":                
                 onResetInstrumentSlots();
+                break;
+            case "RESET_STAVES":
+                onResetStaves();
+                break;
+            case "OVERLAY_ELEMENT":
+                onOverlayElement(targets, params);
                 break;
             default:
                 logError("doAction: Unknown actionType: " + actionType);
         }
-    }    
+    }
+    function onOverlayElement(targets, params) {
+        if(isNull(params) || isNull(targets)) {
+            return;
+        }
+        if (u.isArray(targets)) {
+            for (var i = 0; i < targets.length; i++) {
+                setOverlayElementInfo(targets[i], params);
+            }
+        } else {
+            setOverlayElementInfo(targets, params);
+        }
+    }
+    function setOverlayElementInfo(target, params) {
+        var stave = state[target];
+        var overlayType = params[EVENT_PARAM_OVERLAY_TYPE];
+        var overlayElement = params[EVENT_PARAM_OVERLAY_ELEMENT];
+        var isEnabled = params[EVENT_PARAM_IS_ENABLED];
+        var opacity = params[EVENT_PARAM_OPACITY];
+        setOverlayElement(stave, overlayType, overlayElement, isEnabled, opacity);
+    }
+    function setOverlayElement(stave, overlayType, overlayElement, isEnabled, opacity) {
+        if(isNull(stave) || isNull(overlayType)) {
+            return;
+        }
+        switch(overlayType) {
+            case "POSITION": 
+                setPositionOverlay(stave, overlayElement, isEnabled, opacity);
+                break;
+            case "PITCH":
+            case "SPEED":
+            case "PRESSURE": 
+            case "DYNAMICS":
+            default:
+                log("setOverlayElement: unknown overlay type: " + overlayType);
+        }
+    }
+    function setPositionOverlay(stave, overlayElement, isEnabled, opacity) {
+        if(isNull(overlayElement)) {
+            return;
+        }
+        switch(overlayElement) {
+            case "POSITION_BOX": 
+                setPositionBox(stave, isEnabled, opacity);
+                break;
+            case "POSITION_LINE":
+            case "POSITION_BRIDGE_LINE":
+            case "POSITION_ORD_LINE":
+            default:
+                log("setOverlayElement: unknown overlay type: " + overlayType);
+        }
+    }
+    function setPositionBox(stave, isEnabled, opacity) {
+        var conf = stave.config;
+        if(isNull(conf)) {
+            return;
+        }
+        var ovrlId = conf.ovrlPosId;
+        if(isEnabled) {
+            var op = u.toFloat(opacity);
+            if(!u.isNumeric(op)) {
+                op = 1.0;
+            }
+            u.setElementIdStyleProperty(ovrlId, {opacity: op});
+            u.makeVisible(ovrlId);
+        } else {
+            u.makeInVisible(ovrlId);
+        }
+    }
+    function onResetStaves() {
+        resetStave(state.topStave);
+        resetStave(state.bottomStave);
+    }
+    function resetStave(stave) {
+        if(isNull(stave)) {
+            return;
+        }        
+        stave.pageId = DEFAULT_PAGE_ID; 
+        stave.rndPageId = null; 
+        stave.filename = DEFAULT_PAGE_IMG_URL; 
+        stave.beatMap = null; 
+        stave.timeline = null; 
+        stave.isActive = true; 
+        stave.isPlaying = false; 
+        stave.currentBeat = null;
+        resetStaveOnStop(stave);
+        showDefaultStavePage(stave);
+    }
     function onResetInstrumentSlots() {
         resetInstrumentSlots();
         hideInstrumentSlots();
@@ -1260,7 +1375,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         stopStaves();
         state.isPlaying = false;
         setStopSemaphore();
-        resetState();
+        resetStateOnStop();
     }
     function onStart(targets) {
         if (u.isArray(targets)) {
