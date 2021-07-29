@@ -106,6 +106,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         idTempoBpm: "tmpBpm",
         idSemaphorePrefix: "semC",
         idLineSuffix: "Line",
+        idBridgeSuffix: "Bridge",
+        idOrdSuffix: "Ord",
         blankPageUrl: "img/blankStave.png",
         filterOutParts: [AV, FULL_SCORE],
         connectedRectStyle: { "fill": FILL_CONNECTED, "stroke": STROKE_CONNECTED, "stroke-width": "0px", "visibility": VISIBLE, "opacity": 1 },
@@ -126,8 +128,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         connectedBtnAttrib: { "filter": "" },
         disconnectedBtnAttrib: { "filter": "url(#dropshadow)" },
         errorBtnAttrib: { "filter": "url(#dropshadow)" },
-        topStave: { gId: "stvTop", imgId: "stvTopImg", startLineId: "stvTopStartLine", positionLineId: "stvTopPosLine", beatBallId: "stvTopBeatBall", maskId: "stvTopMask", ovrlPosId: "ovrlTopPos", ballYmax: 84, xLeftMargin: 31.5, posLineConf: {x1: "95", y1: "80", x2: "95", y2: "281"}, posBallConf: {cx: "95", cy: "110", r: "4"} },
-        bottomStave: { gId: "stvBot", imgId: "stvBotImg", startLineId: "stvBotStartLine", positionLineId: "stvBotPosLine", beatBallId: "stvBotBeatBall", maskId: "stvBotMask", ovrlPosId: "ovrlBotPos", ballYmax: 305, xLeftMargin: 31.5, posLineConf: {x1: "95", y1: "301", x2: "95", y2: "502"}, posBallConf: {cx: "95", cy: "331", r: "4"} },
+        topStave: { gId: "stvTop", imgId: "stvTopImg", startLineId: "stvTopStartLine", positionLineId: "stvTopPosLine", beatBallId: "stvTopBeatBall", maskId: "stvTopMask", ovrlPosId: "ovrlTopPos", ovrlPitchId: "ovrlTopPitch", ovrlSpeedId: "ovrlTopSpeed", ovrlPressId: "ovrlTopPres", ovrlDynId: "ovrlTopDyn", ballYmax: 84, xLeftMargin: 31.5, posLineConf: {x1: "95", y1: "80", x2: "95", y2: "281"}, posBallConf: {cx: "95", cy: "110", r: "4"} },
+        bottomStave: { gId: "stvBot", imgId: "stvBotImg", startLineId: "stvBotStartLine", positionLineId: "stvBotPosLine", beatBallId: "stvBotBeatBall", maskId: "stvBotMask", ovrlPosId: "ovrlBotPos", ovrlPitchId: "ovrlBotPitch", ovrlSpeedId: "ovrlBotSpeed", ovrlPressId: "ovrlBotPres", ovrlDynId: "ovrlBotDyn", ballYmax: 305, xLeftMargin: 31.5, posLineConf: {x1: "95", y1: "301", x2: "95", y2: "502"}, posBallConf: {cx: "95", cy: "331", r: "4"} },
     }
     var state = {
         isPlaying: false,
@@ -1047,9 +1049,17 @@ var zscore = (function (u, n, s, a, m, win, doc) {
                 setLineY(stave.config.ovrlPosId + config.idLineSuffix, posY);
                 break;
             case "PITCH":
+                setLineY(stave.config.ovrlPitchId + config.idLineSuffix, posY);
+                break;
             case "SPEED":
+                setLineY(stave.config.ovrlSpeedId + config.idLineSuffix, posY);
+                break;
             case "PRESSURE": 
+            setLineY(stave.config.ovrlPressId + config.idLineSuffix, posY);
+                break;
             case "DYNAMICS":
+                setLineY(stave.config.ovrlDynId + config.idLineSuffix, posY);
+                break;
             default:
                 log("setOverlayElement: unknown overlay type: " + overlayType);
         }
@@ -1082,39 +1092,125 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         if(isNull(stave) || isNull(overlayType)) {
             return;
         }
+        var staveConf = stave.config;
+        if(isNull(staveConf)) {
+            return;
+        }
+        logDebug("setOverlayElement: overlayType: " + overlayType);
         switch(overlayType) {
             case "POSITION": 
-                setPositionOverlay(stave, overlayElement, isEnabled, opacity);
+                setPositionOverlay(staveConf, overlayElement, isEnabled, opacity);
                 break;
             case "PITCH":
+                setPitchOverlay(staveConf, overlayElement, isEnabled, opacity);
+                break;
             case "SPEED":
+                setSpeedOverlay(staveConf, overlayElement, isEnabled, opacity);
+                break;
             case "PRESSURE": 
+                setPressOverlay(staveConf, overlayElement, isEnabled, opacity);
+                break;
             case "DYNAMICS":
+                setDynamicsOverlay(staveConf, overlayElement, isEnabled, opacity);
+                break;                
             default:
                 log("setOverlayElement: unknown overlay type: " + overlayType);
         }
     }
-    function setPositionOverlay(stave, overlayElement, isEnabled, opacity) {
-        if(isNull(overlayElement)) {
+    function setDynamicsOverlay(staveConf, overlayElement, isEnabled, opacity) {
+        if(isNull(overlayElement) || isNull(staveConf)) {
             return;
         }
         switch(overlayElement) {
-            case "POSITION_BOX": 
-                setPositionBox(stave, isEnabled, opacity);
+            case "DYNAMICS_BOX": 
+                setOverlayVisibility(staveConf.ovrlDynId, isEnabled, opacity);
                 break;
-            case "POSITION_LINE":
-            case "POSITION_BRIDGE_LINE":
-            case "POSITION_ORD_LINE":
+            case "DYNAMICS_MID_LINE":
+                setOverlayVisibility(staveConf.ovrlDynId + config.idOrdSuffix + config.idLineSuffix, isEnabled, opacity);
+                break;                
+            case "DYNAMICS_LINE":
+                setOverlayVisibility(staveConf.ovrlDynId + config.idLineSuffix, isEnabled, opacity);
+                break;
             default:
                 log("setOverlayElement: unknown overlay type: " + overlayElement);
         }
     }
-    function setPositionBox(stave, isEnabled, opacity) {
-        var conf = stave.config;
-        if(isNull(conf)) {
+    function setPressOverlay(staveConf, overlayElement, isEnabled, opacity) {
+        if(isNull(overlayElement) || isNull(staveConf)) {
             return;
         }
-        var ovrlId = conf.ovrlPosId;
+        switch(overlayElement) {
+            case "PRESSURE_BOX": 
+                setOverlayVisibility(staveConf.ovrlPressId, isEnabled, opacity);
+                break;
+            case "PRESSURE_MID_LINE":
+                setOverlayVisibility(staveConf.ovrlPressId + config.idOrdSuffix + config.idLineSuffix, isEnabled, opacity);
+                break;                
+            case "PRESSURE_LINE":
+                setOverlayVisibility(staveConf.ovrlPressId + config.idLineSuffix, isEnabled, opacity);
+                break;
+            default:
+                log("setOverlayElement: unknown overlay type: " + overlayElement);
+        }
+    }
+    function setSpeedOverlay(staveConf, overlayElement, isEnabled, opacity) {
+        if(isNull(overlayElement) || isNull(staveConf)) {
+            return;
+        }
+        switch(overlayElement) {
+            case "SPEED_BOX": 
+                setOverlayVisibility(staveConf.ovrlSpeedId, isEnabled, opacity);
+                break;
+            case "SPEED_MID_LINE":
+                setOverlayVisibility(staveConf.ovrlSpeedId + config.idOrdSuffix + config.idLineSuffix, isEnabled, opacity);
+                break;                
+            case "SPEED_LINE":
+                setOverlayVisibility(staveConf.ovrlSpeedId + config.idLineSuffix, isEnabled, opacity);
+                break;
+            default:
+                log("setOverlayElement: unknown overlay type: " + overlayElement);
+        }
+    }
+    function setPitchOverlay(staveConf, overlayElement, isEnabled, opacity) {
+        if(isNull(overlayElement) || isNull(staveConf)) {
+            return;
+        }
+        switch(overlayElement) {
+            case "PITCH_BOX": 
+                setOverlayVisibility(staveConf.ovrlPitchId, isEnabled, opacity);
+                break;
+            case "PITCH_LINE":
+                setOverlayVisibility(staveConf.ovrlPitchId + config.idLineSuffix, isEnabled, opacity);
+                break;
+            default:
+                log("setOverlayElement: unknown overlay type: " + overlayElement);
+        }
+    }
+    function setPositionOverlay(staveConf, overlayElement, isEnabled, opacity) {
+        if(isNull(overlayElement) || isNull(staveConf)) {
+            return;
+        }
+        switch(overlayElement) {
+            case "POSITION_BOX": 
+                setOverlayVisibility(staveConf.ovrlPosId, isEnabled, opacity);
+                break;
+            case "POSITION_LINE":
+                setOverlayVisibility(staveConf.ovrlPosId + config.idLineSuffix, isEnabled, opacity);
+                break;
+            case "POSITION_BRIDGE_LINE":
+                setOverlayVisibility(staveConf.ovrlPosId + config.idBridgeSuffix + config.idLineSuffix, isEnabled, opacity);
+                break;
+            case "POSITION_ORD_LINE":
+                setOverlayVisibility(staveConf.ovrlPosId + config.idOrdSuffix + config.idLineSuffix, isEnabled, opacity);
+                break;
+            default:
+                log("setOverlayElement: unknown overlay type: " + overlayElement);
+        }
+    }
+    function setOverlayVisibility(ovrlId, isEnabled, opacity) {
+        if(isNull(ovrlId)) {
+            return;
+        }
         if(isEnabled) {
             var op = u.toFloat(opacity);
             if(!u.isNumeric(op)) {
