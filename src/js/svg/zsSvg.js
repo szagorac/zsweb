@@ -151,6 +151,13 @@ var zsSvg = (function (u, doc) {
         line.setAttribute(SVG_PARAM_X1, startX);        
         line.setAttribute(SVG_PARAM_X2, endX);
     }
+    function _setLineY(line, startY, endY) {
+        if(!u.isObject(line)) {
+            return;
+        }
+        line.setAttribute(SVG_PARAM_Y1, startY);        
+        line.setAttribute(SVG_PARAM_Y2, endY);
+    }
     function _setElementText(elementId, txt) {
         var element = u.getElement(elementId);
         if(u.isNull(element)) {
@@ -331,7 +338,10 @@ var zsSvg = (function (u, doc) {
         }, 
         setLineX: function (line, startX, endX) {
             return  _setLineX(line, startX, endX);
-        }, 
+        },
+        setLineY: function (line, startY, endY) {
+            return  _setLineY(line, startY, endY);
+        },         
         setElementText: function (elementId, txt) {
             return  _setElementText(elementId, txt);
         }, 

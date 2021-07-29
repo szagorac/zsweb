@@ -4,7 +4,6 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     // TODO set for prod when ready - gets rid of console logs
     const RUN_MODE = "dev";
     const EMPTY = "";
-    const BLANK = " ";
     const UNDERSCORE = "_";
     const SLASH = "/";
     const AV = "AV";
@@ -12,15 +11,11 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     const CONNECTED = "Connected";
     const LOADING = "Loading";
     const READY = "READY";
-    const CONNECT = "Connect";
     const RECONNECTING = "Reconnecting";
     const ERROR = "Error";
     const VISIBLE = "visible";
     const HIDDEN = "hidden";
     const NONE = "none";
-    const ON_CLICK = "onclick";    
-    const FILL = "fill";
-    const STROKE = "stroke";
     const TL_START_OF_PREVIOUS = "<";
     const TL_END_OF_PREVIOUS = ">";
     const CLR_GREEN = "green";
@@ -32,7 +27,6 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     const CLR_BLUE = "blue";
     const CLR_GREY = "grey";
     const CLR_LIGHT_GREY = "lightgrey";
-    const CLR_LAWN_GREEN = "lawngreen";
     const CLR_NONE = NONE;
     const FILL_ACTIVE = CLR_NONE;
     const FILL_INACTIVE = CLR_WHITE;
@@ -111,6 +105,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         idInstSlotBtnPrefix: "instSlotRect",
         idTempoBpm: "tmpBpm",
         idSemaphorePrefix: "semC",
+        idLineSuffix: "Line",
         blankPageUrl: "img/blankStave.png",
         filterOutParts: [AV, FULL_SCORE],
         connectedRectStyle: { "fill": FILL_CONNECTED, "stroke": STROKE_CONNECTED, "stroke-width": "0px", "visibility": VISIBLE, "opacity": 1 },
@@ -1018,9 +1013,50 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             case "OVERLAY_ELEMENT":
                 onOverlayElement(targets, params);
                 break;
+            case "OVERLAY_LINE":
+                onOverlayLine(targets, params);
+                break;
             default:
                 logError("doAction: Unknown actionType: " + actionType);
         }
+    }
+    function onOverlayLine(targets, params) {
+        if(isNull(params) || isNull(targets)) {
+            return;
+        }
+        if (u.isArray(targets)) {
+            for (var i = 0; i < targets.length; i++) {
+                setOverlayLine(targets[i], params);
+            }
+        } else {
+            setOverlayLine(targets, params);
+        }
+    }
+    function setOverlayLine(target, params) {
+        var stave = state[target];
+        var overlayType = params[EVENT_PARAM_OVERLAY_TYPE];
+        var posY = params[EVENT_PARAM_OVERLAY_LINE_Y];
+        setOverlayLinePosition(stave, overlayType, posY);
+    }
+    function setOverlayLinePosition(stave, overlayType, posY) {
+        if(isNull(stave) || isNull(overlayType) || isNull(posY)) {
+            return;
+        }
+        switch(overlayType) {
+            case "POSITION": 
+                setLineY(stave.config.ovrlPosId + config.idLineSuffix, posY);
+                break;
+            case "PITCH":
+            case "SPEED":
+            case "PRESSURE": 
+            case "DYNAMICS":
+            default:
+                log("setOverlayElement: unknown overlay type: " + overlayType);
+        }
+    }
+    function setLineY(lineId, posY) {
+        var line = u.getElement(lineId);
+        s.setLineY(line, posY, posY);
     }
     function onOverlayElement(targets, params) {
         if(isNull(params) || isNull(targets)) {
@@ -1070,7 +1106,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             case "POSITION_BRIDGE_LINE":
             case "POSITION_ORD_LINE":
             default:
-                log("setOverlayElement: unknown overlay type: " + overlayType);
+                log("setOverlayElement: unknown overlay type: " + overlayElement);
         }
     }
     function setPositionBox(stave, isEnabled, opacity) {
