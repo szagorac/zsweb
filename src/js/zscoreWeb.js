@@ -2,7 +2,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     "use strict";
 
     // TODO set for prod when ready - gets rid of console logs
-    const RUN_MODE = "debug";
+    const RUN_MODE = "dev";
     const EMPTY = "";
     const UNDERSCORE = "_";
     const SLASH = "/";
@@ -61,7 +61,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     const EVENT_PARAM_OVERLAY_LINE_Y = "overlayLineY";
     const EVENT_PARAM_IS_ENABLED = "isEnabled";
     const EVENT_PARAM_OPACITY = "opacity";
-
+    const EVENT_PARAM_COLOUR = "colour";
+    
     const DEFAULT_PAGE_IMG_URL = "img/blankStave.png";
     const DEFAULT_PAGE_ID = "p0";
 
@@ -1018,10 +1019,61 @@ var zscore = (function (u, n, s, a, m, win, doc) {
                 break;
             case "OVERLAY_LINE":
                 onOverlayLine(targets, params);
+                break;               
+            case "OVERLAY_COLOUR":
+                callForTargets(onOverlayColour,targets, params);
                 break;
             default:
                 logError("doAction: Unknown actionType: " + actionType);
         }
+    }
+    function callForTargets(func, targets, params) {
+        if(isNull(func)) {
+            return;
+        }
+        if (u.isArray(targets)) {
+            for (var i = 0; i < targets.length; i++) {
+                func(targets[i], params);
+            }
+        } else {
+            func(target, params);
+        }
+    }
+    function onOverlayColour(target, params) {
+        if(isNull(params) || isNull(target)) {
+            return;
+        }
+        var stave = state[target];
+        var overlayType = params[EVENT_PARAM_OVERLAY_TYPE];
+        var col = params[EVENT_PARAM_COLOUR];
+        setOverlayColour(stave, overlayType, col);
+    }
+    function setOverlayColour(stave, overlayType, col) {
+        if(isNull(stave) || isNull(overlayType) || isNull(col)) {
+            return;
+        }
+        switch(overlayType) {
+            case "POSITION": 
+                setFill(stave.config.ovrlPosId + config.idRectSuffix, col);
+                break;
+            case "PITCH":
+                setFill(stave.config.ovrlPitchId + config.idRectSuffix, col);
+                break;
+            case "SPEED":
+                setFill(stave.config.ovrlSpeedId + config.idRectSuffix, col);
+                break;
+            case "PRESSURE": 
+                setFill(stave.config.ovrlPressId + config.idRectSuffix, col);
+                break;
+            case "DYNAMICS":
+                setFill(stave.config.ovrlDynId + config.idRectSuffix, col);
+                break;
+            default:
+                log("setOverlayColour: unknown overlay type: " + overlayType);
+        }
+    }
+    function setFill(rectId, col) {
+        u.setElementIdStyleProperty(rectId, {fill: col});
     }
     function onOverlayLine(targets, params) {
         if(isNull(params) || isNull(targets)) {
