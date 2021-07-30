@@ -1,0 +1,179 @@
+scoreName: "Test Score"
+presets:
+  - id: -2
+    config:
+      - granulator: {
+        masterGainVal: 0.1,
+        playDurationSec: 30.0,
+        playStartOffsetSec: 0.0,
+        maxGrains: 16,
+        bufferPositionPlayRate: 0.5,
+        audioStopToleranceMs: 5,
+        isUsePositionOscillator: true,
+        isUseSizeOscillator: true,
+        isUsePositionFrequencyMod: true,
+        isUsePositionRangeMod: true,
+        panner: { isUsePanner: false, panningModel: "equalpower", distanceModel: "linear", maxPanAngle: 45 },
+        envelope: { attackTime: 0.5, decayTime: 0.0, sustainTime: 0.0, releaseTime: 0.5, sustainLevel: 1.0 },
+        grain: { sizeMs: 100, pitchRate: 1.0, maxPositionOffsetRangeMs: 100, maxPitchRateRange: 0.03, timeOffsetStepMs: 10 },
+        positionOscillator: { minValue: 500.0, maxValue: 4500.0, type: "TRIANGLE", frequency: 0.2,
+                              frequencyLFO: { minValue: -0.1, maxValue: 0.0, type: "TRIANGLE", frequency: 0.02 },
+                              startLFO: { minValue: -500.0, maxValue: 500.0, type: "TRIANGLE", frequency: 0.1 },
+                              endLFO: { minValue: -500.0, maxValue: 500.0, type: "TRIANGLE", frequency: 0.1 } },
+        sizeOscillator: { minValue: -30.0, maxValue: 500.0, type: "TRIANGLE", frequency: 0.1 },
+      }
+      - speechSynth: {
+        volume: 1.0,
+        pitch: 1.0,
+        rate: 0.7,
+        lang: "en-GB",
+        maxVoiceLoadAttempts: 10,
+        maxUtterances: 5,
+        utteranceTimeoutSec: 30,
+        isInterrupt: false,
+        interruptTimeout: 250,
+      }
+  - id: -1
+    scripts: [
+        "webScore.setInstructions('','', '', false);"
+    ]
+  - id: 0
+    scripts: [
+        "webScore.setInstructions('get ready for','<span style=\\'color:blueviolet;\\'>Union Rose</span>', 'performance');"
+    ]
+  - id: 1
+    scripts: [
+        "webScore.resetState();",
+        "webScore.sendGranulatorConfig();",
+        "webScore.sendSpeechSynthConfig();",
+        "webScore.removeOverlays();",
+    ]
+  - id: 2
+    scripts: [
+        "webScore.reset(1);",
+        "webScore.setZoomLevel('outerCircle');",
+        "webScore.setVisible(['centreShape'], true);",
+        "webScore.setVisible(['innerCircle'], false);",
+        "webScore.setVisible(['outerCircle'], false);",
+        "webScore.setVisibleRows([1, 2, 3, 4, 5, 6, 7, 8]);",
+        "webScore.setActiveRows([1]);",
+        "webScore.resetSelectedTiles();",
+        "webScore.setStageAlpha(1.0, 0.5);",
+    ]
+  - id: 3
+    scripts: [
+        "webScore.reset(1);",
+        "webScore.setZoomLevel('centreSmall');",
+        "webScore.setVisible(['centreShape'], true);",
+        "webScore.setVisible(['innerCircle'], false);",
+        "webScore.setVisible(['outerCircle'], false);",
+        "webScore.deactivateRows([1]);",
+        "webScore.setVisibleRows([2, 3, 4, 5, 6, 7, 8]);",
+        "webScore.setActiveRows([2]);",
+        "webScore.setStageAlpha(0.0, 0.5);",
+    ]
+  - id: 4
+    scripts: [
+        "webScore.reset(1);",
+        "webScore.setZoomLevel('innerCircle');",
+        "webScore.setAction('end', 'TIMELINE', ['centreShape']);",
+        "webScore.setVisible(['centreShape'], true);",
+        "webScore.setVisible(['innerCircle'], true);",
+        "webScore.setVisible(['outerCircle'], false);",
+        "webScore.deactivateRows([1,2,3]);",
+        "webScore.setVisibleRows([4, 5, 6, 7, 8]);",
+        "webScore.setActiveRows([4]);",
+        "webScore.setStageAlpha(0.0, 0.5);",
+    ]
+  - id: 5
+    scripts: [
+        "webScore.reset(1);",
+        "webScore.setZoomLevel('innerCircle');",
+        "webScore.setVisible(['centreShape'], true);",
+        "webScore.setVisible(['innerCircle'], true);",
+        "webScore.setVisible(['outerCircle'], false);",
+        "webScore.deactivateRows([1,2,3,4]);",
+        "webScore.setVisibleRows([5, 6, 7, 8]);",
+        "webScore.setActiveRows([5]);",
+        "webScore.setStageAlpha(0.0, 0.5);",
+    ]
+  - id: 6
+    scripts: [
+        "webScore.reset(1);",
+        "webScore.setZoomLevel('outerCircleSmall');",
+        "webScore.setAction('end', 'TIMELINE', ['innerCircle']);",
+        "webScore.setVisible(['centreShape'], true);",
+        "webScore.setVisible(['innerCircle'], true);",
+        "webScore.setVisible(['outerCircle'], true);",
+        "webScore.deactivateRows([1,2,3,4,5]);",
+        "webScore.setVisibleRows([6, 7, 8]);",
+        "webScore.setActiveRows([6]);",
+        "webScore.setStageAlpha(0.0, 0.5);",
+    ]
+  - id: 7
+    scripts: [
+        "webScore.reset(1);",
+        "webScore.setZoomLevel('outerCircle');",
+        "webScore.setVisible(['centreShape'], true);",
+        "webScore.setVisible(['innerCircle'], true);",
+        "webScore.setVisible(['outerCircle'], true);",
+        "webScore.deactivateRows([1,2,3,4,5,6]);",
+        "webScore.setVisibleRows([7, 8]);",
+        "webScore.setActiveRows([7, 8]);",
+        "webScore.setStageAlpha(0.0, 0.5);",
+    ]
+  - id: 8
+    scripts: [
+        "webScore.reset(1);",
+        "webScore.setZoomLevel('outerCircle');",
+        "webScore.setVisible(['centreShape'], true);",
+        "webScore.setVisible(['innerCircle'], true);",
+        "webScore.setVisible(['outerCircle'], true);",
+        "webScore.deactivateRows([1,2,3,4,5,6,7,8]);",
+        "webScore.setStageAlpha(0.0, 0.5);",
+    ]
+  - id: 21
+    scripts: [
+        "webScore.reset(1);",
+        "webScore.setZoomLevel('centreSmall');",
+        "webScore.setVisible(['centreShape'], true);",
+        "webScore.setVisible(['innerCircle'], false);",
+        "webScore.setVisible(['outerCircle'], false);",
+        "webScore.setVisibleRows([1, 2, 3, 4, 5, 6, 7, 8]);",
+        "webScore.setActiveRows([1]);",
+        "webScore.resetSelectedTiles();",
+        "webScore.setStageAlpha(0.0, 0.5);",
+    ]
+pageRangeMapping:
+  - tileRow: 1
+    tileCols: { start: 1, end: 8 }
+    pageRanges: [ { start: 1, end: 8 } ]
+    assignmentType: SEQ
+  - tileRow: 2
+    tileCols: { start: 1, end: 8 }
+    pageRanges: [ { start: 1, end: 8 } ]
+    assignmentType: SEQ
+  - tileRow: 3
+    tileCols: { start: 1, end: 8 }
+    pageRanges: [ { start: 1, end: 8 } ]
+    assignmentType: SEQ
+  - tileRow: 4
+    tileCols: { start: 1, end: 8 }
+    pageRanges: [ { start: 17, end: 24 } ]
+    assignmentType: SEQ
+  - tileRow: 5
+    tileCols: { start: 1, end: 8 }
+    pageRanges: [ { start: 17, end: 24 } ]
+    assignmentType: SEQ
+  - tileRow: 6
+    tileCols: { start: 1, end: 8 }
+    pageRanges: [ { start: 33, end: 40 } ]
+    assignmentType: SEQ
+  - tileRow: 7
+    tileCols: { start: 1, end: 8 }
+    pageRanges: [ { start: 1, end: 8 }, { start: 17, end: 24 }, { start: 33, end: 40 } ]
+    assignmentType: RND
+  - tileRow: 8
+    tileCols: { start: 1, end: 8 }
+    pageRanges: [ { start: 1, end: 8 }, { start: 17, end: 24 }, { start: 33, end: 40 } ]
+    assignmentType: RND

@@ -1,7 +1,6 @@
 var zsNet = (function (u, win) {
     "use strict";
 
-
     //static members
     const LOG_ID = "zsNet: ";
     const GET_SERVER_STATE = "GET_SERVER_STATE";
@@ -28,6 +27,8 @@ var zsNet = (function (u, win) {
     const HTTP_URL_DSLASH = "//";
     const WS_URL_PREFIX = "ws:";
     const WSS_URL_PREFIX =  "wss:";
+    const OPEN = "OPEN";
+    const CLOSED = "CLOSED";
 
     //HTTP
     var _appUrlHttp = "/htp";
@@ -35,7 +36,8 @@ var zsNet = (function (u, win) {
     var _lastStateUpdateTime = 0;
     var isAjaxAsync = true;
     var _stateEventCallback = null;
-
+    var _connectionCallback = null;
+    
     //SSE
     var _appUrlSse = "/sse";
     var _sseSource = null;
@@ -44,6 +46,10 @@ var zsNet = (function (u, win) {
     var _appUrlWebsockets = "/wsoc";
     var _webSocket = null;
     var _isWsOpened = false;
+    var _reconnectTimeMultiplierMs = 10;
+    var _reconnectMaxTimeMs = 5000;
+    var _reconnectAttmpts = 0;
+    var _isInReconnectMode = false;
 
     //Poll
     var _pollInterval = 500;
@@ -69,7 +75,7 @@ var zsNet = (function (u, win) {
     //Class defs END
 
     //Private functions
-    function _init(connectionPref, sseUrl, websocketsUrl, httpUrl, responseEventCallback, serverStateCallback) {
+    function _init(connectionPref, sseUrl, websocketsUrl, httpUrl, serverStateCallback, connectionCallback) {
         if (!u) {
             throw new ZsNetException("Invalid libraries. Required: zsUtil");
         }
@@ -87,6 +93,8 @@ var zsNet = (function (u, win) {
         _appUrlHttp = httpUrl;
         _webQueue = u.createQueue();
         _stateEventCallback = serverStateCallback;
+        _connectionCallback = connectionCallback;
+        
         var isSseSupported = !!win.EventSource;
         var isWebsocketsSupported = 'WebSocket' in win || 'MozWebSocket' in win;
 
@@ -169,12 +177,12 @@ var zsNet = (function (u, win) {
             }, false);
 
             _sseSource.addEventListener('open', function (e) {
-                log("SSE connection open");
+                _processConnectionState(OPEN, SSE);
             }, false);
 
             _sseSource.addEventListener('error', function (e) {
                 if (e.readyState == EventSource.CLOSED) {
-                    log("SSE connection closed");
+                    _processConnectionState(CLOSED, SSE);
                 }
             }, false);
         } catch (error) {
@@ -204,35 +212,191 @@ var zsNet = (function (u, win) {
 
         try {
             _appUrlWebsockets = _constuctWsUrl(url);
-            _webSocket = new WebSocket(_appUrlWebsockets);
-
-            _webSocket.onmessage = function (event) {
-                if(isNull(event) || isNull(event.data)) {
-                    return;
-                }
-                var jsonVal = u.parseJson(event.data);
-                _processServerResponse(jsonVal, WEBSOCKET);                    
-            };
-            _webSocket.onopen = function () {
-                _isWsOpened = true;
-                log("WebSocket connection open");                
-            };
-            _webSocket.onerror = function (error) {
-                log('WebSocket Error ' + error);
-            };
-            _webSocket.onclose = function (error) {
-                _isWsOpened = false;
-                log('WebSocket Error ' + error);                
-            };
+            _webSocket = _connectWs(_appUrlWebsockets);
         } catch (error) {
             u.logException(error, "_initWebsockets: failed to initialise WebSockets");
             _isReady = false;
+            _webSocket = null;
+            _isWsOpened = false;            
             return false;
         }
 
         connState.isUsing = true;        
         log("_initWebsockets: WebSockets Initialised OK");
         return true;
+    }
+    function _closeConnection(connType) { 
+        if(isNull(connType)) {
+            connType = _getConnectionType();
+        }
+        switch(connType) {
+            case WEBSOCKET:
+                // var callback = function(){};
+                _closeWs();
+                break;
+            case SSE:                
+            default:
+                logError("Unsupported connection type: " + connType);
+        }
+    }    
+    function _isConnected(connType) { 
+        if(!_isReady) {
+            return false;
+        }
+        if(isNull(connType)) {
+            connType = _getConnectionType();
+        }
+        switch(connType) {
+            case WEBSOCKET:
+                return _isWsOpen();
+            case SSE:                
+            default:
+                logError("_isConnected: Unsupported connection type: " + connType);
+        }
+    }
+    function _reconnect(connType, isRetry) { 
+        if(!_isReady) {
+            log("_reconnect: net lib not initialised, ignoring call.");
+        }
+        if(isNull(connType)) {
+            connType = _getConnectionType();
+        }
+        switch(connType) {
+            case WEBSOCKET:
+                if(_isInReconnectMode) {
+                    log("_reconnect: already in reconnect mode, ignoring call.");
+                    break;
+                }
+                _reconnectWs(isRetry);
+                break;
+            case SSE:                
+            default:
+                logError("_reconnect: Unsupported connection type: " + connType);
+        }
+    }
+    function _getConnectionType() { 
+        var conn = _getConnection();
+        if(isNull(conn)) {
+            logError("_getConnectionType: Can not find active connection");
+            return null;
+        }
+        return conn.name;
+    }
+    function _getConnection() { 
+        var conn = _currentConnection;
+        if(isNull(conn)) {
+            conn = _getUsedConnectionState();
+        }
+        return conn;
+    }
+    function _getUsedConnectionState() { 
+        for (var key in _connectionStates) {
+            if (_connectionStates.hasOwnProperty(key)) {
+                var conn = _connectionStates[key];
+                if(conn.isUsing) {
+                    return conn;
+                }
+            }                  
+        }
+        return null;
+    }
+    function _reconnectWs(isRetry) { 
+        log("_reconnectWs: attempting to reconnect Websocket ...");
+        if(!_isReady) {
+            log("_reconnect: net lib not initialised, ignoring call.");
+        }
+        if(isNull(_appUrlWebsockets)) {
+            logError("_reconnectWs: invalid Websocket URL");
+            return;
+        }
+        if(_isWsOpen()) {                            
+            log("_reconnectWs: Websocket connection is open. ignoring reconnect");
+            return;
+        }
+        try {            
+            _isInReconnectMode = true;
+            if(!_isWsConnecting()) {
+                _webSocket = _connectWs(_appUrlWebsockets);            
+            }
+        } catch (error) {
+            u.logException(error, "_reconnectWs: failed to reconnect WebSocket");
+            _webSocket = null;
+            _isWsOpened = false;
+            return false;
+        } finally {
+            if(isRetry) {
+                _retryConnect(isRetry);
+            }
+        }
+    }
+    function _retryConnect(isRetry) {
+        _reconnectAttmpts++;
+        var timeout = _getReconnectionTimeout();        
+        log("_reconnectWs: scheduling reconnect in: " + timeout + " ms");
+        setTimeout(function() {
+            _reconnectWs(isRetry);
+        }, timeout);
+
+    }
+    function _getReconnectionTimeout() {
+        var timeout = _reconnectTimeMultiplierMs;
+        if(_reconnectAttmpts > 1) {
+            timeout =  _reconnectTimeMultiplierMs * Math.pow(2, _reconnectAttmpts); 
+        }        
+        if(timeout > _reconnectMaxTimeMs) {
+            timeout = _reconnectMaxTimeMs;
+        }
+        return timeout;
+    }
+    function _reconnectOnCloseCallback() { 
+        u.log("_reconnectOnCloseCallback: WebSocket closed");
+        _isWsOpened = false;
+        _webSocket = null;
+        _reconnectWs(true);
+    }
+    function _closeWs(onCloseCallback) { 
+        if(isNull(_webSocket)) {
+            if(!isNull(onCloseCallback)) {
+                onCloseCallback();
+            }
+            return;
+        }
+        if(!isNull(onCloseCallback)) {
+            _webSocket.onclose = onCloseCallback;
+        }
+        
+        _webSocket.close();
+    }
+    function _connectWs(url) { 
+        if(_isWsOpened || _isWsAlive()) {
+            u.log("_connectWs: connection is already opened, ignoring connect call...");
+            return;
+        }
+
+        var webSocket = new WebSocket(url);
+
+        webSocket.onmessage = function (event) {
+            if(isNull(event) || isNull(event.data)) {
+                return;
+            }
+            var jsonVal = u.parseJson(event.data);
+            _processServerResponse(jsonVal, WEBSOCKET);                    
+        };
+        webSocket.onopen = function () {
+            _isWsOpened = true;
+            _reconnectAttmpts = 0;
+            _isInReconnectMode = false;
+            _processConnectionState(OPEN, WEBSOCKET);
+        };
+        webSocket.onerror = function (error) {
+            _processConnectionState(ERROR, WEBSOCKET);
+        };
+        webSocket.onclose = function (error) {
+            _isWsOpened = false;
+            _webSocket = null;
+            _processConnectionState(CLOSED, WEBSOCKET);
+        };
+        return webSocket;
     }
     function _isPushEvent(event) { 
         return isNull(event.data);
@@ -344,7 +508,9 @@ var zsNet = (function (u, win) {
             return false;
         }
 
-        if(!_isWsOpened) {
+        if(!_isWsOpened || _isWsDead()) {
+            logError("sendWsEvent: Websocket is not oppened");
+            _processConnectionState(CLOSED, WEBSOCKET);
             return false;
         }
 
@@ -482,11 +648,11 @@ var zsNet = (function (u, win) {
         try {
             switch (type) {
                 case ERROR:
-                    log("_processResponse: time: " + sendTime + " type: " + type + " source: " + source + " message: " + message);
+                    logError("_processResponse: time: " + sendTime + " type: " + type + " source: " + source + " message: " + message);
                     _processError(message);
                     break;
                 case OK:
-                    log("_processResponse: time: " + sendTime + " type: " + type + " source: " + source + " message: " + message);
+                    u.logDebug("_processResponse: time: " + sendTime + " type: " + type + " source: " + source + " message: " + message);
                     _processOkResponse(message)
                     break;
                 case STATE_DELTA:                    
@@ -494,7 +660,7 @@ var zsNet = (function (u, win) {
                 case STATE:
                     var state = bag.st;
                     // log("handleAjaxGetResponse: time: " + t + " type: " + type + " state: " + st);
-                    log("_processResponse: time: " + sendTime + " type: " + type + " source: " + source);
+                    u.logDebug("_processResponse: time: " + sendTime + " type: " + type + " source: " + source);
                     _lastStateUpdateTime = sendTime;
                     _processStateResponse(state, isDeltaUpdate);
                     break;
@@ -506,11 +672,66 @@ var zsNet = (function (u, win) {
         }
     }
     function _processError(error) {
-        log("processError: Received ERROR: " + error);
+        logError("processError: Received ERROR: " + error);
     }
     function _processOkResponse(message) {
-        log("processOkResponse: Received message: " + message);
+        u.logDebug("processOkResponse: Received message: " + message);
     }
+    function _processConnectionState(connState, connType) {
+        switch (connState) {
+            case OPEN:
+                if (isNull(_connectionCallback)) {
+                    log(connType + " connection open"); 
+                } else {
+                    _connectionCallback(connState, connType);
+                }
+                break;
+            case CLOSED:            
+                if (isNull(_connectionCallback)) {
+                    log(connType + " connection closed"); 
+                } else {
+                    _connectionCallback(connState, connType);
+                }
+                break;
+            case ERROR:
+                if (isNull(_connectionCallback)) {
+                    logError(connType + " connection error"); 
+                } else {
+                    _connectionCallback(connState, connType);
+                }
+                break;
+            default:
+                logError("Unknown Connection State: " + connState + " for type: " + connType);
+        }
+    }
+    function _isWsDead() {
+        if(isNull(_webSocket)) {
+            return true;
+        }
+        var state = _webSocket.readyState;
+        return state === WebSocket.CLOSED || state === WebSocket.CLOSING;
+    }
+    function _isWsAlive() {
+        if(isNull(_webSocket)) {
+            return false;
+        }
+        var state = _webSocket.readyState;
+        return state === WebSocket.OPEN || state === WebSocket.CONNECTING;
+    }
+    function _isWsConnecting() {
+        if(isNull(_webSocket)) {
+            return false;
+        }
+        var state = _webSocket.readyState;
+        return state === WebSocket.CONNECTING;
+    }   
+    function _isWsOpen() {
+        if(isNull(_webSocket)) {
+            return false;
+        }
+        var state = _webSocket.readyState;
+        return state === WebSocket.OPEN;
+    }    
     function _processStateResponse(serverState, isDeltaUpdate) {
         if (isNull(serverState)) {
             return;
@@ -552,9 +773,11 @@ var zsNet = (function (u, win) {
         SSE: SSE,
         WEBSOCKET: WEBSOCKET,
         POLL: POLL,
-        SSE: SSE,
-        init: function (connectionPref, sseUrl, websocketsUrl, httpUrl, responseEventCallback, serverStateCallback) {
-            _init(connectionPref, sseUrl, websocketsUrl, httpUrl, responseEventCallback, serverStateCallback);
+        OPEN: OPEN,
+        CLOSED: CLOSED,
+        ERROR: ERROR,
+        init: function (connectionPref, sseUrl, websocketsUrl, httpUrl, serverStateCallback, connectionCallback) {
+            _init(connectionPref, sseUrl, websocketsUrl, httpUrl, serverStateCallback, connectionCallback);
         },
         useSse: function (url, sseEventCallback) {
             _useSse(url, sseEventCallback);
@@ -570,8 +793,15 @@ var zsNet = (function (u, win) {
         },
         getServerState: function () {
             _getServerState();
+        },
+        reconnect: function (connType, isRetry) {
+            _reconnect(connType, isRetry);
+        },
+        closeConnection: function (connType) {
+            _closeConnection(connType);
+        },
+        isConnected: function (connType) {
+            return _isConnected(connType);
         }
-
     }
-
 }(zsUtil, window));

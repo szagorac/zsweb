@@ -114,7 +114,7 @@ var zsAudio = (function (u, gr, sp, win) {
                 logError("Invalid audio files to load array");
             }
 
-            if (granulatorFileIndex < 0 || granulatorFileIndex > _audioFilesToLoad.length) {
+            if (granulatorFileIndex < 0 || granulatorFileIndex >= _audioFilesToLoad.length) {
                 logError("Invalid granulator file index: " + granulatorFileIndex);
             } else {
                 _granulatorFileIndex = granulatorFileIndex;
