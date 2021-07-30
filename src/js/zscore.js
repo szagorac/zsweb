@@ -253,7 +253,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         resetAudio();
     }
     function initNet() {
-        n.init(config.connectionPreference, config.appUrlSse, config.appUrlWebsockets, config.appUrlHttp, onServerEventReceived, processSeverState);
+        n.init(config.connectionPreference, config.appUrlSse, config.appUrlWebsockets, config.appUrlHttp, processSeverState);
     }
     function getServerState() {
         n.getServerState();
@@ -2590,16 +2590,6 @@ var zscore = (function (u, n, s, a, win, doc) {
             instructionsTextStyle["background"] = instructionsState.bckgCol;
         }
         u.setElementStyleProperty(instructionsElement, instructionsTextStyle);
-    }
-    function onServerEventReceived(event) {
-        if (isNull(event)) {
-            return;
-        }
-        if (isNotNull(event.data)) {
-            var serverState = u.parseJson(serverData);
-            processSeverState(serverState, false);
-        }
-
     }
     function processSeverState(serverState, isDeltaUpdate) {
         if (isNull(serverState)) {
