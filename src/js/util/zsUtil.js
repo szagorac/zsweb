@@ -776,7 +776,7 @@ var zsUtil = (function (console, win, doc) {
     }
     function _setElementAttributes(element, attrAssocArr) {
         if (_isNull(element) || _isNull(attrAssocArr)) {
-            _logError("setElementAttributes: invalid inputs");
+            _logError("_setElementAttributes: invalid inputs");
             return;
         }
         for (var key in attrAssocArr) {
@@ -794,7 +794,7 @@ var zsUtil = (function (console, win, doc) {
     }
     function _setElementStyleProperty(element, attrAssocArr) {
         if (_isNull(element) || _isNull(attrAssocArr)) {
-            _logError("setElementAttributes: invalid inputs");
+            _logError("_setElementStyleProperty: invalid inputs");
             return;
         }
         for (var key in attrAssocArr) {

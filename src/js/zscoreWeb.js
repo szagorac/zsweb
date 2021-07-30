@@ -2,7 +2,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     "use strict";
 
     // TODO set for prod when ready - gets rid of console logs
-    const RUN_MODE = "dev";
+    const RUN_MODE = "debug";
     const EMPTY = "";
     const UNDERSCORE = "_";
     const SLASH = "/";
@@ -108,6 +108,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         idLineSuffix: "Line",
         idBridgeSuffix: "Bridge",
         idOrdSuffix: "Ord",
+        idRectSuffix: "Rect",
         blankPageUrl: "img/blankStave.png",
         filterOutParts: [AV, FULL_SCORE],
         connectedRectStyle: { "fill": FILL_CONNECTED, "stroke": STROKE_CONNECTED, "stroke-width": "0px", "visibility": VISIBLE, "opacity": 1 },
@@ -1123,7 +1124,12 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         }
         switch(overlayElement) {
             case "DYNAMICS_BOX": 
+                setOverlayVisibility(staveConf.ovrlDynId + config.idRectSuffix, isEnabled, opacity);
+                setOverlayVisibility(staveConf.ovrlDynId + config.idOrdSuffix + config.idLineSuffix, isEnabled, opacity);
                 setOverlayVisibility(staveConf.ovrlDynId, isEnabled, opacity);
+                if(!isEnabled) {
+                    setOverlayVisibility(staveConf.ovrlDynId + config.idLineSuffix, isEnabled, opacity);
+                }
                 break;
             case "DYNAMICS_MID_LINE":
                 setOverlayVisibility(staveConf.ovrlDynId + config.idOrdSuffix + config.idLineSuffix, isEnabled, opacity);
@@ -1141,7 +1147,12 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         }
         switch(overlayElement) {
             case "PRESSURE_BOX": 
+                setOverlayVisibility(staveConf.ovrlPressId + config.idRectSuffix, isEnabled, opacity);
+                setOverlayVisibility(staveConf.ovrlPressId + config.idOrdSuffix + config.idLineSuffix, isEnabled, opacity);
                 setOverlayVisibility(staveConf.ovrlPressId, isEnabled, opacity);
+                if(!isEnabled) {
+                    setOverlayVisibility(staveConf.ovrlPressId + config.idLineSuffix, isEnabled, opacity);
+                }
                 break;
             case "PRESSURE_MID_LINE":
                 setOverlayVisibility(staveConf.ovrlPressId + config.idOrdSuffix + config.idLineSuffix, isEnabled, opacity);
@@ -1158,8 +1169,13 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             return;
         }
         switch(overlayElement) {
-            case "SPEED_BOX": 
+            case "SPEED_BOX":
+                setOverlayVisibility(staveConf.ovrlSpeedId + config.idRectSuffix, isEnabled, opacity);
+                setOverlayVisibility(staveConf.ovrlSpeedId + config.idOrdSuffix + config.idLineSuffix, isEnabled, opacity);
                 setOverlayVisibility(staveConf.ovrlSpeedId, isEnabled, opacity);
+                if(!isEnabled) {
+                    setOverlayVisibility(staveConf.ovrlSpeedId + config.idLineSuffix, isEnabled, opacity);
+                }
                 break;
             case "SPEED_MID_LINE":
                 setOverlayVisibility(staveConf.ovrlSpeedId + config.idOrdSuffix + config.idLineSuffix, isEnabled, opacity);
@@ -1176,8 +1192,12 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             return;
         }
         switch(overlayElement) {
-            case "PITCH_BOX": 
+            case "PITCH_BOX":
+                setOverlayVisibility(staveConf.ovrlPitchId + config.idRectSuffix, isEnabled, opacity);
                 setOverlayVisibility(staveConf.ovrlPitchId, isEnabled, opacity);
+                if(!isEnabled) {
+                    setOverlayVisibility(staveConf.ovrlPitchId + config.idLineSuffix, isEnabled, opacity);
+                }
                 break;
             case "PITCH_LINE":
                 setOverlayVisibility(staveConf.ovrlPitchId + config.idLineSuffix, isEnabled, opacity);
@@ -1191,8 +1211,14 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             return;
         }
         switch(overlayElement) {
-            case "POSITION_BOX": 
+            case "POSITION_BOX":
+                setOverlayVisibility(staveConf.ovrlPosId + config.idRectSuffix, isEnabled, opacity);
+                setOverlayVisibility(staveConf.ovrlPosId + config.idOrdSuffix + config.idLineSuffix, isEnabled, opacity);
+                setOverlayVisibility(staveConf.ovrlPosId + config.idBridgeSuffix + config.idLineSuffix, isEnabled, opacity);
                 setOverlayVisibility(staveConf.ovrlPosId, isEnabled, opacity);
+                if(!isEnabled) {
+                    setOverlayVisibility(staveConf.ovrlPosId + config.idLineSuffix, isEnabled, opacity);
+                }
                 break;
             case "POSITION_LINE":
                 setOverlayVisibility(staveConf.ovrlPosId + config.idLineSuffix, isEnabled, opacity);
