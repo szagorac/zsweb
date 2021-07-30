@@ -985,7 +985,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
                 onPing(params);
                 break;
             case "START":
-                onStart(targets);
+                callForTargets(play, targets, null);
                 break;
             case "STOP":
                 onStop();
@@ -997,13 +997,13 @@ var zscore = (function (u, n, s, a, m, win, doc) {
                 onSemaphoreOff(params);
                 break;
             case "ACTIVATE":
-                onActivate(targets, params);
+                callForTargets(activate, targets, params);
                 break;
             case "BEAT":
-                onServerBeat(targets, params);
+                callForTargets(serverBeat, targets, params);
                 break;
             case "START_MARK":
-                onStartMark(targets, params);
+                callForTargets(setStartMark, targets, params);
                 break;
             case "INSTRUMENT_SLOTS":
                 onInstrumentSlots(params);
@@ -1015,10 +1015,10 @@ var zscore = (function (u, n, s, a, m, win, doc) {
                 onResetStaves();
                 break;
             case "OVERLAY_ELEMENT":
-                onOverlayElement(targets, params);
+                callForTargets(setOverlayElementInfo, targets, params);
                 break;
             case "OVERLAY_LINE":
-                onOverlayLine(targets, params);
+                callForTargets(setOverlayLine, targets, params);
                 break;               
             case "OVERLAY_COLOUR":
                 callForTargets(onOverlayColour,targets, params);
@@ -1075,19 +1075,10 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     function setFill(rectId, col) {
         u.setElementIdStyleProperty(rectId, {fill: col});
     }
-    function onOverlayLine(targets, params) {
-        if(isNull(params) || isNull(targets)) {
+    function setOverlayLine(target, params) {
+        if(isNull(params) || isNull(target)) {
             return;
         }
-        if (u.isArray(targets)) {
-            for (var i = 0; i < targets.length; i++) {
-                setOverlayLine(targets[i], params);
-            }
-        } else {
-            setOverlayLine(targets, params);
-        }
-    }
-    function setOverlayLine(target, params) {
         var stave = state[target];
         var overlayType = params[EVENT_PARAM_OVERLAY_TYPE];
         var posY = params[EVENT_PARAM_OVERLAY_LINE_Y];
@@ -1121,19 +1112,10 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         var line = u.getElement(lineId);
         s.setLineY(line, posY, posY);
     }
-    function onOverlayElement(targets, params) {
-        if(isNull(params) || isNull(targets)) {
+    function setOverlayElementInfo(target, params) {
+        if(isNull(params) || isNull(target)) {
             return;
         }
-        if (u.isArray(targets)) {
-            for (var i = 0; i < targets.length; i++) {
-                setOverlayElementInfo(targets[i], params);
-            }
-        } else {
-            setOverlayElementInfo(targets, params);
-        }
-    }
-    function setOverlayElementInfo(target, params) {
         var stave = state[target];
         var overlayType = params[EVENT_PARAM_OVERLAY_TYPE];
         var overlayElement = params[EVENT_PARAM_OVERLAY_ELEMENT];
@@ -1413,21 +1395,9 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         u.makeInVisible(slotId);
         var attrs = new InstSlotInActiveAttrs();
         u.setElementIdAttributes(btnId, attrs);
-    }
-    function onStartMark(targets, params) {
-        if(isNull(params) || isNull(targets)) {
-            return;
-        }
-        if (u.isArray(targets)) {
-            for (var i = 0; i < targets.length; i++) {
-                setStartMark(targets[i], params);
-            }
-        } else {
-            setStartMark(targets, params);
-        }
-    }
+    }    
     function setStartMark(target, params) {
-        if(isNull(params)) {
+        if(isNull(params) || isNull(target)) {
             return;
         }
         var stave = state[target];
@@ -1458,19 +1428,10 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             u.makeElementInVisible(startLine);
         }
     }
-    function onServerBeat(targets, params) {
-        if(isNull(params) || isNull(targets)) {
+    function serverBeat(target, params) {
+        if(isNull(params) || isNull(target)) {
             return;
         }
-        if (u.isArray(targets)) {
-            for (var i = 0; i < targets.length; i++) {
-                serverBeat(targets[i], params);
-            }
-        } else {
-            serverBeat(targets, params);
-        }
-    }
-    function serverBeat(target, params) {
         var stave = state[target];
         var beatNo = params[EVENT_PARAM_BEAT_NO];
         setStaveBeat(stave, beatNo);
@@ -1496,19 +1457,10 @@ var zscore = (function (u, n, s, a, m, win, doc) {
            logDebug("setTimelineBeat: Invalid beat " + beatLabel);
         }
     }
-    function onActivate(targets, params) {
-        if(isNull(params) || isNull(targets)) {
+    function activate(target, params) {
+        if(isNull(params) || isNull(target)) {
             return;
         }
-        if (u.isArray(targets)) {
-            for (var i = 0; i < targets.length; i++) {
-                activate(targets[i], params);
-            }
-        } else {
-            activate(targets, params);
-        }
-    }
-    function activate(target, params) {
         var stave = state[target];
         var isActive = params[EVENT_PARAM_IS_ACTIVE];
         var isPlay = params[EVENT_PARAM_IS_PLAY];
@@ -1586,16 +1538,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         state.isPlaying = false;
         setStopSemaphore();
         resetStateOnStop();
-    }
-    function onStart(targets) {
-        if (u.isArray(targets)) {
-            for (var i = 0; i < targets.length; i++) {
-                play(targets[i]);
-            }
-        } else {
-            play(targets);
-        }
-    }
+    }    
     function play(target) {
         if(isNull(target)) {
             return;
