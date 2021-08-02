@@ -6,6 +6,7 @@ var zsSvg = (function (u, doc) {
     const CIRCLE_PREFIX = "c";
     const LINE_PREFIX = "l";
     const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
+    const SVG_XLINK_NAMESPACE = "http://www.w3.org/1999/xlink";
     const BLANK = " ";
     const ZERO = "0";
     const ONE = "1";
@@ -19,6 +20,9 @@ var zsSvg = (function (u, doc) {
     const SVG_ID_TEXT_PATH = "textPath";
     const SVG_ID_TSPAN = "tspan";
     const SVG_ID_RECT = "rect";
+
+    const SVG_ATTR_XLINK_HREF = "xlink:href";
+    const SVG_ATTR_HREF = "href";
 
     const SVG_TRANSFORM = "transform";
     const SVG_TRANSFORM_ROTATE_PRE = "rotate(";
@@ -173,7 +177,15 @@ var zsSvg = (function (u, doc) {
         var params = {};
         params.fill = colour;
         u.setElementStyleProperty(element, params)
-    }
+    }    
+    function _setElementIdHref(elementId, href) {
+        var element = u.getElement(elementId);
+        if(u.isNull(element)) {
+            return;
+        }
+        element.setAttributeNS(SVG_XLINK_NAMESPACE, SVG_ATTR_XLINK_HREF,  href);
+        element.setAttribute(SVG_ATTR_HREF, href);
+    }    
     function _createArc(x, y, radius, startAngle, endAngle) {
         var start = u.polarToCartesian(x, y, radius, endAngle);
         var end = u.polarToCartesian(x, y, radius, startAngle);
@@ -347,6 +359,9 @@ var zsSvg = (function (u, doc) {
         }, 
         setElementColour: function (elementId, colour) {
             return  _setElementColour(elementId, colour);
-        },       
+        },
+        setElementIdHref: function (elementId, href) {
+            return  _setElementIdHref(elementId, href);
+        },               
     }
 }(zsUtil, document));
