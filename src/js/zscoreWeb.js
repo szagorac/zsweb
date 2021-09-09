@@ -46,7 +46,6 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     const TXT_FILL_DISCONNECTED = CLR_WHITE;
     const TXT_FILL_ERROR = CLR_BLACK;
     const PAGE_NO_CONTINUOUS = 6666;
-    const PAGE_ID_CONTINUOUS = "p" + PAGE_NO_CONTINUOUS;
 
     const EVENT_ID_PART_REG = "PART_REG";
     const EVENT_ID_PART_READY = "PART_READY";
@@ -137,8 +136,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     var state = {
         isPlaying: false,
         isReady: false,
-        score: { title: "ZScore", noSpaceTitle: "ZScore", instrument: "Part View", parts: ["Part View"], firstPageNo: 1, lastPageNo: 2 },
-        part: { name: "Part View", imgDir: null, imgPageNameToken: null, imgContPageName: null, blankPageNo: 0, contPageNo: 6666, pageRanges: [{ start: 1, end: 1 }], pages: {} },
+        score: { title: "ZScore", noSpaceTitle: "ZScore", htmlFile: null, instrument: "Part View", parts: ["Part View"], firstPageNo: 1, lastPageNo: 2 },
+        part: { name: "Part View", imgDir: null, imgPageNameToken: null, imgContPageName: null, blankPageNo: 0, contPageNo: PAGE_NO_CONTINUOUS, pageRanges: [{ start: 1, end: 1 }], pages: {} },
         topStave: { id: "topStave", config: config.topStave, pageId: DEFAULT_PAGE_ID, rndPageId: null, filename: DEFAULT_PAGE_IMG_URL, beatMap: null, timeline: null, isActive: true, isPlaying: false, currentBeat: null},
         bottomStave: { id: "bottomStave", config: config.bottomStave, pageId: DEFAULT_PAGE_ID, rndPageId: null, filename: DEFAULT_PAGE_IMG_URL, beatMap: null, timeline: null, isActive: false, isPlaying: false, currentBeat: null },
         startTimeTl: 0,
@@ -231,6 +230,9 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         initMetro();
 
         state.isInitialised = true;
+    }
+    function resetOnNewScore() {
+        state.part.pages = {};
     }
     function resetStateOnStop() {
         resetStaveOnStop(state.topStave);
@@ -467,8 +469,18 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         if (!u.isObject(scoreInfo)) {
             return;
         }
+        if (isNotNull(scoreInfo.partHtmlPage)) {
+            var isLoad = setPartHtmlPage(scoreInfo.partHtmlPage);
+            var currentPage = u.getPageName();
+            if(isLoad && scoreInfo.partHtmlPage !== currentPage) {
+                u.loadPage(scoreInfo.partHtmlPage);
+            }
+        }
         if (isNotNull(scoreInfo.title)) {
-            setTitle(scoreInfo.title);
+            var isNew = setTitle(scoreInfo.title);
+            if(isNew) {
+                resetOnNewScore();
+            }
         }
         if (isNotNull(scoreInfo.instruments)) {
             processinstruments(scoreInfo.instruments);
@@ -482,11 +494,24 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     }
     function setTitle(title) {
         if (state.score.title === title) {
-            return;
+            return false;
         }
         state.score.title = title;
         state.score.noSpaceTitle = u.replaceEmptySpaces(title, UNDERSCORE);
         s.setElementText(config.idTitle, title);
+        return true;
+    }
+    function setPartHtmlPage(partFile) {
+        var previous = state.score.htmlFile;
+        if(isNull(previous)) {
+            state.score.htmlFile = partFile;
+            return false;
+        }
+        if (previous === partFile) {
+            return false;
+        }
+        state.score.htmlFile = partFile;
+        return true;
     }
     function setScoreDir(scoreDir) {
         if (state.scoreDir === scoreDir) {

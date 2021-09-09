@@ -1196,6 +1196,16 @@ var zsUtil = (function (console, win, doc) {
         }    
         return csvStr.split(COMMA);
     }
+    function _getPageName(){
+        var path = win.location.pathname;
+        return path.split("/").pop();
+    }
+    function _loadPage(url){
+        if(_isNull(url)) {
+            return;
+        }
+        win.location.href = url;
+    }    
 
     // PUBLIC API
     return {
@@ -1207,7 +1217,12 @@ var zsUtil = (function (console, win, doc) {
         Point: Point,
         Oscillator: Oscillator,
         ParamOscillator: ParamOscillator,
-
+        loadPage: function (url) {
+            _loadPage(url);
+        },
+        getPageName: function () {
+            return _getPageName();
+        },
         interpolateLinear: function (val1, val2, decimalMid) {
             return _interpolateLinear(val1, val2, decimalMid);
         },
