@@ -4,3 +4,13 @@ rndStrategy:
     - range: { start: 1, end: 5 }
       isRndActive: false
       instruments: [ all ]
+builderStrategy:
+  sections: [pitch, rhythm]
+  assignmentType: USER_ANY_FCFS
+  pageRanges:
+    - range: { start: 1, end: 5 }
+      name: pitch
+      instruments: [ all ]
+    - range: { start: 1, end: 5 }
+      name: rhythm
+      instruments: [ all ]

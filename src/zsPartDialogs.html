@@ -22,14 +22,14 @@
     <script type="text/javascript" src="js/gsap/minified/gsap.min.js"></script>
     <script type="text/javascript" src="js/gsap/minified/Draggable.min.js"></script>
     <script type="text/javascript" src="js/util/zsUtil.js?v=1.0.1"></script>
-    <script type="text/javascript" src="js/net/zsNet.js?v=1.0.7"></script>
+    <script type="text/javascript" src="js/net/zsNet.js?v=1.0.1"></script>
     <script type="text/javascript" src="js/music/zsMusic.js?v=1.0.1"></script>
-    <script type="text/javascript" src="js/svg/zsSvg.js?v=1.0.2"></script>
+    <script type="text/javascript" src="js/svg/zsSvg.js?v=1.0.1"></script>
     <script type="text/javascript" src="js/audio/zsGranulator.js?v=1.0.1"></script>
     <script type="text/javascript" src="js/audio/zsSpeech.js?v=1.0.1"></script>
     <script type="text/javascript" src="js/audio/zsBeep.js?v=1.0.1"></script>
     <script type="text/javascript" src="js/audio/zsWsAudio.js?v=1.0.1"></script>
-    <script type="text/javascript" src="js/zscoreWeb.js?v=1.0.2"></script>
+    <script type="text/javascript" src="js/zscoreWebDialogs.js?v=1.0.1"></script>
 </head>
 
 <body>
@@ -62,7 +62,7 @@
                         </g>
                         <line style="fill:none;stroke:black;stroke-width:4;stroke-linecap:round;stroke-miterlimit:10;" x1="41" y1="78.8" x2="41" y2="9.7"/>
                     </g>
-                </symbol> 
+                </symbol>
                 <symbol id="metronomeOn" data-name="metronome" viewBox="0 0 100 125">
                     <g style="fill: limegreen;stroke:limegreen">
                         <path d="M59.9,8l20.9,84H19.1L40.4,8H60 M62.4,2H37.7c-1.1,0-2.2,0.9-2.5,1.9L11.9,96.1c-0.3,1.1,0.4,1.9,1.5,1.9h73c1.1,0,1.8-0.9,1.5-1.9L64.9,3.9C64.6,2.9,63.5,2,62.4,2L62.4,2z"/>
@@ -71,7 +71,10 @@
                         </g>
                         <line style="fill:none;stroke:limegreen;stroke-width:4;stroke-linecap:round;stroke-miterlimit:10;" x1="50" y1="78.8" x2="89.4" y2="9.7"/>
                     </g>
-                </symbol>                             
+                </symbol> 
+                <symbol id="home" data-name="home" viewBox="0 0 24 24">
+                    <path d="M 12 2.0996094 L 1 12 L 4 12 L 4 21 L 11 21 L 11 15 L 13 15 L 13 21 L 20 21 L 20 12 L 23 12 L 12 2.0996094 z M 12 4.7910156 L 18 10.191406 L 18 11 L 18 19 L 15 19 L 15 13 L 9 13 L 9 19 L 6 19 L 6 10.191406 L 12 4.7910156 z"/>
+                </symbol>
             </defs>
 
             <!-- frame -->
@@ -80,7 +83,7 @@
 
             <!-- title -->
             <g id="header">
-                <text id="title" x="50%" y="28" dominant-baseline="middle" text-anchor="middle" font-size="1.5em">ZScore</text> 
+                <text id="title" x="50%" y="28" dominant-baseline="middle" text-anchor="middle" font-size="1.5em">Dialogs</text> 
                 <text id="part" x="50%" y="60" dominant-baseline="middle" text-anchor="middle" font-size="1.1em">Part View</text> 
             </g>
             
@@ -106,6 +109,13 @@
                 <g id="tmpNote"><use x="95" y="48" width="8" height="22" href="#crotchet" xlink:href="#crotchet"/></g>
                 <text id="tmpEquals" x="105" y="65" dominant-baseline="middle" font-size="1em" text-anchor="start">=</text> 
                 <text id="tmpBpm" x="115" y="65" dominant-baseline="middle" font-size="1.5em" text-anchor="start">0</text> 
+            </g>
+            <!-- home -->
+            <g id="homeBtn">
+                <a xlink:href="index.html">
+                    <rect class="iconBkgr" x="730" y="48" width="28" height="28" />
+                    <use class="icon" x="732" y="50" width="24" height="24" href="#home" xlink:href="#home"/>
+                </a>
             </g>
             <!-- status -->
             <g id="srvrStatus">
@@ -211,26 +221,19 @@
             </g>
         </svg>    
     </div>
-    <div id="partListOuterDiv" class="outer" style="visibility: hidden;">
+    <div id="sectionListOuterDiv" class="outer" style="visibility: hidden;">
         <div class="middle">
-            <div class="part-list">
-                <div class="part-list-content">Select part: </div>
-                <div id="parts">
-                </div>
+            <div class="section-list">
+                <div class="section-list-content">Select sections you would like to present:</div>
+                <div id="sections"></div>
+                <div class="section-list-content">Presenting sections:</div>
+                <div class="section-list-content" id="ownedSections">one two three</div>
             </div>
         </div>
     </div>
-    <!-- <div id="joinBtnOuterDiv" class="outer" style="visibility: visible;">
-        <div class="middle">
-            <div class="inner">         
-                <buton id="joinBtn" class="joinButton" onclick="join();">CONNECT</button>
-            </div>
-        </div>
-    </div> -->
 
     <script type="text/javascript">
         function stateBtnClick() {
-            // document.getElementById('joinBtnOuterDiv').style.visibility = 'hidden';
             try {
                 zscore.onStateBtn();
             } catch(err) {
@@ -244,7 +247,14 @@
             } catch(err) {
                 onErr("Failed onPartSelect: " + inst, err);
             }
-        }      
+        }
+        function onSectionSelect(section) {
+            try {
+                zscore.onSectionSelect(section);
+            } catch(err) {
+                onErr("Failed onSectionSelect: " + section, err);
+            }
+        }
         function onInstrumentSelect(slotNo, inst) {
             try {
                 zscore.onInstrumentSelect(slotNo, inst);

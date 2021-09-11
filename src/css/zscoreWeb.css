@@ -151,6 +151,22 @@ a:active {
     margin-bottom: 5vw;
     font-size: 1.0em;
 }
+.section-list{ 
+    border:2px solid black;
+    background-color: rgb(237, 248, 247);
+    opacity: 1.0;
+    color: gray;
+    font-size: 26px;
+    font-weight: bold;
+    /* text-shadow: -1px -1px 1px #000, 1px 1px 1px #000; */
+    position: relative;
+    z-index: 100;
+}
+.section-list-content {
+    margin-top: 3vw;
+    margin-bottom: 2vw;
+    font-size: 1.0em;
+}
 .myTxt {
 	font-family:Courier New;
     font-size: 20px;
@@ -201,6 +217,25 @@ a:active {
 }
 .partListButton {
     margin-bottom: 5vw;
+	box-shadow: 3px 4px 0px 0px #91b8b3;
+	background:linear-gradient(to bottom, #768d87 5%, #6c7c7c 100%);
+	background-color:#768d87;
+	border-radius:18px;
+	border:1px solid #566963;
+	display:inline-block;
+	cursor:pointer;
+	color:white;
+	font-family:Arial;
+	font-size: 1.0em;
+	padding:7px 25px;
+	text-decoration:none;
+    text-shadow:0px 1px 0px #2b665e;
+    z-index:5; 
+}
+.sectionListButton {
+    margin-bottom: 5vw;
+    margin-left: 1vw;
+    margin-right: 1vw;
 	box-shadow: 3px 4px 0px 0px #91b8b3;
 	background:linear-gradient(to bottom, #768d87 5%, #6c7c7c 100%);
 	background-color:#768d87;
@@ -295,4 +330,15 @@ a:active {
 .srvr-status-svg-btn-dis:active {
     transform: none;
 }
-  
+.icon {
+    fill: rgb(50, 50, 50);
+    stroke: none;
+}
+.icon:hover {
+    fill: green;
+}
+.iconBkgr{
+    fill: rgb(212, 212, 212);
+    stroke: none;
+    fill-opacity: 0;
+}
