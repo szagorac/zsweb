@@ -46,7 +46,9 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     const TXT_FILL_DISCONNECTED = CLR_WHITE;
     const TXT_FILL_ERROR = CLR_BLACK;
     const PAGE_NO_CONTINUOUS = 6666;
+    const LS_CLIENT_ID_KEY = "zsClientId";
 
+    const EVENT_ID_HELLO = "HELLO";
     const EVENT_ID_PART_REG = "PART_REG";
     const EVENT_ID_PART_READY = "PART_READY";
     const EVENT_ID_PING = "PING";
@@ -67,6 +69,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     const EVENT_PARAM_OPACITY = "opacity";
     const EVENT_PARAM_COLOUR = "colour";
     const EVENT_PARAM_SECTION = "section";
+    const EVENT_PARAM_CLIENT_ID = "clientId";
     
     const DEFAULT_PAGE_IMG_URL = "img/blankStave.png";
     const DEFAULT_PAGE_ID = "p0";
@@ -141,6 +144,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         metro: { idMetronomeRect: "metroRect", idMetronome: "metro", idMetroSlider: "metroFreqSlider", idMetroFreqRect: "metroFreq", idMetroFreqLine: "metroFreqLine", ifSymbolMetroOff: "#metronome", ifSymbolMetroOn: "#metronomeOn", ifMetroFreqSlider: "#metroFreq", minFreq: 220, maxFreq: 2200},
     }
     var state = {
+        clientId: null,
         isPlaying: false,
         isReady: false,
         score: { title: "ZScore", noSpaceTitle: "ZScore", htmlFile: null, instrument: "Part View", parts: ["Part View"], firstPageNo: 1, lastPageNo: 2, sections: [], assignmentType: null},
@@ -229,6 +233,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         u.setRunMode(RUN_MODE);
 
         log("init: ");
+        setClientId();
         isTouch = u.isTouchDevice()
         isSafari = u.isSafari(navigator);
         log("init: IsTouch Device: " + isTouch + " isSafari: " + isSafari);
@@ -245,6 +250,15 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         initMetro();
 
         state.isInitialised = true;
+    }
+    function setClientId() {
+        var zsClientId = u.getLocalParam(LS_CLIENT_ID_KEY);
+        if(isNull(zsClientId)) {
+            zsClientId = u.generateRandomId();
+            u.storeLocalParam(LS_CLIENT_ID_KEY, zsClientId);
+        }
+        state.clientId = zsClientId;
+        log("clientId: " + state.clientId);
     }
     function resetOnNewScore() {
         state.part.pages = {};
@@ -422,6 +436,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         state.connectionType = connType;
         state.reconnectAttmpts = 0;
         setServerStatusView(config.connectedRectStyle, config.connectedBtnAttrib, config.connectedTxtStyle, CONNECTED);
+        sendHello();
     }
     function onDisconnected(connType) {
         state.isConnected = false;
@@ -1129,32 +1144,41 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         }
         u.makeVisible(config.idPartsListOuterDiv);
     }
+    function sendHello() {
+        var evParams = createReqParams();
+        n.sendEvent(EVENT_ID_HELLO, evParams);
+    }
     function registerPart(part) {
-        var evParams = new EventParams();
+        var evParams = createReqParams();
         evParams[EVENT_PARAM_PART] = part;
         n.sendEvent(EVENT_ID_PART_REG, evParams);
     }
     function sendReady() {
-        var evParams = new EventParams();
+        var evParams = createReqParams();
         evParams[EVENT_PARAM_PART] = state.part.name;
         n.sendEvent(EVENT_ID_PART_READY, evParams);
     }
     function sendPing(serverTime) {
-        var evParams = new EventParams();
+        var evParams = createReqParams();
         evParams[EVENT_PARAM_SERVER_TIME] = serverTime;
         n.sendEvent(EVENT_ID_PING, evParams);
     }
     function sendInstrumentSlot(slotNo, slotInstrument, thisPart) {
-        var evParams = new EventParams();
+        var evParams = createReqParams();
         evParams[EVENT_PARAM_SLOT_NO] = slotNo;
         evParams[EVENT_PARAM_SLOT_INSTRUMENT] = slotInstrument;
         evParams[EVENT_PARAM_PART] = thisPart;
         n.sendEvent(EVENT_ID_SELECT_ISLOT, evParams);
     }
     function sendSectionSelection(section) {
-        var evParams = new EventParams();
+        var evParams = createReqParams();
         evParams[EVENT_PARAM_SECTION] = section;
         n.sendEvent(EVENT_ID_SELECT_SECTION, evParams);
+    }
+    function createReqParams() {
+        var evParams = new EventParams();
+        evParams[EVENT_PARAM_CLIENT_ID] = state.clientId;
+        return evParams;
     }
     function processSeverActions(actions) {
         var id = null;

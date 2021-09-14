@@ -548,17 +548,17 @@ var zsUtil = (function (console, win, doc) {
                 break;
         }
         console.log(obj);
-    }    
+    }
     function _logDebug(val) {
-        if(_mode !== _RUN_MODE.DEBUG) {
+        if (_mode !== _RUN_MODE.DEBUG) {
             return;
         }
         _log(val);
-    }    
+    }
     function _log(val, id, isError) {
         switch (_mode) {
             case _RUN_MODE.PROD:
-                if(!isError) {
+                if (!isError) {
                     return;
                 }
                 break;
@@ -790,7 +790,7 @@ var zsUtil = (function (console, win, doc) {
         }
     }
     function _setElementIdStyleProperty(elementId, attrAssocArr) {
-        _setElementStyleProperty(_getElement(elementId), attrAssocArr) 
+        _setElementStyleProperty(_getElement(elementId), attrAssocArr)
     }
     function _setElementStyleProperty(element, attrAssocArr) {
         if (_isNull(element) || _isNull(attrAssocArr)) {
@@ -893,7 +893,7 @@ var zsUtil = (function (console, win, doc) {
             return;;
         }
         var attrs = STYLE_INVISIBLE;
-        if(isVisible) {
+        if (isVisible) {
             attrs = STYLE_VISIBLE;
         }
         _setElementStyleProperty(element, attrs);
@@ -1135,7 +1135,7 @@ var zsUtil = (function (console, win, doc) {
         return true;
     }
     function _arrContains(arr, elm) {
-        if(!_isArray(arr)) {
+        if (!_isArray(arr)) {
             return false;
         }
         return arr.includes(elm);
@@ -1193,19 +1193,113 @@ var zsUtil = (function (console, win, doc) {
     function _csvToArr(csvStr) {
         if (!csvStr) {
             return [];
-        }    
+        }
         return csvStr.split(COMMA);
     }
-    function _getPageName(){
+    function _getPageName() {
         var path = win.location.pathname;
         return path.split("/").pop();
     }
-    function _loadPage(url){
-        if(_isNull(url)) {
+    function _loadPage(url) {
+        if (_isNull(url)) {
             return;
         }
         win.location.href = url;
-    }    
+    }
+    function _generateRandomId() {
+        const uint32 = win.crypto.getRandomValues(new Uint32Array(1))[0];
+        return uint32.toString(16);
+    }
+    function _storeLocalParam(key, value) {
+        if (_isNull(key)) {
+            return;
+        }
+        if (!_isLocalStorageSupported()) {
+            _setCookieParam(key, value);
+            return;
+        }
+        try {
+            localStorage.setItem(key, value);
+            return;
+        } catch (err) {
+            _logException(err, "setLocalStorageParam key: " + key + " value: " + value);
+            _setCookieParam(key, value);
+        }
+    }
+    function _getLocalParam(key) {
+        if (_isNull(key)) {
+            return null;
+        }
+        if (!_isLocalStorageSupported()) {
+            return _getCookieParam(key);
+        }
+        var out = localStorage.getItem(key);
+        if(_isNull(out)) {
+            out = _getCookieParam(key);
+        }
+        return out;
+    }
+    function _removeLocalParam(key) {
+        if (_isNull(key)) {
+            return;
+        }
+        if (!_isLocalStorageSupported()) {
+            _expireCookieParam(key);
+            return;
+        }
+        localStorage.removeItem(key);
+    }
+    function _isLocalStorageSupported() {
+        try {
+            return 'localStorage' in win && win['localStorage'] !== null;
+        } catch (e) {
+            return false;
+        }
+    }
+    function _setCookieParam(key, value, days) {
+        var expires = "";
+        if (!_isNull(days)) {
+            var date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            expires = "; expires=" + date.toUTCString();
+        }
+        document.cookie = key + "=" + (value || "") + expires + "; path=/";
+    }
+    function _getCookieParam(key) {
+        if (_isNull(key)) {
+            return null;
+        }
+        var nameEQ = key + "=";
+        var ca = document.cookie.split(';');
+        for (var i = 0; i < ca.length; i++) {
+            var c = ca[i];
+            while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+        }
+        return null;
+    }
+    function _expireCookieParam(key) {
+        if (_isNull(key)) {
+            return;
+        }
+        _setCookieParam(key, "", -1);
+    }
+    function _toBoolean(val) {
+        if (_isNull(val)) {
+            return null;
+        }
+        if(!_isString(val)) {
+            return val;
+        }
+        switch (val) {
+            case 'true':
+                return true;
+            case 'false':
+                return false;
+            default:
+                return val;
+        }
+    }
 
     // PUBLIC API
     return {
@@ -1217,6 +1311,18 @@ var zsUtil = (function (console, win, doc) {
         Point: Point,
         Oscillator: Oscillator,
         ParamOscillator: ParamOscillator,
+        storeLocalParam: function (key, value) {
+            _storeLocalParam(key, value);
+        },
+        getLocalParam: function (key) {
+            return _getLocalParam(key);
+        },
+        removeLocalParam: function (key) {
+            return _removeLocalParam(key);
+        },
+        generateRandomId: function () {
+            return _generateRandomId();
+        },
         loadPage: function (url) {
             _loadPage(url);
         },
@@ -1321,7 +1427,7 @@ var zsUtil = (function (console, win, doc) {
         },
         replacePropValue: function (asocArr, prop, strToReplace, strReplaceWith) {
             _replacePropValue(asocArr, prop, strToReplace, strReplaceWith);
-        },       
+        },
         replaceEmptySpaces: function (strVal, strReplaceWith) {
             _replaceEmptySpaces(strVal, strReplaceWith);
         },
@@ -1458,7 +1564,7 @@ var zsUtil = (function (console, win, doc) {
         },
         csvToArr: function (csvStr) {
             return _csvToArr(csvStr);
-        },        
+        },
         toStr: function (val) {
             return String(val);
         },
@@ -1473,6 +1579,9 @@ var zsUtil = (function (console, win, doc) {
                 return null;
             }
             return parseInt(val, 10);
+        },
+        toBoolean: function (val) {
+            return _toBoolean(val);
         },
         isNumeric: function (num) {
             return _isNumeric(num);
@@ -1515,7 +1624,7 @@ var zsUtil = (function (console, win, doc) {
         },
         logDebug: function (val) {
             _logDebug(val);
-        },        
+        },
         log: function (val, id) {
             _log(val, id);
         },
