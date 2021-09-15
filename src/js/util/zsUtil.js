@@ -1285,20 +1285,7 @@ var zsUtil = (function (console, win, doc) {
         _setCookieParam(key, "", -1);
     }
     function _toBoolean(val) {
-        if (_isNull(val)) {
-            return null;
-        }
-        if(!_isString(val)) {
-            return val;
-        }
-        switch (val) {
-            case 'true':
-                return true;
-            case 'false':
-                return false;
-            default:
-                return val;
-        }
+        return (val === 'true') ? true : (val === 'false' ? false : val);        
     }
 
     // PUBLIC API
