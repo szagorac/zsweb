@@ -1040,7 +1040,14 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         }
     }
     function processBuidlerStrategy(strategy) {
+        var isReady = false;
+        if(isNotNull(strategy.isReady)) {
+            isReady = u.toBoolean(strategy.isReady);
+        }
         if(isNotNull(strategy.sections)) {
+            if(state.score.sections.length > 0) {
+                state.score.sections = [];
+            }    
             if (u.isArray(strategy.sections)) {
                 for (var i = 0; i < strategy.sections.length; i++) {
                     addSection(strategy.sections[i]);
@@ -1048,10 +1055,14 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             } else {
                 addSection(strategy.sections);
             }
-            showSections();
         }
         if(isNotNull(strategy.assignmentType)) {
             state.score.assignmentType = strategy.assignmentType;
+        }
+        if(isReady) {
+            hideSections();
+        } else {
+            showSections();
         }
     }
     function addSection(section) {
@@ -1084,6 +1095,14 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             u.addChildToParent(sectionsElement, sectionBtn);
         }
         u.makeVisible(config.idSectionsListOuterDiv);
+    }
+    function hideSections() {
+        var sectionsElement = u.getElement(config.idSections);
+        if (isNull(sectionsElement)) {
+            return;
+        }
+        u.removeElementChildren(sectionsElement);
+        u.makeInVisible(config.idSectionsListOuterDiv);
     }
     function processRndStrategy(strategy) {
     }
