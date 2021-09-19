@@ -108,6 +108,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         idPartsListOuterDiv: "partListOuterDiv",
         idSections: "sections",
         idSectionsListOuterDiv: "sectionListOuterDiv",
+        idSectionBtnPrefix: "sectionBtn",
+        idOwnedSections: "ownedSections",        
         idInstrument: "part",        
         idInstControls: "instControls",
         idInstSlotPrefix: "instSlot",        
@@ -147,7 +149,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         clientId: null,
         isPlaying: false,
         isReady: false,
-        score: { title: "ZScore", noSpaceTitle: "ZScore", htmlFile: null, instrument: "Part View", parts: ["Part View"], firstPageNo: 1, lastPageNo: 2, sections: [], assignmentType: null},
+        score: { title: "ZScore", noSpaceTitle: "ZScore", htmlFile: null, instrument: "Part View", parts: ["Part View"], firstPageNo: 1, lastPageNo: 2, sections: [], ownedSections: [], mySections: [], assignmentType: null},
         part: { name: "Part View", imgDir: null, imgPageNameToken: null, imgContPageName: null, blankPageNo: 0, contPageNo: PAGE_NO_CONTINUOUS, pageRanges: [{ start: 1, end: 1 }], pages: {} },
         topStave: { id: "topStave", config: config.topStave, pageId: DEFAULT_PAGE_ID, rndPageId: null, filename: DEFAULT_PAGE_IMG_URL, beatMap: null, timeline: null, isActive: true, isPlaying: false, currentBeat: null},
         bottomStave: { id: "bottomStave", config: config.bottomStave, pageId: DEFAULT_PAGE_ID, rndPageId: null, filename: DEFAULT_PAGE_IMG_URL, beatMap: null, timeline: null, isActive: false, isPlaying: false, currentBeat: null },
@@ -205,9 +207,14 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         this.onclick = "onPartSelect('" + partName + "')";
     }
     function SectionBtnAttrs(btnNo, sectionName) {
-        this.id = "sectionBtn" + btnNo;
+        this.id = config.idSectionBtnPrefix + sectionName;
+        this.no = btnNo;
         this.class = "sectionListButton";
         this.onclick = "onSectionSelect('" + sectionName + "')";
+    }
+    function SectionBtnDisabledAttrs() {
+        this.class = "sectionListButtonDisabled";
+        this.onclick = "";
     }
     function InstSlotActiveAttrs(slotNo, instrument) {
         this.onclick = "onInstrumentSelect(" + slotNo + ",'" + instrument + "')";
@@ -302,10 +309,37 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             log("onSectionSelection: unexpected section: " + section);
             return;
         }
-        disableSectionButton(section);
+        disableSection(section);
         sendSectionSelection(section);
     }
-    function disableSectionButton(section) {
+    function disableSection(section) {
+        var btnId = config.idSectionBtnPrefix + section;
+        var sectionBtn = u.getElement(btnId);
+        if(isNull(sectionBtn)) {
+            return;
+        }
+        disableSectionButton(sectionBtn);
+   }
+    function disableSectionButton(sectionBtn) {
+        if(isNull(sectionBtn)) {
+            return;
+        }
+        // u.setText(sectionBtn, section);
+        u.setElementAttributes(sectionBtn, new SectionBtnDisabledAttrs());
+    }
+    function setSectionsOwnedByClient() {        
+        var ownedSections = u.getElement(config.idOwnedSections);
+        if(isNull(ownedSections)) {
+            return;
+        }
+        var clientSections = state.score.mySections;
+        var displaySections = "";
+        var delim = "";
+        for (var i = 0; i < clientSections.length; i++) {
+            displaySections = displaySections + delim + clientSections[i];
+            delim = "; ";
+        }
+        u.setText(ownedSections, displaySections);
     }
     function onInstrumentSelection(slotNo, instrument) {
         if(isNull(slotNo) || isNull(instrument) || isNull(state.part.name)) {
@@ -489,6 +523,9 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         if (isNotNull(serverState.scoreInfo)) {
             processScoreInfo(serverState.scoreInfo);
         }
+        if (isNotNull(serverState.strategyInfo)) {
+            processStrategyInfo(serverState.strategyInfo);
+        }
         if (isNotNull(serverState.partInfo)) {
             processPartInfo(serverState.partInfo);
         }
@@ -522,9 +559,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
                 resetOnNewScore();
             }
         }
-        if (isNotNull(scoreInfo.strategies)) {
-            processStrategies(scoreInfo.strategies);
-        }
+
         if (isNotNull(scoreInfo.instruments)) {
             processInstruments(scoreInfo.instruments);
         }
@@ -535,6 +570,11 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             setScoreDir(scoreInfo.scoreDir);
         }
     }
+    function processStrategyInfo(strategyInfo) {
+        if (isNotNull(strategyInfo.strategies)) {
+            processStrategies(strategyInfo.strategies);
+        }
+    }    
     function setTitle(title) {
         if (state.score.title === title) {
             return false;
@@ -1059,6 +1099,17 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         if(isNotNull(strategy.assignmentType)) {
             state.score.assignmentType = strategy.assignmentType;
         }
+        state.score.ownedSections = [];
+        state.score.mySections = [];
+        if(isNotNull(strategy.sectionOwners)) {
+            for (var section in strategy.sectionOwners){
+                var owner = strategy.sectionOwners[section];
+                state.score.ownedSections.push(section);
+                if(state.clientId === owner) {
+                    state.score.mySections.push(section);
+                }
+            }
+        }
         if(isReady) {
             hideSections();
         } else {
@@ -1080,20 +1131,22 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         if (isNull(sectionsElement)) {
             return;
         }
-        u.removeElementChildren(sectionsElement);
+        // u.removeElementChildren(sectionsElement);
         for (var i = 0; i < sections.length; i++) {
             var section = sections[i];
-            if (u.arrContains(config.filterOutParts, section)) {
-                continue;
-            }
-            var attrs = new SectionBtnAttrs(i + 1, section);
-            var btnDiv = u.createDiv();
-            var sectionBtn = u.createButton(attrs);
-            u.setText(sectionBtn, section);
-            // u.addChildToParent(btnDiv, sectionBtn);
-            // u.addChildToParent(sectionsElement, btnDiv);
-            u.addChildToParent(sectionsElement, sectionBtn);
+            var btnId = config.idSectionBtnPrefix + section;
+            var sectionBtn = u.getElement(btnId);
+            if(isNull(sectionBtn)) {
+                var attrs = new SectionBtnAttrs(i + 1, section);
+                sectionBtn = u.createButton(attrs);
+                u.setText(sectionBtn, section);
+                u.addChildToParent(sectionsElement, sectionBtn);
+            }            
+            if(u.arrContains(state.score.ownedSections, section)) {
+                disableSectionButton(sectionBtn);
+            }                        
         }
+        setSectionsOwnedByClient();
         u.makeVisible(config.idSectionsListOuterDiv);
     }
     function hideSections() {

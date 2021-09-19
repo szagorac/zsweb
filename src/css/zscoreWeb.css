@@ -232,6 +232,20 @@ a:active {
     text-shadow:0px 1px 0px #2b665e;
     z-index:5; 
 }
+.partListButton:hover {
+	background:linear-gradient(to bottom, #6c7c7c 5%, #768d87 100%);
+	background-color:#6c7c7c;
+}
+.partListButton:active {
+	background: #819890;
+    -webkit-box-shadow: inset 0px 0px 5px #c1c1c1;
+    -moz-box-shadow: inset 0px 0px 5px #c1c1c1;
+    box-shadow: inset 0px 0px 5px #c1c1c1;
+    outline: none;
+}
+.partListButton:focus {
+    outline:0;
+}
 .sectionListButton {
     margin-bottom: 5vw;
     margin-left: 1vw;
@@ -251,19 +265,38 @@ a:active {
     text-shadow:0px 1px 0px #2b665e;
     z-index:5; 
 }
-.partListButton:hover {
+.sectionListButton:hover {
 	background:linear-gradient(to bottom, #6c7c7c 5%, #768d87 100%);
 	background-color:#6c7c7c;
 }
-.partListButton:active {
+.sectionListButton:active {
 	background: #819890;
     -webkit-box-shadow: inset 0px 0px 5px #c1c1c1;
     -moz-box-shadow: inset 0px 0px 5px #c1c1c1;
     box-shadow: inset 0px 0px 5px #c1c1c1;
     outline: none;
 }
-.partListButton:focus {
+.sectionListButton:focus {
     outline:0;
+}
+.sectionListButtonDisabled {
+    margin-bottom: 5vw;
+    margin-left: 1vw;
+    margin-right: 1vw;
+	box-shadow: 0px 0px 0px 0px grey;
+	background: grey;
+	background-color:grey;
+	border-radius:18px;
+	border:1px solid grey;
+	display:inline-block;
+	cursor:pointer;
+	color:grey;
+	font-family:Arial;
+	font-size: 1.0em;
+	padding:7px 25px;
+	text-decoration:none;
+    text-shadow:0px 1px 0px #2b665e;
+    z-index:5; 
 }
 .instButton:hover {background-color: #98d3a2;}
 .instButton:active {
