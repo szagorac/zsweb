@@ -940,6 +940,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         if (!u.isArray(pageRanges)) {
             return;
         }
+        state.part.pages = [];
+
         for (var i = 0; i < pageRanges.length; i++) {
             loadPageRange(pageRanges[i]);
         }
