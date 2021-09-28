@@ -150,7 +150,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         isPlaying: false,
         isReady: false,
         score: { title: "ZScore", noSpaceTitle: "ZScore", htmlFile: null, instrument: "Part View", parts: ["Part View"], firstPageNo: 1, lastPageNo: 2, sections: [], ownedSections: [], mySections: [], assignmentType: null},
-        part: { name: "Part View", imgDir: null, imgPageNameToken: null, imgContPageName: null, blankPageNo: 0, contPageNo: PAGE_NO_CONTINUOUS, pageRanges: [{ start: 1, end: 1 }], pages: {} },
+        part: { name: "Part View", imgDir: null, imgPageNameToken: null, imgContPageName: null, blankPageNo: 0, contPageNo: PAGE_NO_CONTINUOUS, currentSection: null, pageRanges: [{ start: 1, end: 1 }], pages: {} },
         topStave: { id: "topStave", config: config.topStave, pageId: DEFAULT_PAGE_ID, rndPageId: null, filename: DEFAULT_PAGE_IMG_URL, beatMap: null, timeline: null, isActive: true, isPlaying: false, currentBeat: null},
         bottomStave: { id: "bottomStave", config: config.bottomStave, pageId: DEFAULT_PAGE_ID, rndPageId: null, filename: DEFAULT_PAGE_IMG_URL, beatMap: null, timeline: null, isActive: false, isPlaying: false, currentBeat: null },
         startTimeTl: 0,
@@ -346,6 +346,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             return;
         }
         sendInstrumentSlot(slotNo, instrument, state.part.name);
+        onResetInstrumentSlots();
     }
     function resetAll() {
         resetAudio();
@@ -907,8 +908,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     }
     function processPartInfo(partInfo) {
         if (isNotNull(partInfo.name)) {
-            state.part.name = partInfo.name;
-            s.setElementText(config.idInstrument, partInfo.name);
+            state.part.name = partInfo.name;            
         }
         if (isNotNull(partInfo.pageRanges)) {
             var pgRanges = partInfo.pageRanges;
@@ -932,7 +932,21 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         if (isNotNull(partInfo.contPageNo)) {
             state.part.contPageNo = partInfo.contPageNo;
         }
+        if (isNotNull(partInfo.currentSection)) {
+            state.part.currentSection = partInfo.currentSection;
+        }
         loadPartPages();
+        showPartInfo();
+    }
+    function showPartInfo() {
+        var partName = state.part.name;
+        var section = state.part.currentSection;
+        var out = "";
+        if(isNotNull(section)) {
+            out += u.capitalizeFirstLetter(section) + " - ";
+        }
+        out += partName;
+        s.setElementText(config.idInstrument, out);
     }
     function loadPartPages() {
         var part = state.part;

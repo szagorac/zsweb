@@ -1287,6 +1287,12 @@ var zsUtil = (function (console, win, doc) {
     function _toBoolean(val) {
         return (val === 'true') ? true : (val === 'false' ? false : val);        
     }
+    function _capitalizeFirstLetter(value) {
+        if(!_isString(value) || value.length < 1) {
+            return value;
+        }
+        return value.charAt(0).toUpperCase() + value.slice(1);
+    }
 
     // PUBLIC API
     return {
@@ -1298,6 +1304,9 @@ var zsUtil = (function (console, win, doc) {
         Point: Point,
         Oscillator: Oscillator,
         ParamOscillator: ParamOscillator,
+        capitalizeFirstLetter: function (value) {
+            return _capitalizeFirstLetter(value);
+        },
         storeLocalParam: function (key, value) {
             _storeLocalParam(key, value);
         },
