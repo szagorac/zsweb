@@ -198,6 +198,11 @@
                 </g>
             </g>
             
+            <!-- client ID -->
+            <g id="clientIdGroup">                
+                <text id="clientId" x="30" y="600" style="visibility:hidden;" font-family="sans-serif" font-size="0.7em" fill="black" pointer-events="none">N/A</text>
+                <rect x="10" y="580" width="90" height="50" style="opacity:0.0;stroke-width:1;stroke:black;fill:white;fill-opacity:0" onclick="onClientIdSelect();"/>
+            </g>
 
             <!-- bottom controls -->
             <rect id="controlsFrame" x="196" y="527" width="420" height="50" fill="none" style="stroke-width:1;stroke:black;opacity:0.3" rx="10"/>
@@ -269,6 +274,13 @@
                 onErr("Failed onMetronmeSelect:", err);
             }
         }   
+        function onClientIdSelect() {
+            try {
+                zscore.onClientIdSelect();
+            } catch(err) {
+                onErr("Failed onMetronmeSelect:", err);
+            }
+        }        
         function onErr(txt, err) {
             if(zsUtil) {
                 zsUtil.logException(err, txt);

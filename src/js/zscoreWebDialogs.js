@@ -121,6 +121,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         idBridgeSuffix: "Bridge",
         idOrdSuffix: "Ord",
         idRectSuffix: "Rect",
+        idClientIdGroup: "clientIdGroup",
+        idClientId: "clientId",        
         blankPageUrl: "img/blankStave.png",
         filterOutParts: [AV, FULL_SCORE],
         connectedRectStyle: { "fill": FILL_CONNECTED, "stroke": STROKE_CONNECTED, "stroke-width": "0px", "visibility": VISIBLE, "opacity": 1 },
@@ -166,8 +168,9 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         isConnected: false,
         isInitialised: false,
         connectionType: null,
-        pageNoToLoad: 0,        
+        pageNoToLoad: 0,
         metro: {isMetroOn: false, slider: {xMax: 60, xMin: 40, xMid: 50, range: 20,}},
+        isClientIdVisible: false,
     }
 
     function ZScoreException(message) {
@@ -266,6 +269,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         }
         state.clientId = zsClientId;
         log("clientId: " + state.clientId);
+        s.setElementText(config.idClientId, state.clientId);
+        showClientId();
     }
     function resetOnNewScore() {
         state.part.pages = {};
@@ -347,6 +352,18 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         }
         sendInstrumentSlot(slotNo, instrument, state.part.name);
         onResetInstrumentSlots();
+    }
+    function showClientId() {
+        var isVisible = state.isClientIdVisible;
+        if(isVisible) {
+            u.makeVisible(config.idClientId);
+        } else {
+            u.makeInVisible(config.idClientId);
+        }
+    }
+    function onClientIdSelection() {
+        state.isClientIdVisible = !state.isClientIdVisible;
+        showClientId();
     }
     function resetAll() {
         resetAudio();
@@ -1939,5 +1956,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         onInstrumentSelect: function (slotNo, instrument) {
             onInstrumentSelection(slotNo, instrument);
         },
+        onClientIdSelect: function () {
+            onClientIdSelection();
+        },        
     }
 }(zsUtil, zsNet, zsSvg, zsWsAudio, zsMusic, window, document));
