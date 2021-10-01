@@ -19,7 +19,7 @@
     <link rel="icon" href="img/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" type="text/css" href="css/zscoreWeb.css?v=1.0.1">
 
-    <script type="text/javascript" src="js/gsap/minified/gsap.min.js"></script>
+    <!-- <script type="text/javascript" src="js/gsap/minified/gsap.min.js"></script>
     <script type="text/javascript" src="js/gsap/minified/Draggable.min.js"></script>
     <script type="text/javascript" src="js/util/zsUtil.js?v=1.0.1"></script>
     <script type="text/javascript" src="js/net/zsNet.js?v=1.0.1"></script>
@@ -29,7 +29,7 @@
     <script type="text/javascript" src="js/audio/zsSpeech.js?v=1.0.1"></script>
     <script type="text/javascript" src="js/audio/zsBeep.js?v=1.0.1"></script>
     <script type="text/javascript" src="js/audio/zsWsAudio.js?v=1.0.1"></script>
-    <script type="text/javascript" src="js/zscoreWebDialogs.js?v=1.0.1"></script>
+    <script type="text/javascript" src="js/zscoreWebDialogs.js?v=1.0.1"></script> -->
 </head>
 
 <body>
@@ -129,16 +129,16 @@
             <!-- staves -->
             <g id="staves">
                 <g id="stvTop">
-                    <image id="stvTopImg" href="img/blankStave.png" xlink:href="img/blankStave.png" preserveAspectRatio="xMidYMid meet" width="752" height="211" x="30" y="80" />
+                    <image id="stvTopImg" href="/score/Dialogs/rsrc/Dialogs_Present_page1.png" xlink:href="/score/Dialogs/rsrc/Dialogs_Present_page1.png" preserveAspectRatio="xMidYMid meet" width="752" height="211" x="30" y="80" />
                     <g id="overlaysTop">
-                        <g id="ovrlTopTimb" style="visibility: hidden;">
+                        <g id="ovrlTopTimbre" style="visibility: hidden;">
                             <rect id="ovrlTopTimbRect" x="96" y="115" width="663" height="32.5" fill="white" style="visibility:hidden;opacity:1.0;stroke-width:1;stroke:none"/>
                             <line id="ovrlTopTimbOrdLine" x1="96" y1="131.25" x2="759" y2="131.25" stroke="grey" stroke-dasharray="3, 3" style="visibility:hidden;opacity:0.4;stroke-width:1"/>
                             <line id="ovrlTopTimbLine" x1="96" y1="131.25" x2="759" y2="131.25" stroke="purple" style="visibility:hidden;opacity:1.0;stroke-width:3"/>
                         </g>
                         <g id="ovrlTopPitch" style="visibility: hidden;">
                             <rect id="ovrlTopPitchRect" x="96" y="149.5" width="663" height="96.5" fill="white" style="visibility:hidden;opacity:1.0;stroke-width:1;stroke:none"/>
-                            <line id="ovrlTopPitchMidLine" x1="96" y1="197.75" x2="759" y2="197.75" stroke="grey" stroke-dasharray="3, 3" style="visibility:hidden;opacity:0.4;stroke-width:1"/>
+                            <line id="ovrlTopTimbMidLine" x1="96" y1="197.75" x2="759" y2="197.75" stroke="grey" stroke-dasharray="3, 3" style="visibility:hidden;opacity:0.4;stroke-width:1"/>
                             <line id="ovrlTopPitchLine" x1="96" y1="197.75" x2="759" y2="197.75" stroke="black" style="visibility:hidden;opacity:1.0;stroke-width:3"/>
                         </g>
                         <g id="ovrlTopPitchStave" style="visibility: hidden;">
@@ -157,9 +157,9 @@
                     <rect id="stvTopMask" x="-1000" y="79" width="2812" height="203" fill="none" style="opacity:0.5;stroke-width:1;stroke:blue"/>
                 </g>
                 <g id="stvBot">
-                    <image id="stvBotImg" href="img/blankStave.png" xlink:href="img/blankStave.png" preserveAspectRatio="xMidYMid meet" width="752" height="211" x="30" y="301" />
+                    <image id="stvBotImg" href="/score/Dialogs/rsrc/Dialogs_Present_page2.png" xlink:href="/score/Dialogs/rsrc/Dialogs_Present_page2.png" preserveAspectRatio="xMidYMid meet" width="752" height="211" x="30" y="301" />
                     <g id="overlaysBot">
-                        <g id="ovrlBotTimb" style="visibility: hidden;">
+                        <g id="ovrlBotTimbre" style="visibility: hidden;">
                             <rect id="ovrlBotTimbRect" x="96" y="336" width="663" height="32.5" fill="white" style="visibility:hidden;opacity:1.0;stroke-width:1;stroke:none"/>
                             <line id="ovrlBotTimbOrdLine" x1="96" y1="352.25" x2="759" y2="352.25" stroke="grey" stroke-dasharray="3, 3" style="visibility:hidden;opacity:0.4;stroke-width:1"/>
                             <line id="ovrlBotTimbLine" x1="96" y1="352.25" x2="759" y2="352.25" stroke="purple" style="visibility:hidden;opacity:1.0;stroke-width:3"/>
@@ -181,7 +181,7 @@
                     <line id="stvBotStartLine" x1="95" y1="301" x2="95" y2="502" stroke="blue" style="opacity:0.2;stroke-width:3"/>
                     <line id="stvBotPosLine" x1="95" y1="301" x2="95" y2="502" stroke="purple" style="opacity:0.3;stroke-width:2"/>
                     <circle id="stvBotBeatBall" cx="95" cy="331" r="4" stroke="none" fill="purple" style="opacity:1.0"/>
-                    <rect id="stvBotMask" x="-1000" y="300" width="2812" height="203" fill="white" style="opacity:0.4;stroke-width:1;stroke:grey"/>                    
+                    <rect id="stvBotMask" x="-1000" y="300" width="2812" height="203" fill="none" style="opacity:0.4;stroke-width:1;stroke:grey"/>                    
                 </g>
             </g>
             
@@ -225,56 +225,56 @@
     </div>
 
     <script type="text/javascript">
-        function stateBtnClick() {
-            try {
-                zscore.onStateBtn();
-            } catch(err) {
-                onErr("Failed to load ZScore", err);
-                window.location = 'error.html';
-            }
-        }        
-        function onPartSelect(inst) {
-            try {
-                zscore.onPartSelect(inst);
-            } catch(err) {
-                onErr("Failed onPartSelect: " + inst, err);
-            }
-        }
-        function onSectionSelect(section) {
-            try {
-                zscore.onSectionSelect(section);
-            } catch(err) {
-                onErr("Failed onSectionSelect: " + section, err);
-            }
-        }
-        function onInstrumentSelect(slotNo, inst) {
-            try {
-                zscore.onInstrumentSelect(slotNo, inst);
-            } catch(err) {
-                onErr("Failed onInstrumentSelect: " + ins, err);
-            }
-        }       
-        function onMetronmeSelect() {
-            try {
-                zscore.onMetronmeSelect();
-            } catch(err) {
-                onErr("Failed onMetronmeSelect:", err);
-            }
-        }   
-        function onClientIdSelect() {
-            try {
-                zscore.onClientIdSelect();
-            } catch(err) {
-                onErr("Failed onMetronmeSelect:", err);
-            }
-        }        
-        function onErr(txt, err) {
-            if(zsUtil) {
-                zsUtil.logException(err, txt);
-            } else {
-                console.log(txt + ", err: " + err);
-            }
-        }
+        // function stateBtnClick() {
+        //     try {
+        //         zscore.onStateBtn();
+        //     } catch(err) {
+        //         onErr("Failed to load ZScore", err);
+        //         window.location = 'error.html';
+        //     }
+        // }        
+        // function onPartSelect(inst) {
+        //     try {
+        //         zscore.onPartSelect(inst);
+        //     } catch(err) {
+        //         onErr("Failed onPartSelect: " + inst, err);
+        //     }
+        // }
+        // function onSectionSelect(section) {
+        //     try {
+        //         zscore.onSectionSelect(section);
+        //     } catch(err) {
+        //         onErr("Failed onSectionSelect: " + section, err);
+        //     }
+        // }
+        // function onInstrumentSelect(slotNo, inst) {
+        //     try {
+        //         zscore.onInstrumentSelect(slotNo, inst);
+        //     } catch(err) {
+        //         onErr("Failed onInstrumentSelect: " + ins, err);
+        //     }
+        // }       
+        // function onMetronmeSelect() {
+        //     try {
+        //         zscore.onMetronmeSelect();
+        //     } catch(err) {
+        //         onErr("Failed onMetronmeSelect:", err);
+        //     }
+        // }   
+        // function onClientIdSelect() {
+        //     try {
+        //         zscore.onClientIdSelect();
+        //     } catch(err) {
+        //         onErr("Failed onMetronmeSelect:", err);
+        //     }
+        // }        
+        // function onErr(txt, err) {
+        //     if(zsUtil) {
+        //         zsUtil.logException(err, txt);
+        //     } else {
+        //         console.log(txt + ", err: " + err);
+        //     }
+        // }
     </script>
 </body>
 

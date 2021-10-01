@@ -143,8 +143,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         connectedBtnAttrib: { "filter": "" },
         disconnectedBtnAttrib: { "filter": "url(#dropshadow)" },
         errorBtnAttrib: { "filter": "url(#dropshadow)" },
-        topStave: { gId: "stvTop", imgId: "stvTopImg", startLineId: "stvTopStartLine", positionLineId: "stvTopPosLine", beatBallId: "stvTopBeatBall", maskId: "stvTopMask", ovrlPosId: "ovrlTopPos", ovrlPitchId: "ovrlTopPitch", ovrlSpeedId: "ovrlTopSpeed", ovrlPressId: "ovrlTopPres", ovrlDynId: "ovrlTopDyn", ballYmax: 84, xLeftMargin: 31.5, posLineConf: {x1: "95", y1: "80", x2: "95", y2: "281"}, posBallConf: {cx: "95", cy: "110", r: "4"} },
-        bottomStave: { gId: "stvBot", imgId: "stvBotImg", startLineId: "stvBotStartLine", positionLineId: "stvBotPosLine", beatBallId: "stvBotBeatBall", maskId: "stvBotMask", ovrlPosId: "ovrlBotPos", ovrlPitchId: "ovrlBotPitch", ovrlSpeedId: "ovrlBotSpeed", ovrlPressId: "ovrlBotPres", ovrlDynId: "ovrlBotDyn", ballYmax: 305, xLeftMargin: 31.5, posLineConf: {x1: "95", y1: "301", x2: "95", y2: "502"}, posBallConf: {cx: "95", cy: "331", r: "4"} },
+        topStave: { gId: "stvTop", imgId: "stvTopImg", startLineId: "stvTopStartLine", positionLineId: "stvTopPosLine", beatBallId: "stvTopBeatBall", maskId: "stvTopMask", ovrlPosId: "ovrlTopPos", ovrlPitchId: "ovrlTopPitch", ovrlSpeedId: "ovrlTopSpeed", ovrlPressId: "ovrlTopPres", ovrlDynId: "ovrlTopDyn", ovrlTimbreId: "ovrlTopTimb", ballYmax: 84, xLeftMargin: 31.5, posLineConf: {x1: "95", y1: "80", x2: "95", y2: "281"}, posBallConf: {cx: "95", cy: "110", r: "4"} },
+        bottomStave: { gId: "stvBot", imgId: "stvBotImg", startLineId: "stvBotStartLine", positionLineId: "stvBotPosLine", beatBallId: "stvBotBeatBall", maskId: "stvBotMask", ovrlPosId: "ovrlBotPos", ovrlPitchId: "ovrlBotPitch", ovrlSpeedId: "ovrlBotSpeed", ovrlPressId: "ovrlBotPres", ovrlDynId: "ovrlBotDyn", ovrlTimbreId: "ovrlBotTimb", ballYmax: 305, xLeftMargin: 31.5, posLineConf: {x1: "95", y1: "301", x2: "95", y2: "502"}, posBallConf: {cx: "95", cy: "331", r: "4"} },
         metro: { idMetronomeRect: "metroRect", idMetronome: "metro", idMetroSlider: "metroFreqSlider", idMetroFreqRect: "metroFreq", idMetroFreqLine: "metroFreqLine", ifSymbolMetroOff: "#metronome", ifSymbolMetroOn: "#metronomeOn", ifMetroFreqSlider: "#metroFreq", minFreq: 220, maxFreq: 2200},
     }
     var state = {
@@ -1401,6 +1401,9 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             case "DYNAMICS":
                 setFill(stave.config.ovrlDynId + config.idRectSuffix, col);
                 break;
+            case "TIMBRE":
+                setFill(stave.config.ovrlTimbreId + config.idRectSuffix, col);
+                break;
             default:
                 log("setOverlayColour: unknown overlay type: " + overlayType);
         }
@@ -1432,13 +1435,16 @@ var zscore = (function (u, n, s, a, m, win, doc) {
                 setLineY(stave.config.ovrlSpeedId + config.idLineSuffix, posY);
                 break;
             case "PRESSURE": 
-            setLineY(stave.config.ovrlPressId + config.idLineSuffix, posY);
+                setLineY(stave.config.ovrlPressId + config.idLineSuffix, posY);
                 break;
             case "DYNAMICS":
                 setLineY(stave.config.ovrlDynId + config.idLineSuffix, posY);
                 break;
+            case "TIMBRE":
+                setLineY(stave.config.ovrlTimbreId + config.idLineSuffix, posY);
+                break;
             default:
-                log("setOverlayElement: unknown overlay type: " + overlayType);
+                log("setOverlayLinePosition: unknown overlay type: " + overlayType);
         }
     }
     function setLineY(lineId, posY) {
@@ -1480,9 +1486,35 @@ var zscore = (function (u, n, s, a, m, win, doc) {
                 break;
             case "DYNAMICS":
                 setDynamicsOverlay(staveConf, overlayElement, isEnabled, opacity);
-                break;                
+                break;
+            case "TIMBRE":
+                setTimbreOverlay(staveConf, overlayElement, isEnabled, opacity);
+                break;
             default:
                 log("setOverlayElement: unknown overlay type: " + overlayType);
+        }
+    }
+    function setTimbreOverlay(staveConf, overlayElement, isEnabled, opacity) {
+        if(isNull(overlayElement) || isNull(staveConf)) {
+            return;
+        }
+        switch(overlayElement) {
+            case "TIMBRE_BOX": 
+                setOverlayVisibility(staveConf.ovrlTimbreId + config.idRectSuffix, isEnabled, opacity);
+                setOverlayVisibility(staveConf.ovrlTimbreId + config.idOrdSuffix + config.idLineSuffix, isEnabled, opacity);
+                setOverlayVisibility(staveConf.ovrlTimbreId, isEnabled, opacity);
+                if(!isEnabled) {
+                    setOverlayVisibility(staveConf.ovrlTimbreId + config.idLineSuffix, isEnabled, opacity);
+                }
+                break;
+            case "TIMBRE_ORD_LINE":
+                setOverlayVisibility(staveConf.ovrlTimbreId + config.idOrdSuffix + config.idLineSuffix, isEnabled, opacity);
+                break;                
+            case "TIMBRE_LINE":
+                setOverlayVisibility(staveConf.ovrlTimbreId + config.idLineSuffix, isEnabled, opacity);
+                break;
+            default:
+                log("setTimbreOverlay: unknown overlay element: " + overlayElement);
         }
     }
     function setDynamicsOverlay(staveConf, overlayElement, isEnabled, opacity) {
@@ -1505,7 +1537,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
                 setOverlayVisibility(staveConf.ovrlDynId + config.idLineSuffix, isEnabled, opacity);
                 break;
             default:
-                log("setOverlayElement: unknown overlay type: " + overlayElement);
+                log("setDynamicsOverlay: unknown overlay element: " + overlayElement);
         }
     }
     function setPressOverlay(staveConf, overlayElement, isEnabled, opacity) {
@@ -1528,7 +1560,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
                 setOverlayVisibility(staveConf.ovrlPressId + config.idLineSuffix, isEnabled, opacity);
                 break;
             default:
-                log("setOverlayElement: unknown overlay type: " + overlayElement);
+                log("setPressOverlay: unknown overlay element: " + overlayElement);
         }
     }
     function setSpeedOverlay(staveConf, overlayElement, isEnabled, opacity) {
@@ -1551,7 +1583,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
                 setOverlayVisibility(staveConf.ovrlSpeedId + config.idLineSuffix, isEnabled, opacity);
                 break;
             default:
-                log("setOverlayElement: unknown overlay type: " + overlayElement);
+                log("setSpeedOverlay: unknown overlay element: " + overlayElement);
         }
     }
     function setPitchOverlay(staveConf, overlayElement, isEnabled, opacity) {
@@ -1570,7 +1602,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
                 setOverlayVisibility(staveConf.ovrlPitchId + config.idLineSuffix, isEnabled, opacity);
                 break;
             default:
-                log("setOverlayElement: unknown overlay type: " + overlayElement);
+                log("setPitchOverlay: unknown overlay element: " + overlayElement);
         }
     }
     function setPositionOverlay(staveConf, overlayElement, isEnabled, opacity) {
@@ -1597,7 +1629,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
                 setOverlayVisibility(staveConf.ovrlPosId + config.idOrdSuffix + config.idLineSuffix, isEnabled, opacity);
                 break;
             default:
-                log("setOverlayElement: unknown overlay type: " + overlayElement);
+                log("setPositionOverlay: unknown overlay element: " + overlayElement);
         }
     }
     function setOverlayVisibility(ovrlId, isEnabled, opacity) {
