@@ -120,6 +120,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         idLineSuffix: "Line",
         idBridgeSuffix: "Bridge",
         idOrdSuffix: "Ord",
+        idMidSuffix: "Mid",
         idRectSuffix: "Rect",
         idClientIdGroup: "clientIdGroup",
         idClientId: "clientId",        
@@ -143,8 +144,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         connectedBtnAttrib: { "filter": "" },
         disconnectedBtnAttrib: { "filter": "url(#dropshadow)" },
         errorBtnAttrib: { "filter": "url(#dropshadow)" },
-        topStave: { gId: "stvTop", imgId: "stvTopImg", startLineId: "stvTopStartLine", positionLineId: "stvTopPosLine", beatBallId: "stvTopBeatBall", maskId: "stvTopMask", ovrlPosId: "ovrlTopPos", ovrlPitchId: "ovrlTopPitch", ovrlSpeedId: "ovrlTopSpeed", ovrlPressId: "ovrlTopPres", ovrlDynId: "ovrlTopDyn", ovrlTimbreId: "ovrlTopTimb", ballYmax: 84, xLeftMargin: 31.5, posLineConf: {x1: "95", y1: "80", x2: "95", y2: "281"}, posBallConf: {cx: "95", cy: "110", r: "4"} },
-        bottomStave: { gId: "stvBot", imgId: "stvBotImg", startLineId: "stvBotStartLine", positionLineId: "stvBotPosLine", beatBallId: "stvBotBeatBall", maskId: "stvBotMask", ovrlPosId: "ovrlBotPos", ovrlPitchId: "ovrlBotPitch", ovrlSpeedId: "ovrlBotSpeed", ovrlPressId: "ovrlBotPres", ovrlDynId: "ovrlBotDyn", ovrlTimbreId: "ovrlBotTimb", ballYmax: 305, xLeftMargin: 31.5, posLineConf: {x1: "95", y1: "301", x2: "95", y2: "502"}, posBallConf: {cx: "95", cy: "331", r: "4"} },
+        topStave: { gId: "stvTop", imgId: "stvTopImg", startLineId: "stvTopStartLine", positionLineId: "stvTopPosLine", beatBallId: "stvTopBeatBall", maskId: "stvTopMask", ovrlPosId: "ovrlTopPos", ovrlPitchId: "ovrlTopPitch", ovrlPitchStaveId: "ovrlTopPitchStave", ovrlSpeedId: "ovrlTopSpeed", ovrlPressId: "ovrlTopPres", ovrlDynId: "ovrlTopDyn", ovrlTimbreId: "ovrlTopTimb", ballYmax: 84, xLeftMargin: 31.5, posLineConf: {x1: "95", y1: "80", x2: "95", y2: "281"}, posBallConf: {cx: "95", cy: "110", r: "4"} },
+        bottomStave: { gId: "stvBot", imgId: "stvBotImg", startLineId: "stvBotStartLine", positionLineId: "stvBotPosLine", beatBallId: "stvBotBeatBall", maskId: "stvBotMask", ovrlPosId: "ovrlBotPos", ovrlPitchId: "ovrlBotPitch", ovrlPitchStaveId: "ovrlBotPitchStave", ovrlSpeedId: "ovrlBotSpeed", ovrlPressId: "ovrlBotPres", ovrlDynId: "ovrlBotDyn", ovrlTimbreId: "ovrlBotTimb", ballYmax: 305, xLeftMargin: 31.5, posLineConf: {x1: "95", y1: "301", x2: "95", y2: "502"}, posBallConf: {cx: "95", cy: "331", r: "4"} },
         metro: { idMetronomeRect: "metroRect", idMetronome: "metro", idMetroSlider: "metroFreqSlider", idMetroFreqRect: "metroFreq", idMetroFreqLine: "metroFreqLine", ifSymbolMetroOff: "#metronome", ifSymbolMetroOn: "#metronomeOn", ifMetroFreqSlider: "#metroFreq", minFreq: 220, maxFreq: 2200},
     }
     var state = {
@@ -1490,6 +1491,9 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             case "TIMBRE":
                 setTimbreOverlay(staveConf, overlayElement, isEnabled, opacity);
                 break;
+            case "PITCH_STAVE":
+                setPitchStaveOverlay(staveConf, overlayElement, isEnabled, opacity);
+                break;
             default:
                 log("setOverlayElement: unknown overlay type: " + overlayType);
         }
@@ -1584,6 +1588,25 @@ var zscore = (function (u, n, s, a, m, win, doc) {
                 break;
             default:
                 log("setSpeedOverlay: unknown overlay element: " + overlayElement);
+        }
+    }    
+    function setPitchStaveOverlay(staveConf, overlayElement, isEnabled, opacity) {
+        if(isNull(overlayElement) || isNull(staveConf)) {
+            return;
+        }
+        switch(overlayElement) {
+            case "PITCH_STAVE_BOX":
+                setOverlayVisibility(staveConf.ovrlPitchStaveId + config.idRectSuffix, isEnabled, opacity);
+                setOverlayVisibility(staveConf.ovrlPitchStaveId, isEnabled, opacity);
+                if(!isEnabled) {
+                    setOverlayVisibility(staveConf.ovrlPitchStaveId + config.idLineSuffix, isEnabled, opacity);
+                }
+                break;
+            case "PITCH_STAVE_MID_LINE":
+                setOverlayVisibility(staveConf.ovrlPitchStaveId + config.idMidSuffix + config.idLineSuffix, isEnabled, opacity);
+                break;                
+            default:
+                log("setPitchOverlay: unknown overlay element: " + overlayElement);
         }
     }
     function setPitchOverlay(staveConf, overlayElement, isEnabled, opacity) {
