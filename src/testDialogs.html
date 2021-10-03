@@ -94,7 +94,12 @@
                 <circle id="semC3" cx="71" cy="26" r="12" stroke="black" stroke-width="1" fill="none"/>
                 <circle id="semC2" cx="100" cy="26" r="12" stroke="black" stroke-width="1" fill="none"/>
                 <circle id="semC1" cx="129" cy="26" r="12" stroke="black" stroke-width="1" fill="none"/>
-            </g>        
+            </g> 
+            <!-- trasnposition -->       
+            <g id="trasnposition">
+                <text id="transpoLetter" x="40" y="65" dominant-baseline="middle" text-anchor="start" font-size="1.5em">C</text> 
+                <text id="transpoMidifier" x="53" y="60" dominant-baseline="middle" text-anchor="start" font-size="0.9em"></text> 
+            </g>
             <!-- tempo -->
             <g id="tempo">
                 <g id="mtrnm">
@@ -141,9 +146,16 @@
                             <line id="ovrlTopTimbMidLine" x1="96" y1="197.75" x2="759" y2="197.75" stroke="grey" stroke-dasharray="3, 3" style="visibility:hidden;opacity:0.4;stroke-width:1"/>
                             <line id="ovrlTopPitchLine" x1="96" y1="197.75" x2="759" y2="197.75" stroke="black" style="visibility:hidden;opacity:1.0;stroke-width:3"/>
                         </g>
-                        <g id="ovrlTopPitchStave" style="visibility: hidden;">
-                            <rect id="ovrlTopPitchStaveRect" x="62.5" y="149.5" width="31" height="96.5" fill="white" style="visibility:hidden;opacity:1.0;stroke-width:1;stroke:none"/>
-                            <line id="ovrlTopPitchStaveMidLine" x1="62.5" y1="197.75" x2="94" y2="197.75" stroke="grey" stroke-dasharray="3, 3" style="visibility:hidden;opacity:0.4;stroke-width:1"/>
+                        <g id="ovrlTopPitchStave" style="visibility: visible;">
+                            <rect id="ovrlTopPitchStaveRect" x="62.5" y="149.5" width="31" height="96.5" fill="white" style="visibility:visible;opacity:1.0;stroke-width:1;stroke:none"/>
+                            <line id="ovrlTopPitchStaveMidLine" x1="62.5" y1="197.75" x2="94" y2="197.75" stroke="grey" stroke-dasharray="3, 3" style="visibility:visible;opacity:0.4;stroke-width:1"/>
+                            <g id="ovrlTopPitchStaveTxt">
+                                <text id="ovrlTop1" x="80" y="228" dominant-baseline="central" font-family="sans-serif" font-weight="bold" font-size="0.75em" >C</text>
+                                <!-- <line x1="50" y1="229" x2="200" y2="229" stroke="grey" style="visibility:visible;opacity:0.4;stroke-width:1"/> -->
+                                <text id="ovrlTop1" x="80" y="238" dominant-baseline="central" font-family="sans-serif" font-weight="bold" font-size="0.75em" >G</text>
+                                <!-- <line x1="50" y1="237" x2="200" y2="237" stroke="grey" style="visibility:visible;opacity:0.4;stroke-width:1"/> -->
+                                <!-- text-anchor="start" -->
+                            </g>        
                         </g>                        
                         <g id="ovrlTopDyn" style="visibility: hidden;">
                             <rect id="ovrlTopDynRect" x="96" y="247.5" width="663" height="32.5" fill="white" style="visibility:hidden;opacity:1.0;stroke-width:1;stroke:none"/>
@@ -168,9 +180,16 @@
                             <rect id="ovrlBotPitchRect" x="96" y="370.5" width="663" height="96.5" fill="white" style="visibility:hidden;opacity:1.0;stroke-width:1;stroke:none"/>
                             <line id="ovrlBotPitchLine" x1="96" y1="418.75" x2="759" y2="418.75" stroke="black" style="visibility:hidden;opacity:1.0;stroke-width:3"/>
                         </g>
-                        <g id="ovrlBotPitchStave" style="visibility: hidden;">
-                            <rect id="ovrlBotPitchStaveRect" x="62.5" y="370.5" width="31.5" height="96.5" fill="white" style="visibility:hidden;opacity:1.0;stroke-width:1;stroke:none"/>
-                            <line id="ovrlBotPitchStaveMidLine" x1="62.5" y1="418.75" x2="94" y2="418.75" stroke="grey" stroke-dasharray="3, 3" style="visibility:hidden;opacity:0.4;stroke-width:1"/>
+                        <g id="ovrlBotPitchStave" style="visibility: visible;">
+                            <rect id="ovrlBotPitchStaveRect" x="62.5" y="370.5" width="31.5" height="96.5" fill="white" style="visibility:visible;opacity:1.0;stroke-width:1;stroke:none"/>
+                            <line id="ovrlBotPitchStaveMidLine" x1="62.5" y1="418.75" x2="94" y2="418.75" stroke="grey" stroke-dasharray="3, 3" style="visibility:visible;opacity:0.4;stroke-width:1"/>
+                            <g id="ovrlBotPitchStaveTxt">
+                                <text id="ovrlBot1" x="80" y="449" dominant-baseline="central" font-family="sans-serif" font-weight="bold" font-size="0.75em">C</text>
+                                <!-- <line x1="50" y1="229" x2="200" y2="229" stroke="grey" style="visibility:visible;opacity:0.4;stroke-width:1"/> -->
+                                <text id="ovrlBot2" x="80" y="459" dominant-baseline="central" font-family="sans-serif" font-weight="bold" font-size="0.75em">G</text>
+                                <!-- <line x1="50" y1="237" x2="200" y2="237" stroke="grey" style="visibility:visible;opacity:0.4;stroke-width:1"/> -->
+                                <!-- text-anchor="start" -->
+                            </g>
                         </g>                        
                         <g id="ovrlBotDyn" style="visibility: hidden;">
                             <rect id="ovrlBotDynRect" x="96" y="469" width="663" height="32.5" fill="white" style="visibility:hidden;opacity:1.0;stroke-width:1;stroke:none"/>
@@ -223,8 +242,27 @@
             </div>
         </div>
     </div>
+    <div id="transpositionListOuterDiv" class="outer" style="visibility: visible;">
+        <div class="middle">
+            <div class="transpo-list">
+                <div class="transpo-list-content">Select Tranposition:</div>
+                <div id="transpos">
+                    <button class="transpoButton transpoButton-large" onClick="transpo('A')">A</button>
+                    <button class="transpoButton" onClick="transpo('BF')">B<sup>&#9837;</sup></button>               
+                    <button class="transpoButton transpoButton-large" onClick="transpo('C')">C</button>
+                    <button class="transpoButton transpoButton-large" onClick="transpo('D')">D</button>
+                    <button class="transpoButton" onClick="transpo('EF')">E<sup>&#9837;</sup></button>
+                    <button class="transpoButton transpoButton-large" onClick="transpo('F')">F</sup></button>
+                    <button class="transpoButton transpoButton-large" onClick="transpo('G')">G</sup></button>
+                </div>                
+            </div>
+        </div>
+    </div>
 
     <script type="text/javascript">
+        function transpo(val) {
+            alert(val);
+        }
         // function stateBtnClick() {
         //     try {
         //         zscore.onStateBtn();

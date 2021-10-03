@@ -70,6 +70,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     const EVENT_PARAM_COLOUR = "colour";
     const EVENT_PARAM_SECTION = "section";
     const EVENT_PARAM_CLIENT_ID = "clientId";
+    const EVENT_PARAM_TRANSPOSITION = "transposition";
     
     const DEFAULT_PAGE_IMG_URL = "img/blankStave.png";
     const DEFAULT_PAGE_ID = "p0";
@@ -109,10 +110,11 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         idSections: "sections",
         idSectionsListOuterDiv: "sectionListOuterDiv",
         idSectionBtnPrefix: "sectionBtn",
-        idOwnedSections: "ownedSections",        
-        idInstrument: "part",        
+        idOwnedSections: "ownedSections",
+        idInstrument: "part", 
         idInstControls: "instControls",
-        idInstSlotPrefix: "instSlot",        
+        idTranspoControls: "transpositionListOuterDiv",
+        idInstSlotPrefix: "instSlot",
         idInstSlotTxtPrefix: "instSlotTxt",
         idInstSlotBtnPrefix: "instSlotRect",
         idTempoBpm: "tmpBpm",
@@ -123,7 +125,9 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         idMidSuffix: "Mid",
         idRectSuffix: "Rect",
         idClientIdGroup: "clientIdGroup",
-        idClientId: "clientId",        
+        idClientId: "clientId",
+        idTranspoKey: "transpoKey",
+        idTranspoMod: "transpoMod",
         blankPageUrl: "img/blankStave.png",
         filterOutParts: [AV, FULL_SCORE],
         connectedRectStyle: { "fill": FILL_CONNECTED, "stroke": STROKE_CONNECTED, "stroke-width": "0px", "visibility": VISIBLE, "opacity": 1 },
@@ -153,9 +157,9 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         isPlaying: false,
         isReady: false,
         score: { title: "ZScore", noSpaceTitle: "ZScore", htmlFile: null, instrument: "Part View", parts: ["Part View"], firstPageNo: 1, lastPageNo: 2, sections: [], ownedSections: [], mySections: [], assignmentType: null},
-        part: { name: "Part View", imgDir: null, imgPageNameToken: null, imgContPageName: null, blankPageNo: 0, contPageNo: PAGE_NO_CONTINUOUS, currentSection: null, pageRanges: [{ start: 1, end: 1 }], pages: {} },
-        topStave: { id: "topStave", config: config.topStave, pageId: DEFAULT_PAGE_ID, rndPageId: null, filename: DEFAULT_PAGE_IMG_URL, beatMap: null, timeline: null, isActive: true, isPlaying: false, currentBeat: null},
-        bottomStave: { id: "bottomStave", config: config.bottomStave, pageId: DEFAULT_PAGE_ID, rndPageId: null, filename: DEFAULT_PAGE_IMG_URL, beatMap: null, timeline: null, isActive: false, isPlaying: false, currentBeat: null },
+        part: { name: "Part View", imgDir: null, imgPageNameToken: null, imgContPageName: null, blankPageNo: 0, contPageNo: PAGE_NO_CONTINUOUS, currentSection: null, transpo: "C", pageRanges: [{ start: 1, end: 1 }], pages: {} },
+        topStave: { id: "topStave", config: config.topStave, pageId: DEFAULT_PAGE_ID, rndPageId: null, filename: DEFAULT_PAGE_IMG_URL, beatMap: null, timeline: null, isActive: true, isPlaying: false, currentBeat: null, transpos: []},
+        bottomStave: { id: "bottomStave", config: config.bottomStave, pageId: DEFAULT_PAGE_ID, rndPageId: null, filename: DEFAULT_PAGE_IMG_URL, beatMap: null, timeline: null, isActive: false, isPlaying: false, currentBeat: null, transpos: []},
         startTimeTl: 0,
         currentBeatId: "b0",
         currentBeatNo: 0,
@@ -172,6 +176,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         pageNoToLoad: 0,
         metro: {isMetroOn: false, slider: {xMax: 60, xMin: 40, xMid: 50, range: 20,}},
         isClientIdVisible: false,
+        traspo: "C",
     }
 
     function ZScoreException(message) {
@@ -365,6 +370,11 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     function onClientIdSelection() {
         state.isClientIdVisible = !state.isClientIdVisible;
         showClientId();
+    }
+    function onTranspoSelection(transpo) {
+        state.traspo = transpo;
+        hideTranspositionSlots();
+        showTransposition();
     }
     function resetAll() {
         resetAudio();
@@ -832,7 +842,32 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         } else {
             stave.rndPageId = null;
         }
+        if (isNotNull(pageInfo.transpositionInfo)) {
+            processTranspositionInfo(pageInfo.transpositionInfo, stave);
+        }
         showStavePage(stave);
+    }
+    function processTranspositionInfo(transpositionInfo, stave) {
+        if (isNull(transpositionInfo) || isNull(stave)) {
+            return;
+        }
+
+    }
+    function showTransposition() {
+        if(isNull(state.traspo)) {
+            return;
+        }
+        var transpo = state.traspo;
+        var note = m.getNote(transpo);
+        if(isNull(note)) {
+            return;
+        }
+        if(isNotNull(note.pitchName)) {
+            s.setElementText(config.idTranspoKey, note.pitchName);
+        }
+        if(isNotNull(note.modUnicode)) {
+            s.setElementText(config.idTranspoMod, note.modUnicode);
+        }
     }
     function showStavePage(stave) {
         if (isNull(stave)) {
@@ -1256,7 +1291,12 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     }
     function registerPart(part) {
         var evParams = createReqParams();
+        var transposition = "C";
+        if(isNotNull(state.traspo)) {
+            transposition = state.traspo;
+        }
         evParams[EVENT_PARAM_PART] = part;
+        evParams[EVENT_PARAM_TRANSPOSITION] = transposition;
         n.sendEvent(EVENT_ID_PART_REG, evParams);
     }
     function sendReady() {
@@ -1707,6 +1747,9 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     function hideInstrumentSlots() {
         u.makeInVisible(config.idInstControls);
     }
+    function hideTranspositionSlots() {
+        u.makeInVisible(config.idTranspoControls);
+    }
     function setInstrumentSlots(csvInstruments) {
         if(isNull(csvInstruments)) {
             return;
@@ -2013,6 +2056,9 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         },
         onClientIdSelect: function () {
             onClientIdSelection();
+        },
+        onTranspoSelect: function (transpo) {
+            onTranspoSelection(transpo);
         },        
     }
 }(zsUtil, zsNet, zsSvg, zsWsAudio, zsMusic, window, document));

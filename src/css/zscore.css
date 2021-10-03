@@ -28,6 +28,12 @@ h1 {
     font-size: 2.5em;
 }
 
+sup {
+    font-size:small; 
+    font-family: monospace;
+    vertical-align:super;
+}
+
 #intro {
     font-size: 1.3em;
 }

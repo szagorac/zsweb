@@ -95,6 +95,11 @@
                 <circle id="semC2" cx="100" cy="26" r="12" stroke="black" stroke-width="1" fill="none"/>
                 <circle id="semC1" cx="129" cy="26" r="12" stroke="black" stroke-width="1" fill="none"/>
             </g>        
+            <!-- trasnposition -->       
+            <g id="trasnposition">
+                <text id="transpoKey" x="40" y="65" dominant-baseline="middle" text-anchor="start" font-size="1.5em">C</text> 
+                <text id="transpoMod" x="53" y="60" dominant-baseline="middle" text-anchor="start" font-size="0.9em"></text> 
+            </g>
             <!-- tempo -->
             <g id="tempo">
                 <g id="mtrnm">
@@ -138,6 +143,7 @@
                         </g>
                         <g id="ovrlTopPitch" style="visibility: hidden;">
                             <rect id="ovrlTopPitchRect" x="96" y="149.5" width="663" height="96.5" fill="white" style="visibility:hidden;opacity:1.0;stroke-width:1;stroke:none"/>
+                            <line id="ovrlTopPitchMidLine" x1="96" y1="197.75" x2="759" y2="197.75" stroke="grey" stroke-dasharray="3, 3" style="visibility:hidden;opacity:0.4;stroke-width:1"/>
                             <line id="ovrlTopPitchLine" x1="96" y1="197.75" x2="759" y2="197.75" stroke="black" style="visibility:hidden;opacity:1.0;stroke-width:3"/>
                         </g>
                         <g id="ovrlTopPitchStave" style="visibility: hidden;">
@@ -222,6 +228,22 @@
             </div>
         </div>
     </div>
+    <div id="transpositionListOuterDiv" class="outer" style="visibility: visible;">
+        <div class="middle">
+            <div class="transpo-list">
+                <div class="transpo-list-content">Select Tranposition:</div>
+                <div id="transpos">
+                    <button class="transpoButton transpoButton-large" onClick="onTranspoSelect('A')">A</button>
+                    <button class="transpoButton" onClick="onTranspoSelect('BF')">B<sup>&#9837;</sup></button>               
+                    <button class="transpoButton transpoButton-large" onClick="onTranspoSelect('C')">C</button>
+                    <button class="transpoButton transpoButton-large" onClick="onTranspoSelect('D')">D</button>
+                    <button class="transpoButton" onClick="onTranspoSelect('EF')">E<sup>&#9837;</sup></button>
+                    <button class="transpoButton transpoButton-large" onClick="onTranspoSelect('F')">F</sup></button>
+                    <button class="transpoButton transpoButton-large" onClick="onTranspoSelect('G')">G</sup></button>
+                </div>                
+            </div>
+        </div>
+    </div>
 
     <script type="text/javascript">
         function stateBtnClick() {
@@ -264,7 +286,14 @@
             try {
                 zscore.onClientIdSelect();
             } catch(err) {
-                onErr("Failed onMetronmeSelect:", err);
+                onErr("Failed onClientIdSelect:", err);
+            }
+        }
+        function onTranspoSelect(transpo) {
+            try {
+                zscore.onTranspoSelect(transpo);
+            } catch(err) {
+                onErr("Failed onTranspoSelect:", err);
             }
         }        
         function onErr(txt, err) {
