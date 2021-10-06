@@ -128,6 +128,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         idClientId: "clientId",
         idTranspoKey: "transpoKey",
         idTranspoMod: "transpoMod",
+        idTranspoInfo: "transpoInfo",
         blankPageUrl: "img/blankStave.png",
         filterOutParts: [AV, FULL_SCORE],
         connectedRectStyle: { "fill": FILL_CONNECTED, "stroke": STROKE_CONNECTED, "stroke-width": "0px", "visibility": VISIBLE, "opacity": 1 },
@@ -147,9 +148,10 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         instSlotInActiveAttrib: { "filter": "none" },
         connectedBtnAttrib: { "filter": "" },
         disconnectedBtnAttrib: { "filter": "url(#dropshadow)" },
+        transpoInfoAttrib: {"dominant-baseline" : "central", "font-family": "sans-serif", "font-weight": "bold", "font-size": "0.75em"},
         errorBtnAttrib: { "filter": "url(#dropshadow)" },
-        topStave: { gId: "stvTop", imgId: "stvTopImg", startLineId: "stvTopStartLine", positionLineId: "stvTopPosLine", beatBallId: "stvTopBeatBall", maskId: "stvTopMask", ovrlPosId: "ovrlTopPos", ovrlPitchId: "ovrlTopPitch", ovrlPitchStaveId: "ovrlTopPitchStave", ovrlSpeedId: "ovrlTopSpeed", ovrlPressId: "ovrlTopPres", ovrlDynId: "ovrlTopDyn", ovrlTimbreId: "ovrlTopTimb", ballYmax: 84, xLeftMargin: 31.5, posLineConf: {x1: "95", y1: "80", x2: "95", y2: "281"}, posBallConf: {cx: "95", cy: "110", r: "4"} },
-        bottomStave: { gId: "stvBot", imgId: "stvBotImg", startLineId: "stvBotStartLine", positionLineId: "stvBotPosLine", beatBallId: "stvBotBeatBall", maskId: "stvBotMask", ovrlPosId: "ovrlBotPos", ovrlPitchId: "ovrlBotPitch", ovrlPitchStaveId: "ovrlBotPitchStave", ovrlSpeedId: "ovrlBotSpeed", ovrlPressId: "ovrlBotPres", ovrlDynId: "ovrlBotDyn", ovrlTimbreId: "ovrlBotTimb", ballYmax: 305, xLeftMargin: 31.5, posLineConf: {x1: "95", y1: "301", x2: "95", y2: "502"}, posBallConf: {cx: "95", cy: "331", r: "4"} },
+        topStave: { gId: "stvTop", imgId: "stvTopImg", startLineId: "stvTopStartLine", positionLineId: "stvTopPosLine", beatBallId: "stvTopBeatBall", maskId: "stvTopMask", ovrlPosId: "ovrlTopPos", ovrlPitchId: "ovrlTopPitch", ovrlPitchStaveId: "ovrlTopPitchStave", ovrlPitchStaveInfoId: "ovrlTopPitchStaveInfo", ovrlSpeedId: "ovrlTopSpeed", ovrlPressId: "ovrlTopPres", ovrlDynId: "ovrlTopDyn", ovrlTimbreId: "ovrlTopTimb", ballYmax: 84, xLeftMargin: 31.5, posLineConf: {x1: "95", y1: "80", x2: "95", y2: "281"}, posBallConf: {cx: "95", cy: "110", r: "4"} },
+        bottomStave: { gId: "stvBot", imgId: "stvBotImg", startLineId: "stvBotStartLine", positionLineId: "stvBotPosLine", beatBallId: "stvBotBeatBall", maskId: "stvBotMask", ovrlPosId: "ovrlBotPos", ovrlPitchId: "ovrlBotPitch", ovrlPitchStaveId: "ovrlBotPitchStave", ovrlPitchStaveInfoId: "ovrlBotPitchStaveInfo", ovrlSpeedId: "ovrlBotSpeed", ovrlPressId: "ovrlBotPres", ovrlDynId: "ovrlBotDyn", ovrlTimbreId: "ovrlBotTimb", ballYmax: 305, xLeftMargin: 31.5, posLineConf: {x1: "95", y1: "301", x2: "95", y2: "502"}, posBallConf: {cx: "95", cy: "331", r: "4"} },
         metro: { idMetronomeRect: "metroRect", idMetronome: "metro", idMetroSlider: "metroFreqSlider", idMetroFreqRect: "metroFreq", idMetroFreqLine: "metroFreqLine", ifSymbolMetroOff: "#metronome", ifSymbolMetroOn: "#metronomeOn", ifMetroFreqSlider: "#metroFreq", minFreq: 220, maxFreq: 2200},
     }
     var state = {
@@ -177,6 +179,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         metro: {isMetroOn: false, slider: {xMax: 60, xMin: 40, xMid: 50, range: 20,}},
         isClientIdVisible: false,
         traspo: "C",
+        counter: 0,
     }
 
     function ZScoreException(message) {
@@ -275,7 +278,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         }
         state.clientId = zsClientId;
         log("clientId: " + state.clientId);
-        s.setElementText(config.idClientId, state.clientId);
+        s.setElementIdText(config.idClientId, state.clientId);
         showClientId();
     }
     function resetOnNewScore() {
@@ -610,7 +613,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         }
         state.score.title = title;
         state.score.noSpaceTitle = u.replaceEmptySpaces(title, UNDERSCORE);
-        s.setElementText(config.idTitle, title);
+        s.setElementIdText(config.idTitle, title);
         return true;
     }
     function setPartHtmlPage(partFile) {
@@ -636,7 +639,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             return;
         }
         state.tempo = bpm;
-        s.setElementText(config.idTempoBpm, bpm);
+        s.setElementIdText(config.idTempoBpm, bpm);
     }
     function processTempoChange(tempo) {
         var bpm = u.toInt(tempo);
@@ -851,7 +854,51 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         if (isNull(transpositionInfo) || isNull(stave)) {
             return;
         }
-
+        var txtInfos = transpositionInfo.txtInfos;
+        if (isNull(txtInfos)) {
+            return;
+        }
+        var ovrlStave = u.getElement(stave.config.ovrlPitchStaveInfoId);
+        if (isNotNull(ovrlStave)) {
+            u.removeElementChildren(ovrlStave);
+        }        
+        if (u.isArray(txtInfos)) {
+            for (var i = 0; i < txtInfos.length; i++) {
+                processTextInfo(txtInfos[i], ovrlStave);
+            }
+        } else {
+            processTextInfo(txtInfos, ovrlStave);
+        }
+    }
+    function processTextInfo(txtInfo, ovrlStave) {
+        if(isNull(txtInfo) || isNull(ovrlStave)) {
+            return;
+        }
+        var x = null;
+        var y = null;
+        var txt = null;
+        if(isNotNull(txtInfo.x)) {
+            x = txtInfo.x;
+        }
+        if(isNotNull(txtInfo.y)) {
+            y = txtInfo.y;
+        }
+        if(isNotNull(txtInfo.txt)) {
+            txt = txtInfo.txt;
+        }
+        if(isNull(x) || isNull(y) || isNull(txt)) {
+            return;
+        }
+        var txtElementId = config.idTranspoInfo + getNextElementIdNo();
+        var txtElement = s.createTextElement(txtElementId);
+        txtElement.setAttribute("x", x);
+        txtElement.setAttribute("y", y);
+        u.setElementAttributes(txtElement, config.transpoInfoAttrib);
+        s.setElementText(txtElement, txt);
+        u.addChildToParent(ovrlStave, txtElement);
+    }
+    function getNextElementIdNo() {
+        return ++state.counter;
     }
     function showTransposition() {
         if(isNull(state.traspo)) {
@@ -863,10 +910,10 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             return;
         }
         if(isNotNull(note.pitchName)) {
-            s.setElementText(config.idTranspoKey, note.pitchName);
+            s.setElementIdText(config.idTranspoKey, note.pitchName);
         }
         if(isNotNull(note.modUnicode)) {
-            s.setElementText(config.idTranspoMod, note.modUnicode);
+            s.setElementIdText(config.idTranspoMod, note.modUnicode);
         }
     }
     function showStavePage(stave) {
@@ -894,6 +941,13 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         var imgElement = u.getElement(conf.imgId);
         imgElement.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", imgSrc);
         imgElement.setAttribute("href", imgSrc);
+
+        var ovrlStave = u.getElement(stave.config.ovrlPitchStaveInfoId);
+        var isStaveOvrlEnabled = false;
+        if(u.hasChildrenElements(ovrlStave)) {
+            isStaveOvrlEnabled = true;
+        }
+        showPitchStaveOverlay(conf, isStaveOvrlEnabled);
     }
     function showDefaultStavePage(stave) {
         if (isNull(stave)) {
@@ -999,7 +1053,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             out += u.capitalizeFirstLetter(section) + " - ";
         }
         out += partName;
-        s.setElementText(config.idInstrument, out);
+        s.setElementIdText(config.idInstrument, out);
     }
     function loadPartPages() {
         var part = state.part;
@@ -1427,17 +1481,12 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             return;
         }
         switch(overlayType) {
+            case "SPEED":
+            case "PRESSURE": 
             case "POSITION": 
-                setFill(stave.config.ovrlPosId + config.idRectSuffix, col);
                 break;
             case "PITCH":
                 setFill(stave.config.ovrlPitchId + config.idRectSuffix, col);
-                break;
-            case "SPEED":
-                setFill(stave.config.ovrlSpeedId + config.idRectSuffix, col);
-                break;
-            case "PRESSURE": 
-                setFill(stave.config.ovrlPressId + config.idRectSuffix, col);
                 break;
             case "DYNAMICS":
                 setFill(stave.config.ovrlDynId + config.idRectSuffix, col);
@@ -1467,16 +1516,11 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         }
         switch(overlayType) {
             case "POSITION": 
-                setLineY(stave.config.ovrlPosId + config.idLineSuffix, posY);
+            case "SPEED":
+            case "PRESSURE": 
                 break;
             case "PITCH":
                 setLineY(stave.config.ovrlPitchId + config.idLineSuffix, posY);
-                break;
-            case "SPEED":
-                setLineY(stave.config.ovrlSpeedId + config.idLineSuffix, posY);
-                break;
-            case "PRESSURE": 
-                setLineY(stave.config.ovrlPressId + config.idLineSuffix, posY);
                 break;
             case "DYNAMICS":
                 setLineY(stave.config.ovrlDynId + config.idLineSuffix, posY);
@@ -1513,17 +1557,12 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         }
         logDebug("setOverlayElement: overlayType: " + overlayType);
         switch(overlayType) {
+            case "SPEED":
+            case "PRESSURE": 
             case "POSITION": 
-                setPositionOverlay(staveConf, overlayElement, isEnabled, opacity);
                 break;
             case "PITCH":
                 setPitchOverlay(staveConf, overlayElement, isEnabled, opacity);
-                break;
-            case "SPEED":
-                setSpeedOverlay(staveConf, overlayElement, isEnabled, opacity);
-                break;
-            case "PRESSURE": 
-                setPressOverlay(staveConf, overlayElement, isEnabled, opacity);
                 break;
             case "DYNAMICS":
                 setDynamicsOverlay(staveConf, overlayElement, isEnabled, opacity);
@@ -1584,52 +1623,6 @@ var zscore = (function (u, n, s, a, m, win, doc) {
                 log("setDynamicsOverlay: unknown overlay element: " + overlayElement);
         }
     }
-    function setPressOverlay(staveConf, overlayElement, isEnabled, opacity) {
-        if(isNull(overlayElement) || isNull(staveConf)) {
-            return;
-        }
-        switch(overlayElement) {
-            case "PRESSURE_BOX": 
-                setOverlayVisibility(staveConf.ovrlPressId + config.idRectSuffix, isEnabled, opacity);
-                setOverlayVisibility(staveConf.ovrlPressId + config.idOrdSuffix + config.idLineSuffix, isEnabled, opacity);
-                setOverlayVisibility(staveConf.ovrlPressId, isEnabled, opacity);
-                if(!isEnabled) {
-                    setOverlayVisibility(staveConf.ovrlPressId + config.idLineSuffix, isEnabled, opacity);
-                }
-                break;
-            case "PRESSURE_MID_LINE":
-                setOverlayVisibility(staveConf.ovrlPressId + config.idOrdSuffix + config.idLineSuffix, isEnabled, opacity);
-                break;                
-            case "PRESSURE_LINE":
-                setOverlayVisibility(staveConf.ovrlPressId + config.idLineSuffix, isEnabled, opacity);
-                break;
-            default:
-                log("setPressOverlay: unknown overlay element: " + overlayElement);
-        }
-    }
-    function setSpeedOverlay(staveConf, overlayElement, isEnabled, opacity) {
-        if(isNull(overlayElement) || isNull(staveConf)) {
-            return;
-        }
-        switch(overlayElement) {
-            case "SPEED_BOX":
-                setOverlayVisibility(staveConf.ovrlSpeedId + config.idRectSuffix, isEnabled, opacity);
-                setOverlayVisibility(staveConf.ovrlSpeedId + config.idOrdSuffix + config.idLineSuffix, isEnabled, opacity);
-                setOverlayVisibility(staveConf.ovrlSpeedId, isEnabled, opacity);
-                if(!isEnabled) {
-                    setOverlayVisibility(staveConf.ovrlSpeedId + config.idLineSuffix, isEnabled, opacity);
-                }
-                break;
-            case "SPEED_MID_LINE":
-                setOverlayVisibility(staveConf.ovrlSpeedId + config.idOrdSuffix + config.idLineSuffix, isEnabled, opacity);
-                break;                
-            case "SPEED_LINE":
-                setOverlayVisibility(staveConf.ovrlSpeedId + config.idLineSuffix, isEnabled, opacity);
-                break;
-            default:
-                log("setSpeedOverlay: unknown overlay element: " + overlayElement);
-        }
-    }    
     function setPitchStaveOverlay(staveConf, overlayElement, isEnabled, opacity) {
         if(isNull(overlayElement) || isNull(staveConf)) {
             return;
@@ -1649,6 +1642,10 @@ var zscore = (function (u, n, s, a, m, win, doc) {
                 log("setPitchOverlay: unknown overlay element: " + overlayElement);
         }
     }
+    function showPitchStaveOverlay(staveConf, isEnabled) {
+        setPitchStaveOverlay(staveConf, "PITCH_STAVE_BOX", isEnabled, 1.0);
+        setPitchStaveOverlay(staveConf, "PITCH_STAVE_MID_LINE", isEnabled, 1.0);
+    }
     function setPitchOverlay(staveConf, overlayElement, isEnabled, opacity) {
         if(isNull(overlayElement) || isNull(staveConf)) {
             return;
@@ -1666,33 +1663,6 @@ var zscore = (function (u, n, s, a, m, win, doc) {
                 break;
             default:
                 log("setPitchOverlay: unknown overlay element: " + overlayElement);
-        }
-    }
-    function setPositionOverlay(staveConf, overlayElement, isEnabled, opacity) {
-        if(isNull(overlayElement) || isNull(staveConf)) {
-            return;
-        }
-        switch(overlayElement) {
-            case "POSITION_BOX":
-                setOverlayVisibility(staveConf.ovrlPosId + config.idRectSuffix, isEnabled, opacity);
-                setOverlayVisibility(staveConf.ovrlPosId + config.idOrdSuffix + config.idLineSuffix, isEnabled, opacity);
-                setOverlayVisibility(staveConf.ovrlPosId + config.idBridgeSuffix + config.idLineSuffix, isEnabled, opacity);
-                setOverlayVisibility(staveConf.ovrlPosId, isEnabled, opacity);
-                if(!isEnabled) {
-                    setOverlayVisibility(staveConf.ovrlPosId + config.idLineSuffix, isEnabled, opacity);
-                }
-                break;
-            case "POSITION_LINE":
-                setOverlayVisibility(staveConf.ovrlPosId + config.idLineSuffix, isEnabled, opacity);
-                break;
-            case "POSITION_BRIDGE_LINE":
-                setOverlayVisibility(staveConf.ovrlPosId + config.idBridgeSuffix + config.idLineSuffix, isEnabled, opacity);
-                break;
-            case "POSITION_ORD_LINE":
-                setOverlayVisibility(staveConf.ovrlPosId + config.idOrdSuffix + config.idLineSuffix, isEnabled, opacity);
-                break;
-            default:
-                log("setPositionOverlay: unknown overlay element: " + overlayElement);
         }
     }
     function setOverlayVisibility(ovrlId, isEnabled, opacity) {
@@ -1793,7 +1763,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         u.makeVisible(btnId);
         u.makeVisible(slotId);
         u.setElementIdAttributes(slotId, config.instSlotActiveAttrib);
-        s.setElementText(txtId, instrument.trim());
+        s.setElementIdText(txtId, instrument.trim());
         u.setElementIdStyleProperty(txtId, config.instSlotTxtActiveStyle);
         if(isThisInst) {
             u.setElementIdStyleProperty(btnId, config.instSlotBtnActiveInstStyle);
@@ -1811,7 +1781,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         u.makeVisible(btnId);
         u.makeVisible(slotId);
         u.setElementIdAttributes(slotId, config.instSlotInActiveAttrib);
-        s.setElementText(txtId, EMPTY);
+        s.setElementIdText(txtId, EMPTY);
         u.setElementIdStyleProperty(txtId, config.instSlotTxtInActiveStyle);
         u.setElementIdStyleProperty(btnId, config.instSlotBtnInActiveStyle);
         var attrs = new InstSlotInActiveAttrs();
@@ -1940,7 +1910,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         var c = u.toInt(lightNo);
         for (var i = 1; i <= c; i++) {
             var lightId = config.idSemaphorePrefix + i;
-            s.setElementColour(lightId, colour);
+            s.setElementIdColour(lightId, colour);
         }
     }
     function getColour(colourId) {

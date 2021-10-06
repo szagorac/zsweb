@@ -498,7 +498,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         }
         state.score.title = title;
         state.score.noSpaceTitle = u.replaceEmptySpaces(title, UNDERSCORE);
-        s.setElementText(config.idTitle, title);
+        s.setElementIdText(config.idTitle, title);
         return true;
     }
     function setPartHtmlPage(partFile) {
@@ -524,7 +524,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             return;
         }
         state.tempo = bpm;
-        s.setElementText(config.idTempoBpm, bpm);
+        s.setElementIdText(config.idTempoBpm, bpm);
     }
     function processTempoChange(tempo) {
         var bpm = u.toInt(tempo);
@@ -825,7 +825,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     function processPartInfo(partInfo) {
         if (isNotNull(partInfo.name)) {
             state.part.name = partInfo.name;
-            s.setElementText(config.idInstrument, partInfo.name);
+            s.setElementIdText(config.idInstrument, partInfo.name);
         }
         if (isNotNull(partInfo.pageRanges)) {
             var pgRanges = partInfo.pageRanges;
@@ -1453,7 +1453,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         u.makeVisible(btnId);
         u.makeVisible(slotId);
         u.setElementIdAttributes(slotId, config.instSlotActiveAttrib);
-        s.setElementText(txtId, instrument.trim());
+        s.setElementIdText(txtId, instrument.trim());
         u.setElementIdStyleProperty(txtId, config.instSlotTxtActiveStyle);
         if(isThisInst) {
             u.setElementIdStyleProperty(btnId, config.instSlotBtnActiveInstStyle);
@@ -1471,7 +1471,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         u.makeVisible(btnId);
         u.makeVisible(slotId);
         u.setElementIdAttributes(slotId, config.instSlotInActiveAttrib);
-        s.setElementText(txtId, EMPTY);
+        s.setElementIdText(txtId, EMPTY);
         u.setElementIdStyleProperty(txtId, config.instSlotTxtInActiveStyle);
         u.setElementIdStyleProperty(btnId, config.instSlotBtnInActiveStyle);
         var attrs = new InstSlotInActiveAttrs();
@@ -1600,7 +1600,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         var c = u.toInt(lightNo);
         for (var i = 1; i <= c; i++) {
             var lightId = config.idSemaphorePrefix + i;
-            s.setElementColour(lightId, colour);
+            s.setElementIdColour(lightId, colour);
         }
     }
     function getColour(colourId) {

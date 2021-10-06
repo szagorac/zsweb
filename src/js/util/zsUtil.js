@@ -710,6 +710,12 @@ var zsUtil = (function (console, win, doc) {
             elm.removeChild(elm.firstChild);
         }
     }
+    function _hasChildrenElements(element) {
+        if (_isNull(element)) {
+            return false;
+        }
+        return _isNotNull(element.children) && element.children.length > 0;
+    }    
     function _clone(elm, elmId) {
         if (_isNull(elm) || _isNull(elmId)) {
             logError("_cloneAndAddElement: invalid element");
@@ -1304,6 +1310,9 @@ var zsUtil = (function (console, win, doc) {
         Point: Point,
         Oscillator: Oscillator,
         ParamOscillator: ParamOscillator,
+        hasChildrenElements: function (element) {
+            return _hasChildrenElements(element);
+        },
         capitalizeFirstLetter: function (value) {
             return _capitalizeFirstLetter(value);
         },

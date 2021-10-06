@@ -162,30 +162,36 @@ var zsSvg = (function (u, doc) {
         line.setAttribute(SVG_PARAM_Y1, startY);        
         line.setAttribute(SVG_PARAM_Y2, endY);
     }
-    function _setElementText(elementId, txt) {
-        var element = u.getElement(elementId);
+    function _setElementIdText(elementId, txt) {
+        _setElementText(u.getElement(elementId), txt);
+    }
+    function _setElementText(element, txt) {
         if(u.isNull(element)) {
             return;
         }
         element.textContent = txt;
     }
-    function _setElementColour(elementId, colour) {
-        var element = u.getElement(elementId);
+    function _setElementIdColour(elementId, colour) {
+        _setElementColour(u.getElement(elementId), colour);
+    }    
+    function _setElementColour(element, colour) {
         if(u.isNull(element)) {
             return;
         }
         var params = {};
         params.fill = colour;
         u.setElementStyleProperty(element, params)
-    }    
+    }
     function _setElementIdHref(elementId, href) {
-        var element = u.getElement(elementId);
+        _setElementHref(u.getElement(elementId), href);
+    } 
+    function _setElementHref(element, href) {
         if(u.isNull(element)) {
             return;
         }
         element.setAttributeNS(SVG_XLINK_NAMESPACE, SVG_ATTR_XLINK_HREF,  href);
         element.setAttribute(SVG_ATTR_HREF, href);
-    }    
+    }   
     function _createArc(x, y, radius, startAngle, endAngle) {
         var start = u.polarToCartesian(x, y, radius, endAngle);
         var end = u.polarToCartesian(x, y, radius, startAngle);
@@ -354,14 +360,23 @@ var zsSvg = (function (u, doc) {
         setLineY: function (line, startY, endY) {
             return  _setLineY(line, startY, endY);
         },         
-        setElementText: function (elementId, txt) {
-            return  _setElementText(elementId, txt);
+        setElementIdText: function (elementId, txt) {
+            return  _setElementIdText(elementId, txt);
         }, 
-        setElementColour: function (elementId, colour) {
-            return  _setElementColour(elementId, colour);
+        setElementText: function (element, txt) {
+            return  _setElementText(element, txt);
+        },
+        setElementIdColour: function (elementId, colour) {
+            return  _setElementIdColour(elementId, colour);
+        },
+        setElementColour: function (element, colour) {
+            return  _setElementColour(element, colour);
         },
         setElementIdHref: function (elementId, href) {
             return  _setElementIdHref(elementId, href);
-        },               
+        },
+        setElementHref: function (element, href) {
+            return  _setElementHref(element, href);
+        },
     }
 }(zsUtil, document));
