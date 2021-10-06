@@ -22,7 +22,7 @@ var zsMusic = (function (u) {
         F: "F",
         G: "G",
     }
-    const PitchModifier = {
+    const PITCH_MOD = {
         THREE_QUARTER_FLAT: -150,
         FLAT: -100,
         QUARTER_FLAT: -50,
@@ -31,7 +31,7 @@ var zsMusic = (function (u) {
         SHARP: 100,
         THREE_QUARTER_SHARP: 150,
     }
-    const NoteUnitDuration = {
+    const DURATION_UNIT = {
         _1: 1.0,
         _2: 0.5,
         _4: 0.25,
@@ -41,36 +41,36 @@ var zsMusic = (function (u) {
         _64: 0.015625,
         _128: 0.0078125,
     };
-    const NoteDuration = {
-        WHOLE: 1 * NoteUnitDuration._1,
-        HALF: 1 * NoteUnitDuration._2, 
-        HALF_DOT: 1.5 * NoteUnitDuration._2,
-        QUARTER: 1 * NoteUnitDuration._4,
-        QUARTER_DOT: 1.5 * NoteUnitDuration._4,
-        EIGHTH: 1 * NoteUnitDuration._8, 
-        EIGHTH_DOT: 1.5 * NoteUnitDuration._8,
-        SIXTEENTH: 1 * NoteUnitDuration._16,  
-        SIXTEENTH_DOT: 1.5 * NoteUnitDuration._16,
-        THIRTY_SECOND: 1 * NoteUnitDuration._32, 
-        THIRTY_SECOND_DOT: 1.5 * NoteUnitDuration._32,
-        SIXTY_FOURTH: 1 * NoteUnitDuration._64, 
-        SIXTY_FOURTH_DOT: 1.5 * NoteUnitDuration._64,
-        HUNDRED_TWENTY_EIGHTH: 1 * NoteUnitDuration._128, 
-        HUNDRED_TWENTY_EIGHTH_DOT: 1.5 * NoteUnitDuration._128,
-        MINIM:  1 * NoteUnitDuration._2,
-        MINIM_DOT: 1.5 * NoteUnitDuration._2,
-        CROTCHET:  1 * NoteUnitDuration._4,
-        CROTCHET_DOT: 1.5 * NoteUnitDuration._4,
-        QUAVER: 1 * NoteUnitDuration._8, 
-        QUAVER_DOT: 1.5 * NoteUnitDuration._8,
-        SEMI_QUAVER:  1 * NoteUnitDuration._16,  
-        SEMI_QUAVER_DOT: 1.5 * NoteUnitDuration._16,
-        DEMI_SEMI_QUAVER: 1 * NoteUnitDuration._32, 
-        DEMI_SEMI_QUAVER_DOT: 1.5 * NoteUnitDuration._32,
-        HEMI_DEMI_SEMI_QUAVER: 1 * NoteUnitDuration._64,
-        HEMI_DEMI_SEMI_QUAVER_DOT: 1.5 * NoteUnitDuration._64,
-        SEMI_HEMI_DEMI_SEMI_QUAVER: 1 * NoteUnitDuration._128,  
-        SEMI_HEMI_DEMI_SEMI_QUAVER_DOT: 1.5 * NoteUnitDuration._128,
+    const DURATION = {
+        WHOLE: 1 * DURATION_UNIT._1,
+        HALF: 1 * DURATION_UNIT._2,
+        HALF_DOT: 1.5 * DURATION_UNIT._2,
+        QUARTER: 1 * DURATION_UNIT._4,
+        QUARTER_DOT: 1.5 * DURATION_UNIT._4,
+        EIGHTH: 1 * DURATION_UNIT._8,
+        EIGHTH_DOT: 1.5 * DURATION_UNIT._8,
+        SIXTEENTH: 1 * DURATION_UNIT._16,
+        SIXTEENTH_DOT: 1.5 * DURATION_UNIT._16,
+        THIRTY_SECOND: 1 * DURATION_UNIT._32,
+        THIRTY_SECOND_DOT: 1.5 * DURATION_UNIT._32,
+        SIXTY_FOURTH: 1 * DURATION_UNIT._64,
+        SIXTY_FOURTH_DOT: 1.5 * DURATION_UNIT._64,
+        HUNDRED_TWENTY_EIGHTH: 1 * DURATION_UNIT._128,
+        HUNDRED_TWENTY_EIGHTH_DOT: 1.5 * DURATION_UNIT._128,
+        MINIM: 1 * DURATION_UNIT._2,
+        MINIM_DOT: 1.5 * DURATION_UNIT._2,
+        CROTCHET: 1 * DURATION_UNIT._4,
+        CROTCHET_DOT: 1.5 * DURATION_UNIT._4,
+        QUAVER: 1 * DURATION_UNIT._8,
+        QUAVER_DOT: 1.5 * DURATION_UNIT._8,
+        SEMI_QUAVER: 1 * DURATION_UNIT._16,
+        SEMI_QUAVER_DOT: 1.5 * DURATION_UNIT._16,
+        DEMI_SEMI_QUAVER: 1 * DURATION_UNIT._32,
+        DEMI_SEMI_QUAVER_DOT: 1.5 * DURATION_UNIT._32,
+        HEMI_DEMI_SEMI_QUAVER: 1 * DURATION_UNIT._64,
+        HEMI_DEMI_SEMI_QUAVER_DOT: 1.5 * DURATION_UNIT._64,
+        SEMI_HEMI_DEMI_SEMI_QUAVER: 1 * DURATION_UNIT._128,
+        SEMI_HEMI_DEMI_SEMI_QUAVER_DOT: 1.5 * DURATION_UNIT._128,
     };
 
     //##### Class defs
@@ -87,18 +87,18 @@ var zsMusic = (function (u) {
         this.pitchName = pitchName;
         this.mod = mod;
         this.html = pitchName;
-        this.unicode = pitchName;
+        this.modUnicode = EMPTY;
         this.semiDistance = semiDistance;
-        switch(mod) {
-            case PitchModifier.FLAT:
-                this.html = pitchName+TAG_SUPERSCRIPT+FLAT_HTML+TAG_SUPERSCRIPT_CLOSE;
-                this.unicode = pitchName+TAG_SUPERSCRIPT+FLAT_UNICODE+TAG_SUPERSCRIPT_CLOSE;
-                this.txt = pitchName+FLAT_TXT;
+        switch (mod) {
+            case PITCH_MOD.FLAT:
+                this.html = pitchName + TAG_SUPERSCRIPT + FLAT_HTML + TAG_SUPERSCRIPT_CLOSE;
+                this.modUnicode = FLAT_UNICODE;
+                this.txt = pitchName + FLAT_TXT;
                 break;
-            case PitchModifier.SHARP:
-                this.html = pitchName+TAG_SUPERSCRIPT+SHARP_HTML+TAG_SUPERSCRIPT_CLOSE;
-                this.unicode = pitchName+TAG_SUPERSCRIPT+SHARP_UNICODE+TAG_SUPERSCRIPT_CLOSE;
-                this.txt = pitchName+SHARP_TXT;
+            case PITCH_MOD.SHARP:
+                this.html = pitchName + TAG_SUPERSCRIPT + SHARP_HTML + TAG_SUPERSCRIPT_CLOSE;
+                this.modUnicode = SHARP_UNICODE;
+                this.txt = pitchName + SHARP_TXT;
                 break;
         }
     }
@@ -114,27 +114,27 @@ var zsMusic = (function (u) {
 
     // object constants
     const PITCH = {
-        AF : new ZsPitch(NotePitchName.A, PitchModifier.FLAT, 8),
-        A : new ZsPitch(NotePitchName.A, PitchModifier.NATURAL, 9),
-        AS : new ZsPitch(NotePitchName.A, PitchModifier.SHARP, 10),
-        BF : new ZsPitch(NotePitchName.B, PitchModifier.FLAT, 10),
-        B : new ZsPitch(NotePitchName.B, PitchModifier.NATURAL, 11),
-        BS : new ZsPitch(NotePitchName.B, PitchModifier.SHARP, 0),
-        CF : new ZsPitch(NotePitchName.C, PitchModifier.FLAT, 11),
-        C : new ZsPitch(NotePitchName.C, PitchModifier.NATURAL, 0),
-        CS : new ZsPitch(NotePitchName.C, PitchModifier.SHARP, 1),
-        DF : new ZsPitch(NotePitchName.D, PitchModifier.FLAT, 1),
-        D : new ZsPitch(NotePitchName.D, PitchModifier.NATURAL, 2),
-        DS : new ZsPitch(NotePitchName.D, PitchModifier.SHARP, 3),
-        EF : new ZsPitch(NotePitchName.E, PitchModifier.FLAT, 3),
-        E : new ZsPitch(NotePitchName.E, PitchModifier.NATURAL, 4),
-        ES : new ZsPitch(NotePitchName.E, PitchModifier.SHARP, 5),
-        FF : new ZsPitch(NotePitchName.F, PitchModifier.FLAT, 4),
-        F : new ZsPitch(NotePitchName.F, PitchModifier.NATURAL, 5),
-        FS : new ZsPitch(NotePitchName.F, PitchModifier.SHARP, 6),
-        GF : new ZsPitch(NotePitchName.G, PitchModifier.FLAT, 6),
-        G : new ZsPitch(NotePitchName.G, PitchModifier.NATURAL, 7),
-        GS : new ZsPitch(NotePitchName.G, PitchModifier.SHARP, 8),
+        AF: new ZsPitch(NotePitchName.A, PITCH_MOD.FLAT, 8),
+        A: new ZsPitch(NotePitchName.A, PITCH_MOD.NATURAL, 9),
+        AS: new ZsPitch(NotePitchName.A, PITCH_MOD.SHARP, 10),
+        BF: new ZsPitch(NotePitchName.B, PITCH_MOD.FLAT, 10),
+        B: new ZsPitch(NotePitchName.B, PITCH_MOD.NATURAL, 11),
+        BS: new ZsPitch(NotePitchName.B, PITCH_MOD.SHARP, 0),
+        CF: new ZsPitch(NotePitchName.C, PITCH_MOD.FLAT, 11),
+        C: new ZsPitch(NotePitchName.C, PITCH_MOD.NATURAL, 0),
+        CS: new ZsPitch(NotePitchName.C, PITCH_MOD.SHARP, 1),
+        DF: new ZsPitch(NotePitchName.D, PITCH_MOD.FLAT, 1),
+        D: new ZsPitch(NotePitchName.D, PITCH_MOD.NATURAL, 2),
+        DS: new ZsPitch(NotePitchName.D, PITCH_MOD.SHARP, 3),
+        EF: new ZsPitch(NotePitchName.E, PITCH_MOD.FLAT, 3),
+        E: new ZsPitch(NotePitchName.E, PITCH_MOD.NATURAL, 4),
+        ES: new ZsPitch(NotePitchName.E, PITCH_MOD.SHARP, 5),
+        FF: new ZsPitch(NotePitchName.F, PITCH_MOD.FLAT, 4),
+        F: new ZsPitch(NotePitchName.F, PITCH_MOD.NATURAL, 5),
+        FS: new ZsPitch(NotePitchName.F, PITCH_MOD.SHARP, 6),
+        GF: new ZsPitch(NotePitchName.G, PITCH_MOD.FLAT, 6),
+        G: new ZsPitch(NotePitchName.G, PITCH_MOD.NATURAL, 7),
+        GS: new ZsPitch(NotePitchName.G, PITCH_MOD.SHARP, 8),
     };
     const PITCH_SET = [
         [PITCH.C],                    //0
@@ -151,15 +151,15 @@ var zsMusic = (function (u) {
         [PITCH.B],                    //11
     ];
     const TRANSPOSITION = {
-        A: new ZsTransposition(PITCH.A, 3, PitchModifier.FLAT),
-        BF: new ZsTransposition(PITCH.BF, 2, PitchModifier.SHARP),
-        C: new ZsTransposition(PITCH.C, 0, PitchModifier.NATURAL),
-        D: new ZsTransposition(PITCH.D, 10, PitchModifier.FLAT),
-        EF: new ZsTransposition(PITCH.EF, 9, PitchModifier.SHARP),
-        F: new ZsTransposition(PITCH.F, 7, PitchModifier.SHARP),
-        G: new ZsTransposition(PITCH.G, 5, PitchModifier.FLAT)
-    };               
-    
+        A: new ZsTransposition(PITCH.A, 3, PITCH_MOD.FLAT),
+        BF: new ZsTransposition(PITCH.BF, 2, PITCH_MOD.SHARP),
+        C: new ZsTransposition(PITCH.C, 0, PITCH_MOD.NATURAL),
+        D: new ZsTransposition(PITCH.D, 10, PITCH_MOD.FLAT),
+        EF: new ZsTransposition(PITCH.EF, 9, PITCH_MOD.SHARP),
+        F: new ZsTransposition(PITCH.F, 7, PITCH_MOD.SHARP),
+        G: new ZsTransposition(PITCH.G, 5, PITCH_MOD.FLAT)
+    };
+
     //##### Private functions
     function _initMusic() {
         if (!u) {
@@ -167,54 +167,72 @@ var zsMusic = (function (u) {
         }
     }
     function _getBeatDurationSec(bpm) {
-        if(!u.isNumeric(bpm)) {
+        if (!u.isNumeric(bpm)) {
             return;
         }
 
-        return SEC_IN_MIN/bpm;
+        return SEC_IN_MIN / bpm;
     }
-    function _getNote(note) {
-        if(u.isNull(note)) {
+    function _getPitch(note) {
+        if (u.isNull(note)) {
             return null;
         }
-        
-        return PITCH[note];
-    }
 
+        return PITCH[note];
+    }    
+    function _getTransposition(note) {
+        if (u.isNull(note)) {
+            return null;
+        }
+
+        return TRANSPOSITION[note];
+    }
     function _transpose(pitch, transposition) {
-        if(!u.isObjectInstanceOf(ZsPitch, pitch) || !u.isObjectInstanceOf(ZsTransposition, transposition)) {
+        if (!u.isObjectInstanceOf(ZsPitch, pitch) || !u.isObjectInstanceOf(ZsTransposition, transposition)) {
             return null;
         }
         var pitchSemi = pitch.semiDistance;
         var transpoSemi = transposition.semiDistance;
 
         var semiIndex = pitchSemi + transpoSemi;
-        if(semiIndex > 11) {
+        if (semiIndex > 11) {
             semiIndex -= 12;
-        } 
-        if(semiIndex < 0 || semiIndex > 11) {
-            throw new ZsMusicException("_transpose: invalid result semitone index: " + semiIndex);   
+        }
+        if (semiIndex < 0 || semiIndex > 11) {
+            throw new ZsMusicException("_transpose: invalid result semitone index: " + semiIndex);
         }
         var resultArr = PITCH_SET[semiIndex];
-        if(resultArr.length == 1) {
+        if (resultArr.length == 1) {
             return resultArr[0];
         }
         var preferredMod = transposition.preferredModifier;
         for (var i = 0; i < resultArr.length; i++) {
             var outPitch = resultArr[i];
-            if(outPitch.mod === preferredMod) {
+            if (outPitch.mod === preferredMod) {
                 return outPitch;
             }
         }
         var preferredMod = pitch.mod;
         for (var i = 0; i < resultArr.length; i++) {
             var outPitch = resultArr[i];
-            if(outPitch.mod === preferredMod) {
+            if (outPitch.mod === preferredMod) {
                 return outPitch;
             }
         }
-        
+
         return resultArr[0];
+    }
+    function _getModUnicode(mod) {
+        if (isNull(mod)) {
+            return EMPTY;
+        }
+        switch (mod) {
+            case PITCH_MOD.FLAT:
+                return FLAT_UNICODE;
+            case PITCH_MOD.SHARP:
+                return SHARP_UNICODE;
+        }
+        return EMPTY;
     }
     function logError(val) {
         u.logError(val, LOG_ID);
@@ -272,15 +290,16 @@ var zsMusic = (function (u) {
         out = _transpose(pitch, transpo);
         log("Transpose " + pitch.txt + " to " + transpo.pitch.txt + ": " + out.txt);
     }
-    
-     //##### PUBLIC API
-     return {
+
+    //##### PUBLIC API
+    return {
         FLAT_HTML: FLAT_HTML,
         SHARP_HTML: SHARP_HTML,
         PITCH: PITCH,
+        PITCH_MOD: PITCH_MOD,
         TRANSPOSITION: TRANSPOSITION,
-        NoteUnitDuration: NoteUnitDuration, 
-        NoteDuration: NoteDuration, 
+        DURATION_UNIT: DURATION_UNIT,
+        DURATION: DURATION,
         ZsTempo: ZsTempo,
         init: function () {
             _initMusic();
@@ -288,14 +307,20 @@ var zsMusic = (function (u) {
         getBeatDurationSec: function (bpm) {
             return _getBeatDurationSec(bpm);
         },
-        getNote: function (note) {
-            return _getNote(note);
+        getPitch: function (note) {
+            return _getPitch(note);
+        },
+        getTransposition: function (note) {
+            return _getTransposition(note);
         },
         transpose: function (pitch, transposition) {
             return _transpose(pitch, transposition);
-        }, 
+        },
+        getModUnicode: function (mod) {
+            return _getModUnicode(mod);
+        },
         test: function () {
             return _test();
-        },        
+        },
     }
 }(zsUtil));

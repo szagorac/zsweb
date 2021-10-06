@@ -149,6 +149,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         connectedBtnAttrib: { "filter": "" },
         disconnectedBtnAttrib: { "filter": "url(#dropshadow)" },
         transpoInfoAttrib: { "dominant-baseline": "central", "font-family": "sans-serif", "font-weight": "bold", "font-size": "0.75em" },
+        transpoPitchModAttrib: {"dy": -2, "font-family": "monospace", "font-size": "1.5em"},
         errorBtnAttrib: { "filter": "url(#dropshadow)" },
         topStave: { gId: "stvTop", imgId: "stvTopImg", startLineId: "stvTopStartLine", positionLineId: "stvTopPosLine", beatBallId: "stvTopBeatBall", maskId: "stvTopMask", ovrlPosId: "ovrlTopPos", ovrlPitchId: "ovrlTopPitch", ovrlPitchStaveId: "ovrlTopPitchStave", ovrlPitchStaveInfoId: "ovrlTopPitchStaveInfo", ovrlSpeedId: "ovrlTopSpeed", ovrlPressId: "ovrlTopPres", ovrlDynId: "ovrlTopDyn", ovrlTimbreId: "ovrlTopTimb", ballYmax: 84, xLeftMargin: 31.5, posLineConf: { x1: "95", y1: "80", x2: "95", y2: "281" }, posBallConf: { cx: "95", cy: "110", r: "4" } },
         bottomStave: { gId: "stvBot", imgId: "stvBotImg", startLineId: "stvBotStartLine", positionLineId: "stvBotPosLine", beatBallId: "stvBotBeatBall", maskId: "stvBotMask", ovrlPosId: "ovrlBotPos", ovrlPitchId: "ovrlBotPitch", ovrlPitchStaveId: "ovrlBotPitchStave", ovrlPitchStaveInfoId: "ovrlBotPitchStaveInfo", ovrlSpeedId: "ovrlBotSpeed", ovrlPressId: "ovrlBotPres", ovrlDynId: "ovrlBotDyn", ovrlTimbreId: "ovrlBotTimb", ballYmax: 305, xLeftMargin: 31.5, posLineConf: { x1: "95", y1: "301", x2: "95", y2: "502" }, posBallConf: { cx: "95", cy: "331", r: "4" } },
@@ -178,7 +179,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         pageNoToLoad: 0,
         metro: { isMetroOn: false, slider: { xMax: 60, xMin: 40, xMid: 50, range: 20, } },
         isClientIdVisible: false,
-        traspo: "C",
+        transpo: m.TRANSPOSITION.C,
         counter: 0,
     }
 
@@ -273,7 +274,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     }
     function test() {
         try {
-            m.test();
+            // m.test();
         } catch (err) {
             logError("test: failed tests: " + err.message);
         }
@@ -382,8 +383,15 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         state.isClientIdVisible = !state.isClientIdVisible;
         showClientId();
     }
-    function onTranspoSelection(transpo) {
-        state.traspo = transpo;
+    function onTranspoSelection(note) {
+        if (isNull(note)) {
+            return;
+        }
+        var transposition = m.getTransposition(note);
+        if (isNull(transposition)) {
+            return;
+        }
+        state.transpo = transposition;
         hideTranspositionSlots();
         showTransposition();
     }
@@ -897,31 +905,59 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         if (isNull(x) || isNull(y) || isNull(txt)) {
             return;
         }
+        var pitch = m.getPitch(txt);
+        var mod = m.PITCH_MOD.NATURAL;
+        if (isNotNull(pitch)) {
+            mod = pitch.mod;
+            var transPitch = m.transpose(pitch, state.transpo);
+            if (isNotNull(transPitch)) {
+                pitch = transPitch;
+                txt = transPitch.pitchName;
+                mod = transPitch.mod;
+            }
+        }
+
         var txtElementId = config.idTranspoInfo + getNextElementIdNo();
         var txtElement = s.createTextElement(txtElementId);
         txtElement.setAttribute("x", x);
         txtElement.setAttribute("y", y);
         u.setElementAttributes(txtElement, config.transpoInfoAttrib);
-        s.setElementText(txtElement, txt);
+
+        var tspanElementId = config.idTranspoInfo + getNextElementIdNo();
+        var tspanElement = s.createTspanElement(tspanElementId);
+        s.setElementText(tspanElement, txt);
+
+        if (isNotNull(pitch) && m.PITCH_MOD.NATURAL !== mod && isNotNull(pitch.modUnicode)) {
+            var modTspanElementId = config.idTranspoInfo + getNextElementIdNo();
+            var modTspanElement = s.createTspanElement(modTspanElementId);
+            u.setElementAttributes(modTspanElement, config.transpoPitchModAttrib);            
+            s.setElementText(modTspanElement, pitch.modUnicode);
+            u.addChildToParent(tspanElement, modTspanElement);
+        }
+
+        u.addChildToParent(txtElement, tspanElement);
         u.addChildToParent(ovrlStave, txtElement);
     }
     function getNextElementIdNo() {
         return ++state.counter;
     }
     function showTransposition() {
-        if (isNull(state.traspo)) {
+        if (isNull(state.transpo)) {
             return;
         }
-        var transpo = state.traspo;
-        var note = m.getNote(transpo);
-        if (isNull(note)) {
+        var transpo = state.transpo;
+        var pitch = m.PITCH.C;
+        if (isNotNull(transpo)) {
+            pitch = transpo.pitch;
+        }
+        if (isNull(pitch)) {
             return;
         }
-        if (isNotNull(note.pitchName)) {
-            s.setElementIdText(config.idTranspoKey, note.pitchName);
+        if (isNotNull(pitch.pitchName)) {
+            s.setElementIdText(config.idTranspoKey, pitch.pitchName);
         }
-        if (isNotNull(note.modUnicode)) {
-            s.setElementIdText(config.idTranspoMod, note.modUnicode);
+        if (isNotNull(pitch.modUnicode)) {
+            s.setElementIdText(config.idTranspoMod, pitch.modUnicode);
         }
     }
     function showStavePage(stave) {
@@ -1354,8 +1390,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     function registerPart(part) {
         var evParams = createReqParams();
         var transposition = "C";
-        if (isNotNull(state.traspo)) {
-            transposition = state.traspo;
+        if (isNotNull(state.transpo)) {
+            transposition = state.transpo;
         }
         evParams[EVENT_PARAM_PART] = part;
         evParams[EVENT_PARAM_TRANSPOSITION] = transposition;
