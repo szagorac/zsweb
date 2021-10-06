@@ -71,7 +71,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     const EVENT_PARAM_SECTION = "section";
     const EVENT_PARAM_CLIENT_ID = "clientId";
     const EVENT_PARAM_TRANSPOSITION = "transposition";
-    
+
     const DEFAULT_PAGE_IMG_URL = "img/blankStave.png";
     const DEFAULT_PAGE_ID = "p0";
 
@@ -111,7 +111,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         idSectionsListOuterDiv: "sectionListOuterDiv",
         idSectionBtnPrefix: "sectionBtn",
         idOwnedSections: "ownedSections",
-        idInstrument: "part", 
+        idInstrument: "part",
         idInstControls: "instControls",
         idTranspoControls: "transpositionListOuterDiv",
         idInstSlotPrefix: "instSlot",
@@ -148,20 +148,20 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         instSlotInActiveAttrib: { "filter": "none" },
         connectedBtnAttrib: { "filter": "" },
         disconnectedBtnAttrib: { "filter": "url(#dropshadow)" },
-        transpoInfoAttrib: {"dominant-baseline" : "central", "font-family": "sans-serif", "font-weight": "bold", "font-size": "0.75em"},
+        transpoInfoAttrib: { "dominant-baseline": "central", "font-family": "sans-serif", "font-weight": "bold", "font-size": "0.75em" },
         errorBtnAttrib: { "filter": "url(#dropshadow)" },
-        topStave: { gId: "stvTop", imgId: "stvTopImg", startLineId: "stvTopStartLine", positionLineId: "stvTopPosLine", beatBallId: "stvTopBeatBall", maskId: "stvTopMask", ovrlPosId: "ovrlTopPos", ovrlPitchId: "ovrlTopPitch", ovrlPitchStaveId: "ovrlTopPitchStave", ovrlPitchStaveInfoId: "ovrlTopPitchStaveInfo", ovrlSpeedId: "ovrlTopSpeed", ovrlPressId: "ovrlTopPres", ovrlDynId: "ovrlTopDyn", ovrlTimbreId: "ovrlTopTimb", ballYmax: 84, xLeftMargin: 31.5, posLineConf: {x1: "95", y1: "80", x2: "95", y2: "281"}, posBallConf: {cx: "95", cy: "110", r: "4"} },
-        bottomStave: { gId: "stvBot", imgId: "stvBotImg", startLineId: "stvBotStartLine", positionLineId: "stvBotPosLine", beatBallId: "stvBotBeatBall", maskId: "stvBotMask", ovrlPosId: "ovrlBotPos", ovrlPitchId: "ovrlBotPitch", ovrlPitchStaveId: "ovrlBotPitchStave", ovrlPitchStaveInfoId: "ovrlBotPitchStaveInfo", ovrlSpeedId: "ovrlBotSpeed", ovrlPressId: "ovrlBotPres", ovrlDynId: "ovrlBotDyn", ovrlTimbreId: "ovrlBotTimb", ballYmax: 305, xLeftMargin: 31.5, posLineConf: {x1: "95", y1: "301", x2: "95", y2: "502"}, posBallConf: {cx: "95", cy: "331", r: "4"} },
-        metro: { idMetronomeRect: "metroRect", idMetronome: "metro", idMetroSlider: "metroFreqSlider", idMetroFreqRect: "metroFreq", idMetroFreqLine: "metroFreqLine", ifSymbolMetroOff: "#metronome", ifSymbolMetroOn: "#metronomeOn", ifMetroFreqSlider: "#metroFreq", minFreq: 220, maxFreq: 2200},
+        topStave: { gId: "stvTop", imgId: "stvTopImg", startLineId: "stvTopStartLine", positionLineId: "stvTopPosLine", beatBallId: "stvTopBeatBall", maskId: "stvTopMask", ovrlPosId: "ovrlTopPos", ovrlPitchId: "ovrlTopPitch", ovrlPitchStaveId: "ovrlTopPitchStave", ovrlPitchStaveInfoId: "ovrlTopPitchStaveInfo", ovrlSpeedId: "ovrlTopSpeed", ovrlPressId: "ovrlTopPres", ovrlDynId: "ovrlTopDyn", ovrlTimbreId: "ovrlTopTimb", ballYmax: 84, xLeftMargin: 31.5, posLineConf: { x1: "95", y1: "80", x2: "95", y2: "281" }, posBallConf: { cx: "95", cy: "110", r: "4" } },
+        bottomStave: { gId: "stvBot", imgId: "stvBotImg", startLineId: "stvBotStartLine", positionLineId: "stvBotPosLine", beatBallId: "stvBotBeatBall", maskId: "stvBotMask", ovrlPosId: "ovrlBotPos", ovrlPitchId: "ovrlBotPitch", ovrlPitchStaveId: "ovrlBotPitchStave", ovrlPitchStaveInfoId: "ovrlBotPitchStaveInfo", ovrlSpeedId: "ovrlBotSpeed", ovrlPressId: "ovrlBotPres", ovrlDynId: "ovrlBotDyn", ovrlTimbreId: "ovrlBotTimb", ballYmax: 305, xLeftMargin: 31.5, posLineConf: { x1: "95", y1: "301", x2: "95", y2: "502" }, posBallConf: { cx: "95", cy: "331", r: "4" } },
+        metro: { idMetronomeRect: "metroRect", idMetronome: "metro", idMetroSlider: "metroFreqSlider", idMetroFreqRect: "metroFreq", idMetroFreqLine: "metroFreqLine", ifSymbolMetroOff: "#metronome", ifSymbolMetroOn: "#metronomeOn", ifMetroFreqSlider: "#metroFreq", minFreq: 220, maxFreq: 2200 },
     }
     var state = {
         clientId: null,
         isPlaying: false,
         isReady: false,
-        score: { title: "ZScore", noSpaceTitle: "ZScore", htmlFile: null, instrument: "Part View", parts: ["Part View"], firstPageNo: 1, lastPageNo: 2, sections: [], ownedSections: [], mySections: [], assignmentType: null},
+        score: { title: "ZScore", noSpaceTitle: "ZScore", htmlFile: null, instrument: "Part View", parts: ["Part View"], firstPageNo: 1, lastPageNo: 2, sections: [], ownedSections: [], mySections: [], assignmentType: null },
         part: { name: "Part View", imgDir: null, imgPageNameToken: null, imgContPageName: null, blankPageNo: 0, contPageNo: PAGE_NO_CONTINUOUS, currentSection: null, transpo: "C", pageRanges: [{ start: 1, end: 1 }], pages: {} },
-        topStave: { id: "topStave", config: config.topStave, pageId: DEFAULT_PAGE_ID, rndPageId: null, filename: DEFAULT_PAGE_IMG_URL, beatMap: null, timeline: null, isActive: true, isPlaying: false, currentBeat: null, transpos: []},
-        bottomStave: { id: "bottomStave", config: config.bottomStave, pageId: DEFAULT_PAGE_ID, rndPageId: null, filename: DEFAULT_PAGE_IMG_URL, beatMap: null, timeline: null, isActive: false, isPlaying: false, currentBeat: null, transpos: []},
+        topStave: { id: "topStave", config: config.topStave, pageId: DEFAULT_PAGE_ID, rndPageId: null, filename: DEFAULT_PAGE_IMG_URL, beatMap: null, timeline: null, isActive: true, isPlaying: false, currentBeat: null, transpos: [] },
+        bottomStave: { id: "bottomStave", config: config.bottomStave, pageId: DEFAULT_PAGE_ID, rndPageId: null, filename: DEFAULT_PAGE_IMG_URL, beatMap: null, timeline: null, isActive: false, isPlaying: false, currentBeat: null, transpos: [] },
         startTimeTl: 0,
         currentBeatId: "b0",
         currentBeatNo: 0,
@@ -176,7 +176,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         isInitialised: false,
         connectionType: null,
         pageNoToLoad: 0,
-        metro: {isMetroOn: false, slider: {xMax: 60, xMin: 40, xMid: 50, range: 20,}},
+        metro: { isMetroOn: false, slider: { xMax: 60, xMin: 40, xMid: 50, range: 20, } },
         isClientIdVisible: false,
         traspo: "C",
         counter: 0,
@@ -267,12 +267,20 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         initSvg();
         initAudio();
         initMetro();
+        test();
 
         state.isInitialised = true;
     }
+    function test() {
+        try {
+            m.test();
+        } catch (err) {
+            logError("test: failed tests: " + err.message);
+        }
+    }
     function setClientId() {
         var zsClientId = u.getLocalParam(LS_CLIENT_ID_KEY);
-        if(isNull(zsClientId)) {
+        if (isNull(zsClientId)) {
             zsClientId = u.generateRandomId();
             u.storeLocalParam(LS_CLIENT_ID_KEY, zsClientId);
         }
@@ -289,7 +297,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         resetStaveOnStop(state.bottomStave);
     }
     function resetStaveOnStop(stave) {
-        if(isNull(stave) || isNull(stave.config)) {
+        if (isNull(stave) || isNull(stave.config)) {
             return;
         }
 
@@ -317,7 +325,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         state.part.name = part;
         registerPart(part);
         u.makeInVisible(config.idPartsListOuterDiv);
-    }    
+    }
     function onSectionSelection(section) {
         if (!u.arrContains(state.score.sections, section)) {
             log("onSectionSelection: unexpected section: " + section);
@@ -329,21 +337,21 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     function disableSection(section) {
         var btnId = config.idSectionBtnPrefix + section;
         var sectionBtn = u.getElement(btnId);
-        if(isNull(sectionBtn)) {
+        if (isNull(sectionBtn)) {
             return;
         }
         disableSectionButton(sectionBtn);
-   }
+    }
     function disableSectionButton(sectionBtn) {
-        if(isNull(sectionBtn)) {
+        if (isNull(sectionBtn)) {
             return;
         }
         // u.setText(sectionBtn, section);
         u.setElementAttributes(sectionBtn, new SectionBtnDisabledAttrs());
     }
-    function setSectionsOwnedByClient() {        
+    function setSectionsOwnedByClient() {
         var ownedSections = u.getElement(config.idOwnedSections);
-        if(isNull(ownedSections)) {
+        if (isNull(ownedSections)) {
             return;
         }
         var clientSections = state.score.mySections;
@@ -356,7 +364,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         u.setText(ownedSections, displaySections);
     }
     function onInstrumentSelection(slotNo, instrument) {
-        if(isNull(slotNo) || isNull(instrument) || isNull(state.part.name)) {
+        if (isNull(slotNo) || isNull(instrument) || isNull(state.part.name)) {
             return;
         }
         sendInstrumentSlot(slotNo, instrument, state.part.name);
@@ -364,7 +372,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     }
     function showClientId() {
         var isVisible = state.isClientIdVisible;
-        if(isVisible) {
+        if (isVisible) {
             u.makeVisible(config.idClientId);
         } else {
             u.makeInVisible(config.idClientId);
@@ -387,19 +395,19 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     }
     function initMetro() {
         var metro = u.getElement(config.metro.idMetronomeRect);
-        if(isNull(metro)) {
+        if (isNull(metro)) {
             return;
         }
-        u.listen('click', metro, onMetro);        
+        u.listen('click', metro, onMetro);
         initMetroFreqSlider();
     }
     function initMetroFreqSlider() {
         var freqLine = u.getElement(config.metro.idMetroFreqLine);
         var freqRect = u.getElement(config.metro.idMetroFreqRect);
-        if(isNotNull(freqLine) && isNotNull(freqRect)) {
+        if (isNotNull(freqLine) && isNotNull(freqRect)) {
             var x2 = u.toInt(freqLine.getAttribute(X2));
             var sliderWidth = u.toInt(freqRect.getAttribute(WIDTH));
-            var sliderWidthHalf = Math.round(sliderWidth/2);
+            var sliderWidthHalf = Math.round(sliderWidth / 2);
             var xMax = x2 - sliderWidthHalf;
             state.metro.slider.xMax = xMax;
             var x1 = u.toInt(freqLine.getAttribute(X1));
@@ -407,10 +415,10 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             state.metro.slider.xMin = xMin;
             var range = xMax - xMin;
             state.metro.slider.range = range;
-            var xMid = Math.round((xMax + xMin)/2);
+            var xMid = Math.round((xMax + xMin) / 2);
             state.metro.slider.xMid = xMid;
         }
-        
+
         Draggable.create(config.metro.ifMetroFreqSlider, {
             type: X,
             bounds: document.getElementById(config.metro.idMetroFreqLine),
@@ -421,16 +429,16 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         var midDiffX = gsap.getProperty(config.metro.ifMetroFreqSlider, X);
         var ballPosX = state.metro.slider.xMid + midDiffX;
         var val = ballPosX - state.metro.slider.xMin;
-        var percent = Math.round(val*100/state.metro.slider.range);
-        var freq = u.mapRange(percent, 0, 100, config.metro.minFreq,  config.metro.maxFreq);
-        if(freq < 200) {
+        var percent = Math.round(val * 100 / state.metro.slider.range);
+        var freq = u.mapRange(percent, 0, 100, config.metro.minFreq, config.metro.maxFreq);
+        if (freq < 200) {
             freq = 200;
         }
         a.setBeepFreqenecy(freq);
         log("onFreqSliderMove: freq: " + freq);
     }
     function onMetro(event) {
-        if(state.metro.isMetroOn) {
+        if (state.metro.isMetroOn) {
             switchMetroOff();
         } else {
             switchMetroOn();
@@ -581,13 +589,13 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         if (isNotNull(scoreInfo.partHtmlPage)) {
             var isLoad = setPartHtmlPage(scoreInfo.partHtmlPage);
             var currentPage = u.getPageName();
-            if(isLoad && scoreInfo.partHtmlPage !== currentPage) {
+            if (isLoad && scoreInfo.partHtmlPage !== currentPage) {
                 u.loadPage(scoreInfo.partHtmlPage);
             }
         }
         if (isNotNull(scoreInfo.title)) {
             var isNew = setTitle(scoreInfo.title);
-            if(isNew) {
+            if (isNew) {
                 resetOnNewScore();
             }
         }
@@ -606,7 +614,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         if (isNotNull(strategyInfo.strategies)) {
             processStrategies(strategyInfo.strategies);
         }
-    }    
+    }
     function setTitle(title) {
         if (state.score.title === title) {
             return false;
@@ -618,7 +626,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     }
     function setPartHtmlPage(partFile) {
         var previous = state.score.htmlFile;
-        if(isNull(previous)) {
+        if (isNull(previous)) {
             state.score.htmlFile = partFile;
             return false;
         }
@@ -643,14 +651,14 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     }
     function processTempoChange(tempo) {
         var bpm = u.toInt(tempo);
-        if(isNull(bpm)) {
+        if (isNull(bpm)) {
             return;
         }
         var previousBpm = state.tempo;
-        var modifier = bpm/previousBpm;
+        var modifier = bpm / previousBpm;
         state.tempoModifier = modifier;
         setBpm(bpm);
-        if(state.isPlaying) {
+        if (state.isPlaying) {
             setStaveTimelinesTempo(modifier);
         } else {
             resetStaveTimelines();
@@ -664,10 +672,10 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         var staveId = mapInfo.staveId;
         var mapStr = mapInfo.map;
         var stave = state[staveId];
-        if(isNull(stave)) {
+        if (isNull(stave)) {
             return;
         }
-        var xLeftMargin =  stave.config.xLeftMargin;
+        var xLeftMargin = stave.config.xLeftMargin;
 
         var map = JSON.parse(JSON.stringify(mapStr));
         if (!u.isArray(map)) {
@@ -695,7 +703,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         setTimelineTempoMod(state.bottomStave.timeline, modifier);
     }
     function setTimelineTempoMod(tl, mod) {
-        if(isNull(tl)) {
+        if (isNull(tl)) {
             return;
         }
         var currentTimeScale = tl.timeScale();
@@ -707,54 +715,54 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         createStaveTimeline(state.bottomStave);
     }
     function initStaveTimelines(staveId) {
-        if(isNull(staveId)) {
+        if (isNull(staveId)) {
             return;
         }
         createStaveTimeline(state[staveId]);
     }
     function createStaveTimeline(stave) {
-        if(isNull(stave)) {
+        if (isNull(stave)) {
             return;
         }
-        var staveTimeline = gsap.timeline({onComplete: onTimelineComplete, onCompleteParams: [stave.id], paused: true});
+        var staveTimeline = gsap.timeline({ onComplete: onTimelineComplete, onCompleteParams: [stave.id], paused: true });
         var beatMaps = stave.beatMap;
-        if(isNull(beatMaps)) {
+        if (isNull(beatMaps)) {
             return;
         }
         var lineId = stave.config.positionLineId;
         var ballId = stave.config.beatBallId;
         var ballYmax = stave.config.ballYmax;
-        
+
         var isFirstBeat = true;
-        for (var beat in beatMaps){
-            var beatMap = beatMaps[beat];            
+        for (var beat in beatMaps) {
+            var beatMap = beatMaps[beat];
             var bpm = state.tempo;
             var beatDurationSec = m.getBeatDurationSec(bpm);
             var startBeat = beatMap.beatStartNum;
 
-            if(isFirstBeat) {
+            if (isFirstBeat) {
                 var beatId = config.beatIdPrefix + (startBeat - 1);
                 var endX = beatMap.xStart;
-                var startBeatPositionLineTween = createPositionLineTween(lineId, 0, endX, beatId, 0);                    
+                var startBeatPositionLineTween = createPositionLineTween(lineId, 0, endX, beatId, 0);
                 staveTimeline.add(startBeatPositionLineTween, TL_START_OF_PREVIOUS);
                 var startPositionBallXTween = createPositionBallXTween(ballId, 0, endX, beatId);
                 staveTimeline.add(startPositionBallXTween, TL_END_OF_PREVIOUS);
                 isFirstBeat = false;
             }
-            
+
             var endX = beatMap.xEnd;
             var beatId = config.beatIdPrefix + startBeat;
             var tweenId = config.tweenIdPrefix + beatId;
             var beatPositionLineTween = createPositionLineTween(lineId, beatDurationSec, endX, beatId, startBeat);
             var beatPositionBallXTween = createPositionBallXTween(ballId, beatDurationSec, endX, beatId);
-            var beatPositionBallYTween = createPositionBallYTween(ballId, beatDurationSec/2, ballYmax, beatId);
+            var beatPositionBallYTween = createPositionBallYTween(ballId, beatDurationSec / 2, ballYmax, beatId);
             var tweenId = beatPositionLineTween.vars.id;
             staveTimeline.addLabel(tweenId, TL_END_OF_PREVIOUS);
             staveTimeline.add(beatPositionLineTween, TL_END_OF_PREVIOUS);
             staveTimeline.add(beatPositionBallXTween, TL_START_OF_PREVIOUS);
             staveTimeline.add(beatPositionBallYTween, tweenId);
         }
-        if(isNotNull(stave.currentBeat)) {
+        if (isNotNull(stave.currentBeat)) {
             setTimelineBeat(staveTimeline, stave.currentBeat);
         }
         stave.timeline = staveTimeline;
@@ -764,12 +772,12 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         return gsap.to(u.toCssIdQuery(lineId), {
             id: tweenId,
             duration: beatDurationSec,
-            attr: {"x1":endX, "x2":endX},
+            attr: { "x1": endX, "x2": endX },
             ease: "none",
             onStart: onBeatStart,
             onStartParams: [beatId, beatNo],
             onComplete: onBeatEnd,
-            onCompleteParams: [beatId, beatNo],            
+            onCompleteParams: [beatId, beatNo],
         });
     }
     function createPositionBallXTween(ballId, beatDurationSec, endX, beatId) {
@@ -777,29 +785,29 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         return gsap.to(u.toCssIdQuery(ballId), {
             id: tweenId,
             duration: beatDurationSec,
-            attr: {"cx":endX},
+            attr: { "cx": endX },
             ease: "none",
         });
     }
     function createPositionBallYTween(ballId, beatDurationSec, endY, beatId) {
         var tweenId = config.ballTweenIdPrefix + beatId;
         return gsap.to(u.toCssIdQuery(ballId), {
-            id: tweenId,            
+            id: tweenId,
             duration: beatDurationSec,
-            attr: {"cy":endY, "r":2},
+            attr: { "cy": endY, "r": 2 },
             ease: "power1.out",
             autoAlpha: 0.5,
-            repeat: 1, 
+            repeat: 1,
             yoyo: true,
         });
     }
     function onTimelineComplete(staveid) {
         logDebug("onTimelineComplete stave: " + staveid);
         var stave = state[staveid];
-        if(isNotNull(stave)) {
+        if (isNotNull(stave)) {
             stave.isRunning = false;
         }
-        if(isNotNull(stave.timeline)) {
+        if (isNotNull(stave.timeline)) {
             stave.timeline.pause(0);
         }
     }
@@ -815,10 +823,10 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         logDebug("onBeatEnd: beat: " + beatId + " beatNo: " + beatNo + " elapsedTime: " + diff);
     }
     function setCurrentBeat(beatNo, beatId) {
-        if(!u.isNumeric(beatNo)) {
+        if (!u.isNumeric(beatNo)) {
             return;
         }
-        if(u.isNull(beatId)) {
+        if (u.isNull(beatId)) {
             beatId = config.beatIdPrefix + beatNo;
         }
         state.currentBeatId = beatId;
@@ -861,7 +869,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         var ovrlStave = u.getElement(stave.config.ovrlPitchStaveInfoId);
         if (isNotNull(ovrlStave)) {
             u.removeElementChildren(ovrlStave);
-        }        
+        }
         if (u.isArray(txtInfos)) {
             for (var i = 0; i < txtInfos.length; i++) {
                 processTextInfo(txtInfos[i], ovrlStave);
@@ -871,22 +879,22 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         }
     }
     function processTextInfo(txtInfo, ovrlStave) {
-        if(isNull(txtInfo) || isNull(ovrlStave)) {
+        if (isNull(txtInfo) || isNull(ovrlStave)) {
             return;
         }
         var x = null;
         var y = null;
         var txt = null;
-        if(isNotNull(txtInfo.x)) {
+        if (isNotNull(txtInfo.x)) {
             x = txtInfo.x;
         }
-        if(isNotNull(txtInfo.y)) {
+        if (isNotNull(txtInfo.y)) {
             y = txtInfo.y;
         }
-        if(isNotNull(txtInfo.txt)) {
+        if (isNotNull(txtInfo.txt)) {
             txt = txtInfo.txt;
         }
-        if(isNull(x) || isNull(y) || isNull(txt)) {
+        if (isNull(x) || isNull(y) || isNull(txt)) {
             return;
         }
         var txtElementId = config.idTranspoInfo + getNextElementIdNo();
@@ -901,18 +909,18 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         return ++state.counter;
     }
     function showTransposition() {
-        if(isNull(state.traspo)) {
+        if (isNull(state.traspo)) {
             return;
         }
         var transpo = state.traspo;
         var note = m.getNote(transpo);
-        if(isNull(note)) {
+        if (isNull(note)) {
             return;
         }
-        if(isNotNull(note.pitchName)) {
+        if (isNotNull(note.pitchName)) {
             s.setElementIdText(config.idTranspoKey, note.pitchName);
         }
-        if(isNotNull(note.modUnicode)) {
+        if (isNotNull(note.modUnicode)) {
             s.setElementIdText(config.idTranspoMod, note.modUnicode);
         }
     }
@@ -926,9 +934,9 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             return;
         }
 
-        var imgSrc = null;        
+        var imgSrc = null;
         var showPageId = stave.pageId;
-        if(isNotNull(stave.rndPageId)) {
+        if (isNotNull(stave.rndPageId)) {
             showPageId = stave.rndPageId;
         }
         var pageImg = getPageImage(showPageId)
@@ -944,7 +952,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
 
         var ovrlStave = u.getElement(stave.config.ovrlPitchStaveInfoId);
         var isStaveOvrlEnabled = false;
-        if(u.hasChildrenElements(ovrlStave)) {
+        if (u.hasChildrenElements(ovrlStave)) {
             isStaveOvrlEnabled = true;
         }
         showPitchStaveOverlay(conf, isStaveOvrlEnabled);
@@ -1015,7 +1023,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     }
     function processPartInfo(partInfo) {
         if (isNotNull(partInfo.name)) {
-            state.part.name = partInfo.name;            
+            state.part.name = partInfo.name;
         }
         if (isNotNull(partInfo.pageRanges)) {
             var pgRanges = partInfo.pageRanges;
@@ -1049,7 +1057,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         var partName = state.part.name;
         var section = state.part.currentSection;
         var out = "";
-        if(isNotNull(section)) {
+        if (isNotNull(section)) {
             out += u.capitalizeFirstLetter(section) + " - ";
         }
         out += partName;
@@ -1171,27 +1179,27 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         state.part.pageRanges.push(pr);
     }
     function processStrategies(strategies) {
-        if(isNull(strategies)) {
+        if (isNull(strategies)) {
             return;
         }
         if (u.isArray(strategies)) {
             for (var i = 0; i < strategies.length; i++) {
                 processStrategy(strategies[i]);
-            }            
+            }
         } else {
             processStrategy(strategies);
         }
     }
     function processStrategy(strategy) {
-        if(!u.isObject(strategy)) {
+        if (!u.isObject(strategy)) {
             return;
         }
-        if(isNull(strategy.name)) {
+        if (isNull(strategy.name)) {
             logError("processStrategies: invalid strategy name");
             return;
         }
         var strategyName = strategy.name;
-        switch(strategyName) {
+        switch (strategyName) {
             case STRATEGY_BUILDER:
                 processBuidlerStrategy(strategy);
                 break;
@@ -1204,50 +1212,50 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     }
     function processBuidlerStrategy(strategy) {
         var isReady = false;
-        if(isNotNull(strategy.isReady)) {
+        if (isNotNull(strategy.isReady)) {
             isReady = u.toBoolean(strategy.isReady);
         }
-        if(isNotNull(strategy.sections)) {
-            if(state.score.sections.length > 0) {
+        if (isNotNull(strategy.sections)) {
+            if (state.score.sections.length > 0) {
                 state.score.sections = [];
-            }    
+            }
             if (u.isArray(strategy.sections)) {
                 for (var i = 0; i < strategy.sections.length; i++) {
                     addSection(strategy.sections[i]);
-                }            
+                }
             } else {
                 addSection(strategy.sections);
             }
         }
-        if(isNotNull(strategy.assignmentType)) {
+        if (isNotNull(strategy.assignmentType)) {
             state.score.assignmentType = strategy.assignmentType;
         }
         state.score.ownedSections = [];
         state.score.mySections = [];
-        if(isNotNull(strategy.sectionOwners)) {
-            for (var section in strategy.sectionOwners){
+        if (isNotNull(strategy.sectionOwners)) {
+            for (var section in strategy.sectionOwners) {
                 var owner = strategy.sectionOwners[section];
                 state.score.ownedSections.push(section);
-                if(state.clientId === owner) {
+                if (state.clientId === owner) {
                     state.score.mySections.push(section);
                 }
             }
         }
-        if(isReady) {
+        if (isReady) {
             hideSections();
         } else {
             showSections();
         }
     }
     function addSection(section) {
-        if(isNull(section)) {
+        if (isNull(section)) {
             return;
         }
         state.score.sections.push(section);
     }
     function showSections() {
         var sections = state.score.sections;
-        if(sections.length < 1) {
+        if (sections.length < 1) {
             return;
         }
         var sectionsElement = u.getElement(config.idSections);
@@ -1259,15 +1267,15 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             var section = sections[i];
             var btnId = config.idSectionBtnPrefix + section;
             var sectionBtn = u.getElement(btnId);
-            if(isNull(sectionBtn)) {
+            if (isNull(sectionBtn)) {
                 var attrs = new SectionBtnAttrs(i + 1, section);
                 sectionBtn = u.createButton(attrs);
                 u.setText(sectionBtn, section);
                 u.addChildToParent(sectionsElement, sectionBtn);
-            }            
-            if(u.arrContains(state.score.ownedSections, section)) {
+            }
+            if (u.arrContains(state.score.ownedSections, section)) {
                 disableSectionButton(sectionBtn);
-            }                        
+            }
         }
         setSectionsOwnedByClient();
         u.makeVisible(config.idSectionsListOuterDiv);
@@ -1287,7 +1295,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         if (!u.isArray(instruments)) {
             if (!u.arrContains(config.filterOutParts, part)) {
                 parts.push(instruments);
-            }            
+            }
         } else {
             for (var i = 0; i < instruments.length; i++) {
                 var part = instruments[i]
@@ -1346,7 +1354,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     function registerPart(part) {
         var evParams = createReqParams();
         var transposition = "C";
-        if(isNotNull(state.traspo)) {
+        if (isNotNull(state.traspo)) {
             transposition = state.traspo;
         }
         evParams[EVENT_PARAM_PART] = part;
@@ -1436,7 +1444,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             case "INSTRUMENT_SLOTS":
                 onInstrumentSlots(params);
                 break;
-            case "RESET_INSTRUMENT_SLOTS":                
+            case "RESET_INSTRUMENT_SLOTS":
                 onResetInstrumentSlots();
                 break;
             case "RESET_STAVES":
@@ -1447,16 +1455,16 @@ var zscore = (function (u, n, s, a, m, win, doc) {
                 break;
             case "OVERLAY_LINE":
                 callForTargets(setOverlayLine, targets, params);
-                break;               
+                break;
             case "OVERLAY_COLOUR":
-                callForTargets(onOverlayColour,targets, params);
+                callForTargets(onOverlayColour, targets, params);
                 break;
             default:
                 logError("doAction: Unknown actionType: " + actionType);
         }
     }
     function callForTargets(func, targets, params) {
-        if(isNull(func)) {
+        if (isNull(func)) {
             return;
         }
         if (u.isArray(targets)) {
@@ -1468,7 +1476,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         }
     }
     function onOverlayColour(target, params) {
-        if(isNull(params) || isNull(target)) {
+        if (isNull(params) || isNull(target)) {
             return;
         }
         var stave = state[target];
@@ -1477,13 +1485,13 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         setOverlayColour(stave, overlayType, col);
     }
     function setOverlayColour(stave, overlayType, col) {
-        if(isNull(stave) || isNull(overlayType) || isNull(col)) {
+        if (isNull(stave) || isNull(overlayType) || isNull(col)) {
             return;
         }
-        switch(overlayType) {
+        switch (overlayType) {
             case "SPEED":
-            case "PRESSURE": 
-            case "POSITION": 
+            case "PRESSURE":
+            case "POSITION":
                 break;
             case "PITCH":
                 setFill(stave.config.ovrlPitchId + config.idRectSuffix, col);
@@ -1499,10 +1507,10 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         }
     }
     function setFill(rectId, col) {
-        u.setElementIdStyleProperty(rectId, {fill: col});
+        u.setElementIdStyleProperty(rectId, { fill: col });
     }
     function setOverlayLine(target, params) {
-        if(isNull(params) || isNull(target)) {
+        if (isNull(params) || isNull(target)) {
             return;
         }
         var stave = state[target];
@@ -1511,13 +1519,13 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         setOverlayLinePosition(stave, overlayType, posY);
     }
     function setOverlayLinePosition(stave, overlayType, posY) {
-        if(isNull(stave) || isNull(overlayType) || isNull(posY)) {
+        if (isNull(stave) || isNull(overlayType) || isNull(posY)) {
             return;
         }
-        switch(overlayType) {
-            case "POSITION": 
+        switch (overlayType) {
+            case "POSITION":
             case "SPEED":
-            case "PRESSURE": 
+            case "PRESSURE":
                 break;
             case "PITCH":
                 setLineY(stave.config.ovrlPitchId + config.idLineSuffix, posY);
@@ -1537,7 +1545,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         s.setLineY(line, posY, posY);
     }
     function setOverlayElementInfo(target, params) {
-        if(isNull(params) || isNull(target)) {
+        if (isNull(params) || isNull(target)) {
             return;
         }
         var stave = state[target];
@@ -1548,18 +1556,18 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         setOverlayElement(stave, overlayType, overlayElement, isEnabled, opacity);
     }
     function setOverlayElement(stave, overlayType, overlayElement, isEnabled, opacity) {
-        if(isNull(stave) || isNull(overlayType)) {
+        if (isNull(stave) || isNull(overlayType)) {
             return;
         }
         var staveConf = stave.config;
-        if(isNull(staveConf)) {
+        if (isNull(staveConf)) {
             return;
         }
         logDebug("setOverlayElement: overlayType: " + overlayType);
-        switch(overlayType) {
+        switch (overlayType) {
             case "SPEED":
-            case "PRESSURE": 
-            case "POSITION": 
+            case "PRESSURE":
+            case "POSITION":
                 break;
             case "PITCH":
                 setPitchOverlay(staveConf, overlayElement, isEnabled, opacity);
@@ -1578,21 +1586,21 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         }
     }
     function setTimbreOverlay(staveConf, overlayElement, isEnabled, opacity) {
-        if(isNull(overlayElement) || isNull(staveConf)) {
+        if (isNull(overlayElement) || isNull(staveConf)) {
             return;
         }
-        switch(overlayElement) {
-            case "TIMBRE_BOX": 
+        switch (overlayElement) {
+            case "TIMBRE_BOX":
                 setOverlayVisibility(staveConf.ovrlTimbreId + config.idRectSuffix, isEnabled, opacity);
                 setOverlayVisibility(staveConf.ovrlTimbreId + config.idOrdSuffix + config.idLineSuffix, isEnabled, opacity);
                 setOverlayVisibility(staveConf.ovrlTimbreId, isEnabled, opacity);
-                if(!isEnabled) {
+                if (!isEnabled) {
                     setOverlayVisibility(staveConf.ovrlTimbreId + config.idLineSuffix, isEnabled, opacity);
                 }
                 break;
             case "TIMBRE_ORD_LINE":
                 setOverlayVisibility(staveConf.ovrlTimbreId + config.idOrdSuffix + config.idLineSuffix, isEnabled, opacity);
-                break;                
+                break;
             case "TIMBRE_LINE":
                 setOverlayVisibility(staveConf.ovrlTimbreId + config.idLineSuffix, isEnabled, opacity);
                 break;
@@ -1601,21 +1609,21 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         }
     }
     function setDynamicsOverlay(staveConf, overlayElement, isEnabled, opacity) {
-        if(isNull(overlayElement) || isNull(staveConf)) {
+        if (isNull(overlayElement) || isNull(staveConf)) {
             return;
         }
-        switch(overlayElement) {
-            case "DYNAMICS_BOX": 
+        switch (overlayElement) {
+            case "DYNAMICS_BOX":
                 setOverlayVisibility(staveConf.ovrlDynId + config.idRectSuffix, isEnabled, opacity);
                 setOverlayVisibility(staveConf.ovrlDynId + config.idOrdSuffix + config.idLineSuffix, isEnabled, opacity);
                 setOverlayVisibility(staveConf.ovrlDynId, isEnabled, opacity);
-                if(!isEnabled) {
+                if (!isEnabled) {
                     setOverlayVisibility(staveConf.ovrlDynId + config.idLineSuffix, isEnabled, opacity);
                 }
                 break;
             case "DYNAMICS_MID_LINE":
                 setOverlayVisibility(staveConf.ovrlDynId + config.idOrdSuffix + config.idLineSuffix, isEnabled, opacity);
-                break;                
+                break;
             case "DYNAMICS_LINE":
                 setOverlayVisibility(staveConf.ovrlDynId + config.idLineSuffix, isEnabled, opacity);
                 break;
@@ -1624,20 +1632,20 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         }
     }
     function setPitchStaveOverlay(staveConf, overlayElement, isEnabled, opacity) {
-        if(isNull(overlayElement) || isNull(staveConf)) {
+        if (isNull(overlayElement) || isNull(staveConf)) {
             return;
         }
-        switch(overlayElement) {
+        switch (overlayElement) {
             case "PITCH_STAVE_BOX":
                 setOverlayVisibility(staveConf.ovrlPitchStaveId + config.idRectSuffix, isEnabled, opacity);
                 setOverlayVisibility(staveConf.ovrlPitchStaveId, isEnabled, opacity);
-                if(!isEnabled) {
+                if (!isEnabled) {
                     setOverlayVisibility(staveConf.ovrlPitchStaveId + config.idLineSuffix, isEnabled, opacity);
                 }
                 break;
             case "PITCH_STAVE_MID_LINE":
                 setOverlayVisibility(staveConf.ovrlPitchStaveId + config.idMidSuffix + config.idLineSuffix, isEnabled, opacity);
-                break;                
+                break;
             default:
                 log("setPitchOverlay: unknown overlay element: " + overlayElement);
         }
@@ -1647,14 +1655,14 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         setPitchStaveOverlay(staveConf, "PITCH_STAVE_MID_LINE", isEnabled, 1.0);
     }
     function setPitchOverlay(staveConf, overlayElement, isEnabled, opacity) {
-        if(isNull(overlayElement) || isNull(staveConf)) {
+        if (isNull(overlayElement) || isNull(staveConf)) {
             return;
         }
-        switch(overlayElement) {
+        switch (overlayElement) {
             case "PITCH_BOX":
                 setOverlayVisibility(staveConf.ovrlPitchId + config.idRectSuffix, isEnabled, opacity);
                 setOverlayVisibility(staveConf.ovrlPitchId, isEnabled, opacity);
-                if(!isEnabled) {
+                if (!isEnabled) {
                     setOverlayVisibility(staveConf.ovrlPitchId + config.idLineSuffix, isEnabled, opacity);
                 }
                 break;
@@ -1666,15 +1674,15 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         }
     }
     function setOverlayVisibility(ovrlId, isEnabled, opacity) {
-        if(isNull(ovrlId)) {
+        if (isNull(ovrlId)) {
             return;
         }
-        if(isEnabled) {
+        if (isEnabled) {
             var op = u.toFloat(opacity);
-            if(!u.isNumeric(op)) {
+            if (!u.isNumeric(op)) {
                 op = 1.0;
             }
-            u.setElementIdStyleProperty(ovrlId, {opacity: op});
+            u.setElementIdStyleProperty(ovrlId, { opacity: op });
             u.makeVisible(ovrlId);
         } else {
             u.makeInVisible(ovrlId);
@@ -1685,16 +1693,16 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         resetStave(state.bottomStave);
     }
     function resetStave(stave) {
-        if(isNull(stave)) {
+        if (isNull(stave)) {
             return;
-        }        
-        stave.pageId = DEFAULT_PAGE_ID; 
-        stave.rndPageId = null; 
-        stave.filename = DEFAULT_PAGE_IMG_URL; 
-        stave.beatMap = null; 
-        stave.timeline = null; 
-        stave.isActive = true; 
-        stave.isPlaying = false; 
+        }
+        stave.pageId = DEFAULT_PAGE_ID;
+        stave.rndPageId = null;
+        stave.filename = DEFAULT_PAGE_IMG_URL;
+        stave.beatMap = null;
+        stave.timeline = null;
+        stave.isActive = true;
+        stave.isPlaying = false;
         stave.currentBeat = null;
         resetStaveOnStop(stave);
         showDefaultStavePage(stave);
@@ -1704,14 +1712,14 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         hideInstrumentSlots();
     }
     function onInstrumentSlots(params) {
-        if(isNull(params)) {
+        if (isNull(params)) {
             return;
         }
         var csvInstruments = params[EVENT_PARAM_CSV_INSTRUMENTS];
         setInstrumentSlots(csvInstruments);
         showInstrumentSlots();
     }
-    function showInstrumentSlots() {        
+    function showInstrumentSlots() {
         u.makeVisible(config.idInstControls);
     }
     function hideInstrumentSlots() {
@@ -1721,29 +1729,29 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         u.makeInVisible(config.idTranspoControls);
     }
     function setInstrumentSlots(csvInstruments) {
-        if(isNull(csvInstruments)) {
+        if (isNull(csvInstruments)) {
             return;
         }
         var insts = u.csvToArr(csvInstruments);
-        if(isNull(insts) || insts.length <= 0) {
+        if (isNull(insts) || insts.length <= 0) {
             return;
         }
         var parts = state.score.parts;
-        if(isNull(parts) || parts.length <= 0) {
+        if (isNull(parts) || parts.length <= 0) {
             return;
         }
         for (var i = 0; i < parts.length; i++) {
             var slotNo = i + 1;
-            if(i < insts.length) {
+            if (i < insts.length) {
                 setActiveInstrumentSlot(insts[i], slotNo);
             } else {
                 disableInstrumentSlot(slotNo);
             }
         }
-    }    
+    }
     function resetInstrumentSlots() {
         var parts = state.score.parts;
-        if(isNull(parts) || parts.length <= 0) {
+        if (isNull(parts) || parts.length <= 0) {
             return;
         }
         for (var i = 0; i < parts.length; i++) {
@@ -1752,7 +1760,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         }
     }
     function setActiveInstrumentSlot(instrument, slotNo) {
-        if(isNull(instrument) || isNull(slotNo)) {
+        if (isNull(instrument) || isNull(slotNo)) {
             return;
         }
         var txtId = config.idInstSlotTxtPrefix + slotNo;
@@ -1765,7 +1773,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         u.setElementIdAttributes(slotId, config.instSlotActiveAttrib);
         s.setElementIdText(txtId, instrument.trim());
         u.setElementIdStyleProperty(txtId, config.instSlotTxtActiveStyle);
-        if(isThisInst) {
+        if (isThisInst) {
             u.setElementIdStyleProperty(btnId, config.instSlotBtnActiveInstStyle);
         } else {
             u.setElementIdStyleProperty(btnId, config.instSlotBtnActiveStyle);
@@ -1790,28 +1798,28 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     function hideInstrumentSlot(slotNo) {
         var txtId = config.idInstSlotTxtPrefix + slotNo;
         var btnId = config.idInstSlotBtnPrefix + slotNo;
-        var slotId = config.idInstSlotPrefix + slotNo;        
+        var slotId = config.idInstSlotPrefix + slotNo;
         u.makeInVisible(txtId);
         u.makeInVisible(btnId);
         u.makeInVisible(slotId);
         var attrs = new InstSlotInActiveAttrs();
         u.setElementIdAttributes(btnId, attrs);
-    }    
+    }
     function setStartMark(target, params) {
-        if(isNull(params) || isNull(target)) {
+        if (isNull(params) || isNull(target)) {
             return;
         }
         var stave = state[target];
         var beatNo = params[EVENT_PARAM_BEAT_NO];
-        if(isNull(stave) || isNull(beatNo)) {
+        if (isNull(stave) || isNull(beatNo)) {
             return;
         }
         var beatMap = stave.beatMap;
-        if(isNull(beatMap)) {
+        if (isNull(beatMap)) {
             return;
         }
         var mapElement = beatMap[beatNo]
-        if(isNull(mapElement)) {
+        if (isNull(mapElement)) {
             return;
         }
         var startX = mapElement.xStart - 1;
@@ -1823,14 +1831,14 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         return u.getElement(stave.config.startLineId);
     }
     function setStaveStartMarkVisiblity(startLine, isVisible) {
-        if(isVisible) {
+        if (isVisible) {
             u.makeElementVisible(startLine);
         } else {
             u.makeElementInVisible(startLine);
         }
     }
     function serverBeat(target, params) {
-        if(isNull(params) || isNull(target)) {
+        if (isNull(params) || isNull(target)) {
             return;
         }
         var stave = state[target];
@@ -1838,29 +1846,29 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         setStaveBeat(stave, beatNo);
     }
     function setStaveBeat(stave, beatNo) {
-        if(isNull(stave) || isNull(beatNo)) {
+        if (isNull(stave) || isNull(beatNo)) {
             return;
         }
         var currentTime = a.getCurrentTime();
         logDebug("setStaveBeat: stave: " + stave.id + " beat: " + beatNo + " time: " + currentTime);
         setTimelineBeat(stave.timeline, beatNo);
-        stave.currentBeat = beatNo;        
+        stave.currentBeat = beatNo;
     }
     function setTimelineBeat(timeline, beatNo) {
-        if(isNull(timeline)) {
+        if (isNull(timeline)) {
             return;
         }
         var beatLabel = config.tweenIdPrefix + config.beatIdPrefix + beatNo;
         var labels = timeline.labels;
-        if(beatLabel in labels) {
+        if (beatLabel in labels) {
             a.beep();
-            timeline.seek(beatLabel);     
+            timeline.seek(beatLabel);
         } else {
-           logDebug("setTimelineBeat: Invalid beat " + beatLabel);
+            logDebug("setTimelineBeat: Invalid beat " + beatLabel);
         }
     }
     function activate(target, params) {
-        if(isNull(params) || isNull(target)) {
+        if (isNull(params) || isNull(target)) {
             return;
         }
         var stave = state[target];
@@ -1869,28 +1877,28 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         activateStave(stave, isActive, isPlay);
     }
     function activateStave(stave, isActive, isPlay) {
-        if(isNull(stave) || isNull(isActive) || isNull(isPlay)) {
+        if (isNull(stave) || isNull(isActive) || isNull(isPlay)) {
             return;
         }
-        if(isActive) {
+        if (isActive) {
             u.setElementIdStyleProperty(stave.config.maskId, config.activeStaveStyle);
         } else {
             u.setElementIdStyleProperty(stave.config.maskId, config.inactiveStaveStyle);
             var startLine = getStaveStartMark(stave);
             setStaveStartMarkVisiblity(startLine, false);
         }
-        if(isPlay) {
+        if (isPlay) {
             playTimeline(stave.timeline);
         }
     }
     function onSemaphoreOn(params) {
-        if(isNull(params)) {
+        if (isNull(params)) {
             return;
         }
         processSemaphore(params.lightNo, params.colourId);
     }
     function onSemaphoreOff(params) {
-        if(isNull(params)) {
+        if (isNull(params)) {
             return;
         }
         showSemaphore(params.lightNo, CLR_NONE);
@@ -1904,7 +1912,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         showSemaphore(lightNo, colour);
     }
     function showSemaphore(lightNo, colour) {
-        if(isNull(lightNo) || isNull(colour)) {
+        if (isNull(lightNo) || isNull(colour)) {
             return;
         }
         var c = u.toInt(lightNo);
@@ -1917,7 +1925,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         if (!colourId) {
             colourId = 1;
         }
-    
+
         var colour;
         switch (colourId) {
             case 4:
@@ -1940,17 +1948,17 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         state.isPlaying = false;
         setStopSemaphore();
         resetStateOnStop();
-    }    
+    }
     function play(target) {
-        if(isNull(target)) {
+        if (isNull(target)) {
             return;
         }
         var stave = state[target];
-        if(isNull(stave)) {
+        if (isNull(stave)) {
             return;
         }
         var tl = stave.timeline;
-        if(isNull(tl)) {
+        if (isNull(tl)) {
             return;
         }
         playTimeline(tl);
@@ -2029,6 +2037,6 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         },
         onTranspoSelect: function (transpo) {
             onTranspoSelection(transpo);
-        },        
+        },
     }
 }(zsUtil, zsNet, zsSvg, zsWsAudio, zsMusic, window, document));
