@@ -862,10 +862,17 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         } else {
             stave.rndPageId = null;
         }
+        clearTranspositions(stave);
         if (isNotNull(pageInfo.transpositionInfo)) {
             processTranspositionInfo(pageInfo.transpositionInfo, stave);
         }
         showStavePage(stave);
+    }
+    function clearTranspositions(stave) {
+        var ovrlStave = u.getElement(stave.config.ovrlPitchStaveInfoId);
+        if (isNotNull(ovrlStave)) {
+            u.removeElementChildren(ovrlStave);
+        }
     }
     function processTranspositionInfo(transpositionInfo, stave) {
         if (isNull(transpositionInfo) || isNull(stave)) {
@@ -874,11 +881,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         var txtInfos = transpositionInfo.txtInfos;
         if (isNull(txtInfos)) {
             return;
-        }
+        }        
         var ovrlStave = u.getElement(stave.config.ovrlPitchStaveInfoId);
-        if (isNotNull(ovrlStave)) {
-            u.removeElementChildren(ovrlStave);
-        }
         if (u.isArray(txtInfos)) {
             for (var i = 0; i < txtInfos.length; i++) {
                 processTranspoTxtInfo(txtInfos[i], ovrlStave);
