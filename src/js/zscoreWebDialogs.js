@@ -149,7 +149,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         connectedBtnAttrib: { "filter": "" },
         disconnectedBtnAttrib: { "filter": "url(#dropshadow)" },
         transpoInfoAttrib: { "dominant-baseline": "central", "font-family": "sans-serif", "font-weight": "bold", "font-size": "0.75em" },
-        transpoPitchModAttrib: {"dy": -2, "font-family": "monospace", "font-size": "1.5em"},
+        transpoPitchModAttrib: {"dy": -1, "dx": -1.5, "font-family": "sans-serif", "font-weight": "bold", "font-size": "0.75em"},
         errorBtnAttrib: { "filter": "url(#dropshadow)" },
         topStave: { gId: "stvTop", imgId: "stvTopImg", startLineId: "stvTopStartLine", positionLineId: "stvTopPosLine", beatBallId: "stvTopBeatBall", maskId: "stvTopMask", ovrlPosId: "ovrlTopPos", ovrlPitchId: "ovrlTopPitch", ovrlPitchStaveId: "ovrlTopPitchStave", ovrlPitchStaveInfoId: "ovrlTopPitchStaveInfo", ovrlSpeedId: "ovrlTopSpeed", ovrlPressId: "ovrlTopPres", ovrlDynId: "ovrlTopDyn", ovrlTimbreId: "ovrlTopTimb", ballYmax: 84, xLeftMargin: 31.5, posLineConf: { x1: "95", y1: "80", x2: "95", y2: "281" }, posBallConf: { cx: "95", cy: "110", r: "4" } },
         bottomStave: { gId: "stvBot", imgId: "stvBotImg", startLineId: "stvBotStartLine", positionLineId: "stvBotPosLine", beatBallId: "stvBotBeatBall", maskId: "stvBotMask", ovrlPosId: "ovrlBotPos", ovrlPitchId: "ovrlBotPitch", ovrlPitchStaveId: "ovrlBotPitchStave", ovrlPitchStaveInfoId: "ovrlBotPitchStaveInfo", ovrlSpeedId: "ovrlBotSpeed", ovrlPressId: "ovrlBotPres", ovrlDynId: "ovrlBotDyn", ovrlTimbreId: "ovrlBotTimb", ballYmax: 305, xLeftMargin: 31.5, posLineConf: { x1: "95", y1: "301", x2: "95", y2: "502" }, posBallConf: { cx: "95", cy: "331", r: "4" } },
@@ -384,6 +384,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         showClientId();
     }
     function onTranspoSelection(note) {
+        onStateBtnClick();
         if (isNull(note)) {
             return;
         }
@@ -880,13 +881,13 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         }
         if (u.isArray(txtInfos)) {
             for (var i = 0; i < txtInfos.length; i++) {
-                processTextInfo(txtInfos[i], ovrlStave);
+                processTranspoTxtInfo(txtInfos[i], ovrlStave);
             }
         } else {
-            processTextInfo(txtInfos, ovrlStave);
+            processTranspoTxtInfo(txtInfos, ovrlStave);
         }
     }
-    function processTextInfo(txtInfo, ovrlStave) {
+    function processTranspoTxtInfo(txtInfo, ovrlStave) {
         if (isNull(txtInfo) || isNull(ovrlStave)) {
             return;
         }
@@ -923,19 +924,22 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         txtElement.setAttribute("y", y);
         u.setElementAttributes(txtElement, config.transpoInfoAttrib);
 
-        var tspanElementId = config.idTranspoInfo + getNextElementIdNo();
-        var tspanElement = s.createTspanElement(tspanElementId);
-        s.setElementText(tspanElement, txt);
+        var letterTspanElementId = config.idTranspoInfo + getNextElementIdNo();
+        var letterTspanElement = s.createTspanElement(letterTspanElementId);
+        s.setElementText(letterTspanElement, txt);
+        u.addChildToParent(txtElement, letterTspanElement);
 
         if (isNotNull(pitch) && m.PITCH_MOD.NATURAL !== mod && isNotNull(pitch.modUnicode)) {
             var modTspanElementId = config.idTranspoInfo + getNextElementIdNo();
             var modTspanElement = s.createTspanElement(modTspanElementId);
             u.setElementAttributes(modTspanElement, config.transpoPitchModAttrib);            
+            letterTspanElement.setAttribute("dx", -2);
             s.setElementText(modTspanElement, pitch.modUnicode);
-            u.addChildToParent(tspanElement, modTspanElement);
+            u.addChildToParent(letterTspanElement, modTspanElement);
+        } else {
+            letterTspanElement.setAttribute("dx", 2);
         }
 
-        u.addChildToParent(txtElement, tspanElement);
         u.addChildToParent(ovrlStave, txtElement);
     }
     function getNextElementIdNo() {
