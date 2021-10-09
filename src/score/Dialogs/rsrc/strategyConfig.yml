@@ -7,7 +7,7 @@ rndStrategy:
       instruments: [ all ]
 builderStrategy:
   isActive: true
-  sections: [pitch, rhythm]
+  sections: [ pitch, rhythm ]
   assignmentType: USER_ANY_FCFS
   isStopOnSectionEnd: true
   pageRanges:
@@ -21,10 +21,29 @@ transpositionStrategy:
   isActive: true
   topStaveYRef: 114
   topStaveXRef: 80
+  topStaveStartX: 95
   botStaveYRef: 335
   botStaveXRef: 80
+  botStaveStartX: 95
+  extRectDx: -2
+  extRectDy: -7.5
+  extRectWidth: 13
+  extRectHeight: 13
   minYdistance: 10
   minXdistance: 7
   pages:
-    - {pageNo: 1, part: Present, textElements: [{ dx: 0, dy: 113, txt: C }, { dx: 0, dy: 123, txt: G }]}
-    - {pageNo: 2, part: Present, textElements: [{ dx: 0, dy: 113, txt: C }, { dx: 0, dy: 123, txt: G }]}
+    - { pageNo: 1, part: Present, textElements: [ { dx: 0, dy: 113, txt: C }, { dx: 0, dy: 123, txt: G } ] }
+    - { pageNo: 2, part: Present, textElements: [ { dx: 0, dy: 113, txt: C }, { dx: 0, dy: 123, txt: G } ] }
+    - { pageNo: 3, part: Present, textElements: [ { dx: 0, dy: 102, txt: G }, { dx: 0, dy: 114.5, txt: C } ] }
+    - { pageNo: 4, part: Present, textElements: [ { dx: 0, dy: 113, txt: C }, { dx: 0, dy: 123, txt: G }, { dx: 579, dy: 100.5, txt: G } ] }
+    - { pageNo: 5, part: Present, textElements: [ { dx: 0, dy: 104, txt: C }, { dx: 0, dy: 114, txt: G }, { dx: 0, dy: 126.5, txt: C }, { dx: 320, dy: 94, txt: G } ] }
+    - { pageNo: 1, part: Concur, textElements: [] }
+    - { pageNo: 2, part: Concur, textElements: [ { dx: 0, dy: 113, txt: C }, { dx: 0, dy: 123, txt: G } ] }
+    - { pageNo: 3, part: Concur, textElements: [ { dx: 0, dy: 113, txt: C }, { dx: 0, dy: 123, txt: G } ] }
+    - { pageNo: 4, part: Concur, textElements: [ { dx: 0, dy: 102.5, txt: G }, { dx: 0, dy: 115, txt: C } ] }
+    - { pageNo: 5, part: Concur, textElements: [ { dx: 0, dy: 100.5, txt: G }, { dx: 0, dy: 113, txt: C }, { dx: 0, dy: 123, txt: G } ] }
+    - { pageNo: 1, part: Dissent, textElements: [] }
+    - { pageNo: 2, part: Dissent, textElements: [ { dx: 0, dy: 113, txt: D }, { dx: 0, dy: 123, txt: A } ] }
+    - { pageNo: 3, part: Dissent, textElements: [ { dx: 0, dy: 105, txt: G }, { dx: 0, dy: 120, txt: B } ] }
+    - { pageNo: 4, part: Dissent, textElements: [ { dx: 0, dy: 105, txt: G }, { dx: 0, dy: 115, txt: D } ] }
+    - { pageNo: 5, part: Dissent, textElements: [ { dx: 0, dy: 100.5, txt: A }, { dx: 0, dy: 110.5, txt: D }, { dx: 0, dy: 123, txt: G } ] }
