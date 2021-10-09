@@ -150,6 +150,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         disconnectedBtnAttrib: { "filter": "url(#dropshadow)" },
         transpoInfoAttrib: { "dominant-baseline": "central", "font-family": "sans-serif", "font-weight": "bold", "font-size": "0.75em" },
         transpoPitchModAttrib: {"dy": -1, "dx": -1.5, "font-family": "sans-serif", "font-weight": "bold", "font-size": "0.75em"},
+        transpoExtRectAttrib: { "fill": CLR_WHITE, "stroke": NONE, "visibility": VISIBLE, "opacity": 1.0 },
         errorBtnAttrib: { "filter": "url(#dropshadow)" },
         topStave: { gId: "stvTop", imgId: "stvTopImg", startLineId: "stvTopStartLine", positionLineId: "stvTopPosLine", beatBallId: "stvTopBeatBall", maskId: "stvTopMask", ovrlPosId: "ovrlTopPos", ovrlPitchId: "ovrlTopPitch", ovrlPitchStaveId: "ovrlTopPitchStave", ovrlPitchStaveInfoId: "ovrlTopPitchStaveInfo", ovrlSpeedId: "ovrlTopSpeed", ovrlPressId: "ovrlTopPres", ovrlDynId: "ovrlTopDyn", ovrlTimbreId: "ovrlTopTimb", ballYmax: 84, xLeftMargin: 31.5, posLineConf: { x1: "95", y1: "80", x2: "95", y2: "281" }, posBallConf: { cx: "95", cy: "110", r: "4" } },
         bottomStave: { gId: "stvBot", imgId: "stvBotImg", startLineId: "stvBotStartLine", positionLineId: "stvBotPosLine", beatBallId: "stvBotBeatBall", maskId: "stvBotMask", ovrlPosId: "ovrlBotPos", ovrlPitchId: "ovrlBotPitch", ovrlPitchStaveId: "ovrlBotPitchStave", ovrlPitchStaveInfoId: "ovrlBotPitchStaveInfo", ovrlSpeedId: "ovrlBotSpeed", ovrlPressId: "ovrlBotPres", ovrlDynId: "ovrlBotDyn", ovrlTimbreId: "ovrlBotTimb", ballYmax: 305, xLeftMargin: 31.5, posLineConf: { x1: "95", y1: "301", x2: "95", y2: "502" }, posBallConf: { cx: "95", cy: "331", r: "4" } },
@@ -878,7 +879,56 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         if (isNull(transpositionInfo) || isNull(stave)) {
             return;
         }
-        var txtInfos = transpositionInfo.txtInfos;
+        processTranspoRectInfos(transpositionInfo.rectInfos, stave);
+        processTranspoTxtInfos(transpositionInfo.txtInfos, stave);
+    }
+    function processTranspoRectInfos(rectInfos, stave) {
+        if (isNull(rectInfos)) {
+            return;
+        }        
+        var ovrlStave = u.getElement(stave.config.ovrlPitchStaveInfoId);
+        if (u.isArray(rectInfos)) {
+            for (var i = 0; i < rectInfos.length; i++) {
+                processTranspoRectInfo(rectInfos[i], ovrlStave);
+            }
+        } else {
+            processTranspoRectInfo(rectInfos, ovrlStave);
+        }
+    }
+    function processTranspoRectInfo(rectInfo, ovrlStave) {
+        if (isNull(rectInfo) || isNull(ovrlStave)) {
+            return;
+        }
+        var x = null;
+        var y = null;
+        var width = null;
+        var height = null;
+        if (isNotNull(rectInfo.x)) {
+            x = rectInfo.x;
+        }
+        if (isNotNull(rectInfo.y)) {
+            y = rectInfo.y;
+        }
+        if (isNotNull(rectInfo.width)) {
+            width = rectInfo.width;
+        }
+        if (isNotNull(rectInfo.height)) {
+            height = rectInfo.height;
+        }
+        if (isNull(x) || isNull(y) || isNull(width) || isNull(height)) {
+            return;
+        }
+        var rectElementId = config.idTranspoInfo + getNextElementIdNo();
+        var rectElement = s.createRectangleElement(rectElementId);
+        rectElement.setAttribute("x", x);
+        rectElement.setAttribute("y", y);
+        rectElement.setAttribute("width", width);
+        rectElement.setAttribute("height", height);
+        u.setElementAttributes(rectElement, config.transpoExtRectAttrib);        
+
+        u.addChildToParent(ovrlStave, rectElement);
+    }
+    function processTranspoTxtInfos(txtInfos, stave) {
         if (isNull(txtInfos)) {
             return;
         }        
