@@ -36,7 +36,7 @@ transpositionStrategy:
     - { pageNo: 2, part: Present, textElements: [ { dx: 0, dy: 113, txt: C }, { dx: 0, dy: 123, txt: G } ] }
     - { pageNo: 3, part: Present, textElements: [ { dx: 0, dy: 102, txt: G }, { dx: 0, dy: 114.5, txt: C } ] }
     - { pageNo: 4, part: Present, textElements: [ { dx: 0, dy: 113, txt: C }, { dx: 0, dy: 123, txt: G }, { dx: 579, dy: 100.5, txt: G } ] }
-    - { pageNo: 5, part: Present, textElements: [ { dx: 0, dy: 104, txt: C }, { dx: 0, dy: 114, txt: G }, { dx: 0, dy: 126.5, txt: C }, { dx: 320, dy: 94, txt: G } ] }
+    - { pageNo: 5, part: Present, textElements: [ { dx: 0, dy: 104, txt: C }, { dx: 0, dy: 114, txt: G }, { dx: 0, dy: 126.5, txt: C }, { dx: 320, dy: 91.5, txt: G } ] }
     - { pageNo: 1, part: Concur, textElements: [] }
     - { pageNo: 2, part: Concur, textElements: [ { dx: 0, dy: 113, txt: C }, { dx: 0, dy: 123, txt: G } ] }
     - { pageNo: 3, part: Concur, textElements: [ { dx: 0, dy: 113, txt: C }, { dx: 0, dy: 123, txt: G } ] }
