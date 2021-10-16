@@ -1,17 +1,13 @@
 scoreName: "Dialogs"
 rndStrategy:
   isActive: false
-  pageRanges:
-    - range: { start: 1, end: 5 }
-      isRndActive: false
-      instruments: [ all ]
 builderStrategy:
   isActive: true
   sections: [ pitch, rhythm ]
   assignmentType: USER_ANY_FCFS
   isStopOnSectionEnd: true
   pageRanges:
-    - range: { start: 1, end: 5 }
+    - range: { start: 1, end: 12 }
       name: pitch
       instruments: [ all ]
     - range: { start: 1, end: 5 }
@@ -29,21 +25,44 @@ transpositionStrategy:
   extRectDy: -7.5
   extRectWidth: 13
   extRectHeight: 13
+  extRectModWidth: 18
+  extRectModHeight: 13
   minYdistance: 10
   minXdistance: 7
   pages:
-    - { pageNo: 1, part: Present, textElements: [ { dx: 0, dy: 113, txt: C }, { dx: 0, dy: 123, txt: G } ] }
-    - { pageNo: 2, part: Present, textElements: [ { dx: 0, dy: 113, txt: C }, { dx: 0, dy: 123, txt: G } ] }
-    - { pageNo: 3, part: Present, textElements: [ { dx: 0, dy: 102, txt: G }, { dx: 0, dy: 114.5, txt: C } ] }
-    - { pageNo: 4, part: Present, textElements: [ { dx: 0, dy: 113, txt: C }, { dx: 0, dy: 123, txt: G }, { dx: 579, dy: 100.5, txt: G } ] }
+    - { pageNo: 1, part: Present, textElements: [ { dx: 0, dy: 104, txt: C }, { dx: 0, dy: 114, txt: G } ] }
+    - { pageNo: 2, part: Present, textElements: [ { dx: 0, dy: 104, txt: C }, { dx: 0, dy: 114, txt: G } ] }
+    - { pageNo: 3, part: Present, textElements: [ { dx: 0, dy: 91.5, txt: G }, { dx: 0, dy: 104, txt: C } ] }
+    - { pageNo: 4, part: Present, textElements: [ { dx: 0, dy: 104, txt: C }, { dx: 0, dy: 114, txt: G }, { dx: 579, dy: 91.5, txt: G } ] }
     - { pageNo: 5, part: Present, textElements: [ { dx: 0, dy: 104, txt: C }, { dx: 0, dy: 114, txt: G }, { dx: 0, dy: 126.5, txt: C }, { dx: 320, dy: 91.5, txt: G } ] }
+    - { pageNo: 6, part: Present, textElements: [ { dx: 0, dy: 81, txt: C }, { dx: 0, dy: 91, txt: G }, { dx: 0, dy: 103.5, txt: C } ] }
+    - { pageNo: 7, part: Present, textElements: [ { dx: 0, dy: 104, txt: C }, { dx: 0, dy: 114, txt: G } ] }
+    - { pageNo: 8, part: Present, textElements: [ { dx: 0, dy: 91.5, txt: G }, { dx: 0, dy: 104, txt: C } ] }
+    - { pageNo: 9, part: Present, textElements: [ { dx: 0, dy: 56, txt: D }, { dx: 0, dy: 68.5, txt: G }, { dx: 0, dy: 78.5, txt: D } ] }
+    - { pageNo: 10, part: Present, textElements: [ { dx: 0, dy: 46, txt: G }, { dx: 0, dy: 56, txt: D }, { dx: 0, dy: 68.5, txt: G }, { dx: 0, dy: 78.5, txt: D } ] }
+    - { pageNo: 11, part: Present, textElements: [ { dx: 0, dy: 104, txt: C }, { dx: 0, dy: 114, txt: G } ] }
+    - { pageNo: 12, part: Present, textElements: [ { dx: 0, dy: 104, txt: C }, { dx: 0, dy: 114, txt: G } ] }
     - { pageNo: 1, part: Concur, textElements: [] }
     - { pageNo: 2, part: Concur, textElements: [ { dx: 0, dy: 113, txt: C }, { dx: 0, dy: 123, txt: G } ] }
     - { pageNo: 3, part: Concur, textElements: [ { dx: 0, dy: 113, txt: C }, { dx: 0, dy: 123, txt: G } ] }
     - { pageNo: 4, part: Concur, textElements: [ { dx: 0, dy: 102.5, txt: G }, { dx: 0, dy: 115, txt: C } ] }
     - { pageNo: 5, part: Concur, textElements: [ { dx: 0, dy: 100.5, txt: G }, { dx: 0, dy: 113, txt: C }, { dx: 0, dy: 123, txt: G } ] }
+    - { pageNo: 6, part: Concur, textElements: [ { dx: 0, dy: 77.5, txt: G }, { dx: 0, dy: 90, txt: C }, { dx: 0, dy: 100, txt: G }, { dx: 362, dy: 67.5, txt: C }, { dx: 533, dy: 122.5, txt: G } ] }
+    - { pageNo: 7, part: Concur, textElements: [ { dx: 0, dy: 113, txt: C }, { dx: 0, dy: 123, txt: G } ] }
+    - { pageNo: 8, part: Concur, textElements: [ { dx: 0, dy: 90.5, txt: C }, { dx: 0, dy: 100.5, txt: G } ] }
+    - { pageNo: 9, part: Concur, textElements: [ { dx: 0, dy: 67.5, txt: C }, { dx: 0, dy: 77.5, txt: G }, { dx: 0, dy: 90, txt: C }, { dx: 0, dy: 100, txt: G }, { dx: 417, dy: 45, txt: C }, { dx: 417, dy: 55, txt: G } ] }
+    - { pageNo: 10, part: Concur, textElements: [ { dx: 0, dy: 67.5, txt: C }, { dx: 0, dy: 77.5, txt: G }, { dx: 356.5, dy: 45, txt: C }, { dx: 356.5, dy: 55, txt: G } ] }
+    - { pageNo: 11, part: Concur, textElements: [ { dx: 0, dy: 68, txt: C }, { dx: 0, dy: 78, txt: G } ] }
+    - { pageNo: 12, part: Concur, textElements: [ { dx: 0, dy: 113, txt: C }, { dx: 0, dy: 123, txt: G } ] }
     - { pageNo: 1, part: Dissent, textElements: [] }
     - { pageNo: 2, part: Dissent, textElements: [ { dx: 0, dy: 113, txt: D }, { dx: 0, dy: 123, txt: A } ] }
     - { pageNo: 3, part: Dissent, textElements: [ { dx: 0, dy: 105, txt: G }, { dx: 0, dy: 120, txt: B } ] }
     - { pageNo: 4, part: Dissent, textElements: [ { dx: 0, dy: 105, txt: G }, { dx: 0, dy: 115, txt: D } ] }
-    - { pageNo: 5, part: Dissent, textElements: [ { dx: 0, dy: 100.5, txt: A }, { dx: 0, dy: 110.5, txt: D }, { dx: 0, dy: 123, txt: G } ] }
+    - { pageNo: 5, part: Dissent, textElements: [ { dx: 0, dy: 98, txt: A }, { dx: 0, dy: 110.5, txt: D }, { dx: 0, dy: 123, txt: G } ] }
+    - { pageNo: 6, part: Dissent, textElements: [ { dx: 0, dy: 76, txt: A }, { dx: 0, dy: 88.5, txt: D }, { dx: 0, dy: 101, txt: G }, { dx: 359, dy: 66, txt: D }, { dx: 511, dy: 123.5, txt: G } ] }
+    - { pageNo: 7, part: Dissent, textElements: [ { dx: 0, dy: 110.5, txt: D }, { dx: 0, dy: 123, txt: G } ] }
+    - { pageNo: 8, part: Dissent, textElements: [ { dx: 0, dy: 88.5, txt: D }, { dx: 0, dy: 98.5, txt: A } ] }
+    - { pageNo: 9, part: Dissent, textElements: [ { dx: 0, dy: 66, txt: DF }, { dx: 0, dy: 76, txt: AF }, { dx: 0, dy: 88.5, txt: DF }, { dx: 0, dy: 98.5, txt: AF }, { dx: 425, dy: 43.5, txt: DF }, { dx: 425, dy: 53.5, txt: AF } ] }
+    - { pageNo: 10, part: Dissent, textElements: [ { dx: 0, dy: 66, txt: DF }, { dx: 0, dy: 76, txt: AF }, { dx: 0, dy: 88.5, txt: DF }, { dx: 335.5, dy: 43.5, txt: DF }, { dx: 335.5, dy: 53.5, txt: AF } ] }
+    - { pageNo: 11, part: Dissent, textElements: [ { dx: 0, dy: 87.5, txt: D }, { dx: 0, dy: 97.5, txt: A } ] }
+    - { pageNo: 12, part: Dissent, textElements: [ { dx: 0, dy: 110, txt: DF }, { dx: 0, dy: 122.5, txt: GF } ] }
