@@ -63,6 +63,7 @@ var zscore = (function (u, n, s, a, win, doc) {
     // ---------  MODEL -----------
     var state = {
         instructions: { isVisible: false, l1: EMPTY, l2: EMPTY, l3: EMPTY, bckgCol: "rgba(225, 225, 225, 0.85)" },
+        voteCount: 0,
     }
     var config = {
         connectionPreference: "ws,sse,poll",
@@ -207,7 +208,17 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
         inst = val;
         return true;
-    }    
+    }   
+    function setVote(voteCount) {
+        if (isNull(voteCount)) {
+            return;
+        }
+        if(!u.isNumeric(voteCount)) {
+            voteCount = u.toInt(voteCount);
+        }
+
+        state.voteCount = voteCount;
+    } 
     function onWindowResize(event) {
         if (!u.isObject(this)) {
             return null;
@@ -284,6 +295,12 @@ var zscore = (function (u, n, s, a, win, doc) {
    
     function processInstructions(instructions) {
         setInstructions(instructions.line1, instructions.line2, instructions.line3, instructions.colour, instructions.isVisible);
+    }
+
+    function processCounter(counter) {
+        if(isNotNull(counter.count)) {
+            setVote(counter.count);
+        }
     }
     
     function getSvg() {
@@ -411,6 +428,10 @@ var zscore = (function (u, n, s, a, win, doc) {
         if (isNotNull(serverState.instructions)) {
             processInstructions(serverState.instructions);
         }
+        if (isNotNull(serverState.counter)) {
+            processCounter(serverState.counter);
+        }
+        
     }
     function getInstructionsTextStyle(textState) {
         if (!textState.isVisible) {
