@@ -19,17 +19,20 @@ var zscore = (function (u, n, s, a, win, doc) {
     const COL_PALE_TURQOISE = "#AFEEEE";
     const COL_LIGHT_GREEN = "#CCFFCC";
     const COL_LIGHT_PURPLE = "#CCCCFF";
-    const COL_LIGHT_GRAY = "#DCDCDC";
+    const COL_LIGHT_GRAY = "#CCCCCC";
     const COL_SILVER = "#C0C0C0";
     const COL_TEAL_GRAY = "#2F4F4F"; 
     const COL_DIM_GRAY = "#696969"; 
     const COL_DARK_GRAY = "#4B4B4B"; 
     const COL_ORANGE = "#FFA500";
-    const COL_CRYMSON = "#DC143C";    	
-    const FILL_CLICK_COUNT = COL_DIM_GRAY;
-    const FILL_ACTIVE = COL_DARK_GRAY;
+    const COL_CRYMSON = "#DC143C";
+    const RGB_CLICK_MOD_MAX = 204;
+    const RGB_CLICK_MOD_MIN = 0;
+    const FILL_CLICK_AVG = "#666666";
+    const FILL_CLICK_AVG_RGB = {r: 102, g: 102, b: 102};
+    const FILL_ACTIVE = COL_DIM_GRAY;
     const FILL_PLAYING = COL_DARK_GRAY;
-    const FILL_VISIBLE = COL_DARK_GRAY;
+    const FILL_VISIBLE = COL_DIM_GRAY;
     const FILL_INACTIVE = COL_WHITE;
     const FILL_POINTER_ENTRY = COL_TEAL_GRAY;
     const FILL_SELECTED = COL_TEAL_GRAY;
@@ -103,6 +106,10 @@ var zscore = (function (u, n, s, a, win, doc) {
         tilePrefix: "t",
         overlayPrefix: "o",
         selectedPrefix: "s",
+        tileRotationDuration: 2,
+        tileRotationAngle: 45,
+        tileRotationYoyo: false,
+        tileRotationReps: 0,
         tileCircleGroupPrefix: "ctg",
         tileGroupPrefix: "g",
         tileTextElementPrefix: "x",
@@ -188,7 +195,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         this.sizeMultiplier = sizeMultiplier;
     }
 
-    function TileState(id, isSelected, isActive, isVisible, isPlaying, isPlayingNext, isPlayed, clickCount, arc, txt) {
+    function TileState(id, isSelected, isActive, isVisible, isPlaying, isPlayingNext, isPlayed, clickCount, arc, modFill, txt) {
         this.id = id;
         this.isSelected = isSelected;
         this.isActive = isActive;
@@ -199,6 +206,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         this.clickCount = clickCount;
         this.arc = arc;
         this.txt = txt;
+        this.modFill = modFill;
         this.tweens = [];
     }
 
@@ -287,7 +295,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         var isPlayed = false;
         var clickCount = 0;
         var txt = new TileText(EMPTY, false, 1.0);
-        var initalTileState = new TileState(null, isSelected, isActive, isVisible, isPlaying, isPlayingNext, isPlayed, clickCount, null, txt);
+        var initalTileState = new TileState(null, isSelected, isActive, isVisible, isPlaying, isPlayingNext, isPlayed, clickCount, null, null, txt);
         state.tiles = u.init2DArray(8, 8, initalTileState);
 
         var initialTileCircleState = new TileCircleState(null);
@@ -312,6 +320,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         tileState.clickCount = 0;
         tileState.txt.value = EMPTY;
         tileState.txt.isVisible = false;
+        tileState.modFill = null;
         for (var z = 0; z < tileState.tweens.length; z++) {
             var tween = tileState.tweens[z];
             if (!isNull(tween)) {
@@ -488,13 +497,15 @@ var zscore = (function (u, n, s, a, win, doc) {
         var cRadii = config.circleRadii;
         var centre = config.centre;
         var tAngles = config.tileAngles;
-        var dur = 10;
-        var angle = 360;
+        var dur = config.tileRotationDuration;
+        var angle = config.tileRotationAngle;
+        var yoyo = config.tileRotationYoyo;
+        var reps = config.tileRotationReps;
 
         for (var i = 0; i < cRadii.length; i++) {
             var tileCircleState = state.tileCircles[i];
             tileCircleState.id = config.tileCircleGroupPrefix + (i + 1);
-            var tween = createRotateAroundSvgCentre(tileCircleState.id, dur, angle);
+            var tween = createRotateAroundSvgCentre(tileCircleState.id, dur, angle, yoyo, reps);
             tileCircleState.tweens.push(tween);
             angle = -1 * angle;
 
@@ -889,6 +900,7 @@ var zscore = (function (u, n, s, a, win, doc) {
             return config.tileStyleInActive;
         }
 
+        //Tile is Active
         return config.tileStyleActive;
     }
     function setActiveTileFillOnClickCount() {
@@ -903,29 +915,38 @@ var zscore = (function (u, n, s, a, win, doc) {
                 var tileObj = u.getElement(tileState.id);
                 var rangeConfig = rowRangeConfigs[i];
                 if (isNull(rangeConfig)) {
-                    rangeConfig = createRangeConfig(i);
+                    rangeConfig = createFillRangeConfig(i);
                     rowRangeConfigs[i] = rangeConfig;
                 }
                 modifyFillOnClickCount(tileObj, tileState, rangeConfig);
             }
         }
     }
-    function createRangeConfig(row) {
+    function createFillRangeConfig(row) {
         var clickCounts = getPlayableRowClickCounts(row);
         if (isNull(clickCounts)) {
             return null;
         }
-        var nonZeroArr = u.arrSortedNonZeroElem(clickCounts);
-        if (nonZeroArr.length < 1) {
+        var clicksSortedArr = u.arrSortNumAsc(clickCounts);
+        if (clicksSortedArr.length < 1) {
             return null;
         }
-        return [0, nonZeroArr[0], 0, config.maxColModPerClick];
+        var fillRGB = FILL_CLICK_AVG_RGB;
+        var maxMod = RGB_CLICK_MOD_MAX - fillRGB.r;
+        var minMod = RGB_CLICK_MOD_MIN - fillRGB.r;
+        var min = clicksSortedArr[0];
+        var max = clicksSortedArr[clicksSortedArr.length - 1];
+        if(min === max) {
+            maxMod = 0;
+            minMod = 0;
+        }
+        return [min, max, maxMod, minMod];
     }
     function modifyFillOnClickCount(tileObj, tileState, rangeConfig) {
         if (!tileState.isActive) {
             return;
         }
-        var fill = FILL_CLICK_COUNT;
+        var fill = FILL_CLICK_AVG;
         var clickCount = tileState.clickCount;
         if (clickCount <= 0) {
             return;
@@ -934,6 +955,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         // config.colModPerClick * clickCount;
         // log("fill before: " + fill);
         fill = u.modColour(fill, mod);
+        tileState.modFill = fill;
         // log("fill after: " + fill + " clickCount: " + clickCount + " mod: " + mod);
         tileObj.setAttribute(ATTR_FILL, fill);
     }
@@ -1019,18 +1041,21 @@ var zscore = (function (u, n, s, a, win, doc) {
         // log("onPointerEntry: " + elementId);
 
         if (isTileGroupId(elementId)) {
-            elementId = getTileIdFromGroupId(elementId);
-            tile = u.getElement(elementId);
+            elementId = getTileIdFromGroupId(elementId);            
         } else if (isTileTextId(elementId)) {
             elementId = getTileIdFromTextId(elementId);
-            tile = u.getElement(elementId);
         }
-
         if (!isTileId(elementId)) {
-            log("getTileState: invalid tile id: " + elementId);
+            log("onElementPointerEntry: invalid tile id: " + elementId);
             return null;
         }
-
+        tile = u.getElement(elementId);
+        var tileState = getTileIdState(elementId);
+        if(isNotNull(tileState)) {
+            if(tileState.isActive) {
+                return;
+            }
+        }
         setElementAttributes(tile, config.tileStyleOnPonterEntry);
     }
     function onElementPointerExit(selectedObj) {
@@ -1048,6 +1073,9 @@ var zscore = (function (u, n, s, a, win, doc) {
         var tileState = getTileState(tile)
         if (isNull(tileState)) {
             log("onPointerLeave: invalid selected tile");
+            return;
+        }
+        if(tileState.isActive) {
             return;
         }
 
@@ -1467,9 +1495,17 @@ var zscore = (function (u, n, s, a, win, doc) {
             tileCircleState.selectedId = null;
         }      
     }
+    function setModFill(tileState) {
+        if(!tileState.isActive) {
+            tileState.modFill = null;
+        }
+    }
     function setTileStyle(tileState, tileObj) {
         var tileStyle = getTileStyle(tileState);
         setElementAttributes(tileObj, tileStyle);
+        if(tileState.isActive && isNotNull(tileState.modFill)) {
+            tileObj.setAttribute(ATTR_FILL, tileState.modFill);
+        }        
 
         var tileTextElementId = config.tileTextElementPrefix + tileState.id;
         var tileTextElement = u.getElement(tileTextElementId);
@@ -1485,19 +1521,30 @@ var zscore = (function (u, n, s, a, win, doc) {
         var shape = u.getElement(shapeId);
         setElementAttributes(shape, shapeStyle);
     }
-    function createRotateAroundSvgCentre(objId, dur, angle) {
+    function createRotateAroundSvgCentre(objId, dur, angle, yoyo, reps) {
         if (isNull(objId)) {
             logError("rotate: Invalid objectId: " + objId);
             return;
         }
+        var yoyoval = false;
+        if(isNotNull(yoyo)) {
+            yoyoval = yoyo;
+        }
+        var repetition = 0;
+        if(isNotNull(reps)) {
+            repetition = reps;
+        }
 
-        return gsap.to(u.toCssIdQuery(objId), {
+        return gsap.from(u.toCssIdQuery(objId), {
             duration: dur,
             rotation: angle,
             svgOrigin: (EMPTY + config.centre.x + BLANK + config.centre.y),
             onComplete: onAnimationComplete,
             onCompleteParams: [objId],
-            paused: true
+            paused: true,
+            yoyo: yoyoval,
+            repeat: repetition,
+            ease: "power1.inOut"
         });
     }
     function createAlphaTween(objId, dur, val) {
@@ -2276,6 +2323,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         setStageCoverStyle();
     }
     function processZoomLevel(zoomLevel) {
+        log("zoomLevel: " + zoomLevel);
         if (isNull(zoomLevel)) {
             return;
         }
@@ -2650,6 +2698,7 @@ var zscore = (function (u, n, s, a, win, doc) {
             var clientTileState = getTileIdState(serverTileState.id);
             var serverTileText = serverTile.tileText;
             var clientTileText = clientTileState.txt;
+            var prevActive = clientTileState.isActive;
             clientTileState.isActive = serverTileState.isActive;
             clientTileState.isVisible = serverTileState.isVisible;
             clientTileState.isPlaying = serverTileState.isPlaying;
@@ -2710,6 +2759,7 @@ var zscore = (function (u, n, s, a, win, doc) {
             if((tileState.isPlayed || !tileState.isVisible || !tileState.isActive) && tileState.isSelected) {
                 tileState.isSelected = false;
             }
+            setModFill(tileState);
             setTileStyle(tileState, tileObj);
             setTileStyleText(tileState, tileObj);
             setTileOverlay(tileState, tileObj);

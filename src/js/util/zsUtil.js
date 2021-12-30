@@ -1069,6 +1069,17 @@ var zsUtil = (function (console, win, doc) {
         g = _validateCol(g);
         return (usePound ? "#" : "") + (g | (b << 8) | (r << 16)).toString(16);
     }
+    function _rgbToHex(r, g, b) {
+        return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+    }
+    function _hexToRgb(hex) {
+        var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+          r: parseInt(result[1], 16),
+          g: parseInt(result[2], 16),
+          b: parseInt(result[3], 16)
+        } : null;
+    }
     function _validateCol(col) {
         if (col > 255) {
             return 255;
@@ -1077,7 +1088,7 @@ var zsUtil = (function (console, win, doc) {
         }
         return col;
     }
-    function _arrSortedNonZeroElem(arr) {
+    function _arrSortNumNonZeroDesc(arr) {
         var out = [];
         if (!_isArray(arr)) {
             return out;
@@ -1089,6 +1100,24 @@ var zsUtil = (function (console, win, doc) {
             }
         }
         out.sort(function (a, b) { return b - a });
+        return out;
+    }
+    function _arrSortNumDesc(arr) {
+        var out = [];
+        if (!_isArray(arr)) {
+            return out;
+        }
+        out = arr.slice(0);
+        out.sort(function (a, b) { return b - a });
+        return out;
+    }
+    function _arrSortNumAsc(arr) {
+        var out = [];
+        if (!_isArray(arr)) {
+            return out;
+        }
+        out = arr.slice(0);
+        out.sort(function (a, b) { return a - b });
         return out;
     }
     function _arrShallowClone(arr) {
@@ -1340,8 +1369,14 @@ var zsUtil = (function (console, win, doc) {
         arrMinMax: function (arr) {
             return _arrMinMax(arr);
         },
-        arrSortedNonZeroElem: function (arr) {
-            return _arrSortedNonZeroElem(arr);
+        arrSortedNonZeroDesc: function (arr) {
+            return _arrSortNumNonZeroDesc(arr);
+        },        
+        arrSortNumDesc: function (arr) {
+            return _arrSortNumDesc(arr);
+        },
+        arrSortNumAsc: function (arr) {
+            return _arrSortNumAsc(arr);
         },
         arrSortStrings: function (arr) {
             return _arrSortStrings(arr);
@@ -1379,6 +1414,12 @@ var zsUtil = (function (console, win, doc) {
         modColour: function (col, amt) {
             return _modColour(col, amt);
         },
+        rgbToHex: function (r, g, b) {
+            return _rgbToHex(r, g, b);
+        },
+        hexToRgb: function (hex) {
+            return _hexToRgb(hex);
+        },                
         cloneObj: function (obj) {
             return _cloneObj(obj);
         },
