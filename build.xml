@@ -4,7 +4,7 @@
     </description>
 
     <property name="src" location="src"/>
-    <property name="prod" location="prod"/>
+<!--    <property name="prod" location="prod"/>-->
     <property name="dist" location="webroot"/>
 
     <fileset id="distSrcFileSet" dir="${src}" casesensitive="yes">
@@ -15,11 +15,6 @@
         <include name="score/**/*.*"/>
     </fileset>
 
-    <fileset id="distHtmlFileSet" dir="${prod}" casesensitive="yes">
-        <include name="*.html"/>
-        <include name="*.json"/>
-    </fileset>
-
     <target name="init">
         <mkdir dir="${dist}"/>
     </target>
@@ -27,13 +22,30 @@
     <target name="dist" depends="init" description="generate the distribution">
         <copy todir="${dist}" overwrite="true">
             <fileset refid="distSrcFileSet"/>
-            <fileset refid="distHtmlFileSet"/>
         </copy>
+    </target>
+
+    <target name="prod" depends="dist" description="replace prod lib names">
+        <replace file="${dist}/*.html" token="zsUtil.js" value="zsUtil.min.js"/>
+        <replace file="${dist}/*.html" token="zsNet.js" value="zsNet.min.js"/>
+        <replace file="${dist}/*.html" token="zsMusic.js" value="zsMusic.min.js"/>
+        <replace file="${dist}/*.html" token="zsSvg.js" value="zsSvg.min.js"/>
+        <replace file="${dist}/*.html" token="zsGranulator.js" value="zsGranulator.min.js"/>
+        <replace file="${dist}/*.html" token="zsSpeech.js" value="zsSpeech.min.js"/>
+        <replace file="${dist}/*.html" token="zsBeep.js" value="zsBeep.min.js"/>
+        <replace file="${dist}/*.html" token="zsWsAudio.js" value="zsWsAudio.min.js"/>
+        <replace file="${dist}/*.html" token="zscoreWeb.js" value="zscoreWeb.min.js"/>
+        <replace file="${dist}/*.html" token="adncDialogs.js" value="adncDialogs.min.js"/>
+        <replace file="${dist}/*.html" token="adncUnionRose.js" value="adncUnionRose.min.js"/>
+        <replace file="${dist}/*.html" token="zscoreWebDialogs.js" value="zscoreWebDialogs.min.js"/>
+        <replace file="${dist}/*.html" token="zsAudio.js" value="zsAudio.min.js"/>
+        <replace file="${dist}/*.html" token="metronome.js" value="metronome.min.js"/>
+        <replace file="${dist}/*.html" token="metronomeworker.js" value="metronomeworker.min.js"/>
     </target>
 
     <target name="clean" description="clean up">
         <delete dir="${dist}"/>
     </target>
 
-    <target name="main" depends="clean, dist"/>
+    <target name="main" depends="clean, dist, prod"/>
 </project>
