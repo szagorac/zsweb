@@ -80,6 +80,14 @@
         <replace dir="${distDir}" token="metronome.js" value="metronome.min.js">
             <include name="**/*.html"/>
         </replace>
+
+        <!--css-->
+        <replace dir="${distDir}" token="zscore.css" value="zscore.min.css">
+            <include name="**/*.html"/>
+        </replace>
+        <replace dir="${distDir}" token="zscoreWeb.css" value="zscoreWeb.min.css">
+            <include name="**/*.html"/>
+        </replace>
     </target>
 
     <target name="clean" description="clean up">
