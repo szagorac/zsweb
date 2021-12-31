@@ -948,7 +948,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
         var fill = FILL_CLICK_AVG;
         var clickCount = tileState.clickCount;
-        if (clickCount <= 0) {
+        if (clickCount < 0) {
             return;
         }
         var mod = getTileFillMod(tileState, rangeConfig);
