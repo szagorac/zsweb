@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>ZScore Test</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta http-equiv="cache-control" content="no-cache, must-revalidate, post-check=0, pre-check=0" />
+    <meta http-equiv="cache-control" content="max-age=0" />
+    <meta http-equiv="expires" content="0" />
+    <meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" />
+    <meta http-equiv="pragma" content="no-cache" />
+    <meta name="viewport" content="width=device-width, user-scalable=no">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="img/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16x16.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="shortcut icon" href="img/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="img/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" type="text/css" href="css/zscoreWeb.css?v=1.0.1">
+
+    <script type="text/javascript" src="js/gsap/minified/gsap.min.js"></script>
+    <script type="text/javascript" src="js/gsap/minified/Draggable.min.js"></script>
+    <script type="text/javascript" src="js/util/zsUtil.min.js"></script>
+    <script type="text/javascript" src="js/net/zsNet.min.js"></script>
+    <script type="text/javascript" src="js/music/zsMusic.min.js"></script>
+    <script type="text/javascript" src="js/svg/zsSvg.min.js"></script>
+    <script type="text/javascript" src="js/audio/zsGranulator.min.js"></script>
+    <script type="text/javascript" src="js/audio/zsSpeech.min.js"></script>
+    <script type="text/javascript" src="js/audio/zsBeep.min.js"></script>
+    <script type="text/javascript" src="js/audio/zsWsAudio.min.js"></script>
+    <script type="text/javascript" src="js/zscoreWebDialogs.min.js"></script>
+</head>
+
+<body>
+
+    <div id="container" class="wrapper"> 
+        <svg version="1.1" xmlns="http://www.w3.org/2000/svg" id="svgCanvas" viewBox="0 0 812 609" preserveAspectRatio="xMidYMid meet">
+            <defs>
+                <filter id="shadow">
+                   <feDropShadow dx="1.0" dy="2.0" stdDeviation="0.2" flood-color="blue" />
+                </filter>
+                <filter id="dropshadow" height="130%">
+                    <feGaussianBlur in="SourceAlpha" stdDeviation="2"/> <!-- stdDeviation is how much to blur -->
+                    <feOffset dx="1" dy="2" result="offsetblur" flood-color="blue"/> <!-- how much to offset -->
+                    <feComponentTransfer>
+                      <feFuncA type="linear" slope="0.5"/> <!-- slope is the opacity of the shadow -->
+                    </feComponentTransfer>
+                    <feMerge> 
+                      <feMergeNode/> <!-- this contains the offset blurred image -->
+                      <feMergeNode in="SourceGraphic"/> <!-- this contains the element that the filter is applied to -->
+                    </feMerge>
+                </filter>
+                <symbol id="crotchet" data-name="crotchet" viewBox="0 0 7.34 21.56"><path id="path17203" d="M6.86,0V16.65a2.68,2.68,0,0,0-2-.69C2.75,16,0,17.74,0,19.71c0,1.18,1,1.85,2.4,1.85,2.26,0,4.94-1.82,4.94-3.73V0Z"/></symbol>
+                <symbol id="metronome" data-name="metronome" viewBox="0 0 100 125">
+                    <g>
+                        <path d="M50.8,8l20.9,84H10.1L31.3,8H51 M53.4,2H28.7c-1.1,0-2.2,0.9-2.5,1.9L2.9,96.1c-0.3,1,0.4,1.9,1.5,1.9h73
+                            c1.1,0,1.8-0.9,1.5-1.9l-23-92.2C55.6,2.9,54.5,2,53.4,2L53.4,2z"/>
+                        <g>
+                            <path d="M46.1,31c0.4,1-0.2,1.9-1.3,1.9l-7.5,0c-1.1-0.1-1.7-0.9-1.3-1.9l2.2-5.9c0.4-1.1,1.6-1.9,2.7-1.9l0.2,0
+                                c1.1,0.1,2.3,0.9,2.7,1.9L46.1,31z"/>
+                        </g>
+                        <line style="fill:none;stroke:black;stroke-width:4;stroke-linecap:round;stroke-miterlimit:10;" x1="41" y1="78.8" x2="41" y2="9.7"/>
+                    </g>
+                </symbol>
+                <symbol id="metronomeOn" data-name="metronome" viewBox="0 0 100 125">
+                    <g style="fill: limegreen;stroke:limegreen">
+                        <path d="M59.9,8l20.9,84H19.1L40.4,8H60 M62.4,2H37.7c-1.1,0-2.2,0.9-2.5,1.9L11.9,96.1c-0.3,1.1,0.4,1.9,1.5,1.9h73c1.1,0,1.8-0.9,1.5-1.9L64.9,3.9C64.6,2.9,63.5,2,62.4,2L62.4,2z"/>
+                        <g>
+                            <path d="M75.4,24.4c0.2-1.1,1.1-1.5,2.1-0.9l6.4,3.9c0.9,0.6,1,1.6,0.1,2.3l-4.9,3.9c-0.9,0.7-2.3,0.8-3.3,0.2l-0.2-0.1c-0.9-0.6-1.5-1.9-1.3-3L75.4,24.4z"/>
+                        </g>
+                        <line style="fill:none;stroke:limegreen;stroke-width:4;stroke-linecap:round;stroke-miterlimit:10;" x1="50" y1="78.8" x2="89.4" y2="9.7"/>
+                    </g>
+                </symbol> 
+                <symbol id="home" data-name="home" viewBox="0 0 24 24">
+                    <path d="M 12 2.0996094 L 1 12 L 4 12 L 4 21 L 11 21 L 11 15 L 13 15 L 13 21 L 20 21 L 20 12 L 23 12 L 12 2.0996094 z M 12 4.7910156 L 18 10.191406 L 18 11 L 18 19 L 15 19 L 15 13 L 9 13 L 9 19 L 6 19 L 6 10.191406 L 12 4.7910156 z"/>
+                </symbol>
+            </defs>
+
+            <!-- frame -->
+            <line id="topLine" x1="0" y1="0" x2="812" y2="0" stroke="black" />
+            <line id="bottomLine" x1="0" y1="609" x2="812" y2="609" stroke="black" />                                
+
+            <!-- title -->
+            <g id="header">
+                <text id="title" x="50%" y="28" dominant-baseline="middle" text-anchor="middle" font-size="1.5em">Dialogs</text> 
+                <text id="part" x="50%" y="60" dominant-baseline="middle" text-anchor="middle" font-size="1.1em">Part View</text> 
+            </g>
+            
+            <!-- top controls -->
+            <!-- semaphore -->
+            <g id="semaphore">
+                <circle id="semC4" cx="42" cy="26" r="12" stroke="black" stroke-width="1" fill="none"/>
+                <circle id="semC3" cx="71" cy="26" r="12" stroke="black" stroke-width="1" fill="none"/>
+                <circle id="semC2" cx="100" cy="26" r="12" stroke="black" stroke-width="1" fill="none"/>
+                <circle id="semC1" cx="129" cy="26" r="12" stroke="black" stroke-width="1" fill="none"/>
+            </g>        
+            <!-- trasnposition -->       
+            <g id="trasnposition">
+                <text id="transpoKey" x="40" y="65" dominant-baseline="middle" text-anchor="start" font-size="1.5em">C</text> 
+                <text id="transpoMod" x="53" y="60" dominant-baseline="middle" text-anchor="start" font-size="0.9em"></text> 
+            </g>
+            <!-- tempo -->
+            <g id="tempo">
+                <g id="mtrnm">
+                    <g id="metroFreqSlider" style="visibility:hidden;"> 
+                        <rect id="metroFrame" x="30" y="50" width="60" height="26" fill="none" style="stroke-width:1;stroke:black;opacity:0.3;"/>
+                        <line id="metroFreqLine" x1="35" y1="62" x2="65" y2="62" stroke="black" style="opacity:1.0;stroke-width:2"/>
+                        <rect id="metroFreq" x="48" y="53" width="6" height="18" fill="limegreen" style="stroke-width:1;stroke:black"/>
+                    </g>
+                    <rect id="metroRect" x="67" y="51" width="22" height="24" fill="white" style="stroke-width:1;stroke:none"/>
+                    <use id="metro" x="70" y="53" width="20" height="23" href="#metronome" xlink:href="#metronome" style="pointer-events:none"/>                    
+                </g>
+                <g id="tmpNote"><use x="95" y="48" width="8" height="22" href="#crotchet" xlink:href="#crotchet"/></g>
+                <text id="tmpEquals" x="105" y="65" dominant-baseline="middle" font-size="1em" text-anchor="start">=</text> 
+                <text id="tmpBpm" x="115" y="65" dominant-baseline="middle" font-size="1.5em" text-anchor="start">0</text> 
+            </g>
+            <!-- home -->
+            <g id="homeBtn">
+                <a xlink:href="index.html">
+                    <rect class="iconBkgr" x="730" y="48" width="28" height="28" />
+                    <use class="icon" x="732" y="50" width="24" height="24" href="#home" xlink:href="#home"/>
+                </a>
+            </g>
+            <!-- status -->
+            <g id="srvrStatus">
+                <g id="srvrStatBtn" class="srvr-status-svg-btn" filter="url(#dropshadow)">
+                    <rect id="srvrStatusRect" x="702" y="13" width="80" height="30" fill="red" style="stroke-width:1;stroke:red" onclick="stateBtnClick();" rx="5"/>
+                    <text id="srvrStatusTxt" x="742" y="30" dominant-baseline="middle" text-anchor="middle" font-size="0.8em" fill="white" pointer-events="none">Connect</text>
+                </g>
+            </g> 
+        
+
+            <!-- staves -->
+            <g id="staves">
+                <g id="stvTop">
+                    <image id="stvTopImg" href="img/blankStave.png" xlink:href="img/blankStave.png" preserveAspectRatio="xMidYMid meet" width="752" height="211" x="30" y="80" />
+                    <g id="overlaysTop">
+                        <g id="ovrlTopTimb" style="visibility: hidden;">
+                            <rect id="ovrlTopTimbRect" x="96" y="115" width="663" height="32.5" fill="white" style="visibility:hidden;opacity:1.0;stroke-width:1;stroke:none"/>
+                            <line id="ovrlTopTimbOrdLine" x1="96" y1="131.25" x2="759" y2="131.25" stroke="grey" stroke-dasharray="3, 3" style="visibility:hidden;opacity:0.4;stroke-width:1"/>
+                            <line id="ovrlTopTimbLine" x1="96" y1="131.25" x2="759" y2="131.25" stroke="purple" style="visibility:hidden;opacity:1.0;stroke-width:3"/>
+                        </g>
+                        <g id="ovrlTopPitch" style="visibility: hidden;">
+                            <rect id="ovrlTopPitchRect" x="96" y="149.5" width="663" height="96.5" fill="white" style="visibility:hidden;opacity:1.0;stroke-width:1;stroke:none"/>
+                            <line id="ovrlTopPitchMidLine" x1="96" y1="197.75" x2="759" y2="197.75" stroke="grey" stroke-dasharray="3, 3" style="visibility:hidden;opacity:0.4;stroke-width:1"/>
+                            <line id="ovrlTopPitchLine" x1="96" y1="197.75" x2="759" y2="197.75" stroke="black" style="visibility:hidden;opacity:1.0;stroke-width:3"/>
+                        </g>
+                        <g id="ovrlTopPitchStave" style="visibility: hidden;">
+                            <rect id="ovrlTopPitchStaveRect" x="62.5" y="149.5" width="31" height="96.5" fill="white" style="visibility:hidden;opacity:1.0;stroke-width:1;stroke:none"/>
+                            <line id="ovrlTopPitchStaveMidLine" x1="62.5" y1="197.75" x2="94" y2="197.75" stroke="grey" stroke-dasharray="3, 3" style="visibility:hidden;opacity:0.4;stroke-width:1"/>
+                            <g id="ovrlTopPitchStaveInfo"></g>
+                        </g>                        
+                        <g id="ovrlTopDyn" style="visibility: hidden;">
+                            <rect id="ovrlTopDynRect" x="96" y="247.5" width="663" height="32.5" fill="white" style="visibility:hidden;opacity:1.0;stroke-width:1;stroke:none"/>
+                            <line id="ovrlTopDynOrdLine" x1="96" y1="263.75" x2="759" y2="263.75" stroke="grey" stroke-dasharray="3, 3" style="visibility:hidden;opacity:0.4;stroke-width:1"/>
+                            <line id="ovrlTopDynLine" x1="96" y1="263.75" x2="759" y2="263.75" stroke="crimson" style="visibility:hidden;opacity:1.0;stroke-width:2"/>
+                        </g>
+                    </g>
+                    <line id="stvTopStartLine" x1="95" y1="80" x2="95" y2="281" stroke="blue" style="opacity:0.2;stroke-width:3"/>
+                    <line id="stvTopPosLine" x1="95" y1="80" x2="95" y2="281" stroke="purple" style="opacity:0.3;stroke-width:2"/>
+                    <circle id="stvTopBeatBall" cx="95" cy="110" r="4" stroke="none" fill="purple" style="opacity:1.0"/>
+                    <rect id="stvTopMask" x="-1000" y="79" width="2812" height="203" fill="none" style="opacity:0.5;stroke-width:1;stroke:blue"/>
+                </g>
+                <g id="stvBot">
+                    <image id="stvBotImg" href="img/blankStave.png" xlink:href="img/blankStave.png" preserveAspectRatio="xMidYMid meet" width="752" height="211" x="30" y="301" />
+                    <g id="overlaysBot">
+                        <g id="ovrlBotTimb" style="visibility: hidden;">
+                            <rect id="ovrlBotTimbRect" x="96" y="336" width="663" height="32.5" fill="white" style="visibility:hidden;opacity:1.0;stroke-width:1;stroke:none"/>
+                            <line id="ovrlBotTimbOrdLine" x1="96" y1="352.25" x2="759" y2="352.25" stroke="grey" stroke-dasharray="3, 3" style="visibility:hidden;opacity:0.4;stroke-width:1"/>
+                            <line id="ovrlBotTimbLine" x1="96" y1="352.25" x2="759" y2="352.25" stroke="purple" style="visibility:hidden;opacity:1.0;stroke-width:3"/>
+                        </g>
+                        <g id="ovrlBotPitch" style="visibility: hidden;">
+                            <rect id="ovrlBotPitchRect" x="96" y="370.5" width="663" height="96.5" fill="white" style="visibility:hidden;opacity:1.0;stroke-width:1;stroke:none"/>
+                            <line id="ovrlBotPitchLine" x1="96" y1="418.75" x2="759" y2="418.75" stroke="black" style="visibility:hidden;opacity:1.0;stroke-width:3"/>
+                        </g>
+                        <g id="ovrlBotPitchStave" style="visibility: hidden;">
+                            <rect id="ovrlBotPitchStaveRect" x="62.5" y="370.5" width="31.5" height="96.5" fill="white" style="visibility:hidden;opacity:1.0;stroke-width:1;stroke:none"/>
+                            <line id="ovrlBotPitchStaveMidLine" x1="62.5" y1="418.75" x2="94" y2="418.75" stroke="grey" stroke-dasharray="3, 3" style="visibility:hidden;opacity:0.4;stroke-width:1"/>
+                            <g id="ovrlBotPitchStaveInfo"></g>
+                        </g>                        
+                        <g id="ovrlBotDyn" style="visibility: hidden;">
+                            <rect id="ovrlBotDynRect" x="96" y="469" width="663" height="32.5" fill="white" style="visibility:hidden;opacity:1.0;stroke-width:1;stroke:none"/>
+                            <line id="ovrlBotDynOrdLine" x1="96" y1="485.25" x2="759" y2="485.25" stroke="grey" stroke-dasharray="3, 3" style="visibility:hidden;opacity:0.4;stroke-width:1"/>
+                            <line id="ovrlBotDynLine" x1="96" y1="485.25" x2="759" y2="485.25" stroke="crimson" style="visibility:hidden;opacity:1.0;stroke-width:2"/>
+                        </g>
+                    </g>
+                    <line id="stvBotStartLine" x1="95" y1="301" x2="95" y2="502" stroke="blue" style="opacity:0.2;stroke-width:3"/>
+                    <line id="stvBotPosLine" x1="95" y1="301" x2="95" y2="502" stroke="purple" style="opacity:0.3;stroke-width:2"/>
+                    <circle id="stvBotBeatBall" cx="95" cy="331" r="4" stroke="none" fill="purple" style="opacity:1.0"/>
+                    <rect id="stvBotMask" x="-1000" y="300" width="2812" height="203" fill="white" style="opacity:0.4;stroke-width:1;stroke:grey"/>                    
+                </g>
+            </g>
+            
+            <!-- client ID -->
+            <g id="clientIdGroup">                
+                <text id="clientId" x="30" y="600" style="visibility:hidden;" font-family="sans-serif" font-size="0.7em" fill="black" pointer-events="none">N/A</text>
+                <rect x="10" y="580" width="90" height="50" style="opacity:0.0;stroke-width:1;stroke:black;fill:white;fill-opacity:0" onclick="onClientIdSelect();"/>
+            </g>
+
+            <!-- bottom controls -->
+            <rect id="controlsFrame" x="196" y="527" width="420" height="50" fill="none" style="stroke-width:1;stroke:black;opacity:0.3" rx="10"/>
+            <g id="instControls" style="visibility: hidden;">
+                <g id="instSlot1" class="inst-svg-btn" filter="url(#dropshadow)">
+                    <rect id="instSlotRect1" x="216" y="537" width="80" height="30" fill="white" style="stroke-width:1;stroke:rgb(0,0,0)" rx="10" onclick="onInstrumentSelect(1, 'inst1');"/>
+                    <text id="instSlotTxt1" x="256" y="554" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="1.1em" fill="black" pointer-events="none">Violin1</text>
+                </g>
+                <g id="instSlot2" class="inst-svg-btn" filter="url(#dropshadow)">
+                    <rect id="instSlotRect2" x="316" y="537" width="80" height="30" fill="white" style="stroke-width:1;stroke:rgb(0,0,0)" rx="10" onclick="onInstrumentSelect(2, 'inst2');"/>
+                    <text id="instSlotTxt2" x="356" y="554" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="1.1em" fill="black" pointer-events="none">Violin2</text>
+                </g>
+                <g id="instSlot3" class="inst-svg-btn" filter="url(#dropshadow)">
+                    <rect id="instSlotRect3" x="416" y="537" width="80" height="30" fill="white" style="stroke-width:1;stroke:rgb(0,0,0)" rx="10" onclick="onInstrumentSelect(3, 'inst3');"/>
+                    <text id="instSlotTxt3" x="456" y="554" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="1.1em" fill="black" pointer-events="none">Viola</text>
+                </g>
+                <g id="instSlot4" class="inst-svg-btn-dis" filter="none">
+                    <rect id="instSlotRect4" x="516" y="537" width="80" height="30" fill="lightgrey" style="stroke:none" rx="10" onclick="onInstrumentSelect(4, 'inst4');"/>
+                    <text id="instSlotTxt4" x="556" y="554" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="1.1em" fill="black" pointer-events="none">Cello</text>
+                </g>
+            </g>
+        </svg>    
+    </div>
+    <div id="sectionListOuterDiv" class="outer" style="visibility: hidden;">
+        <div class="middle">
+            <div class="section-list">
+                <div class="section-list-content">Select sections you would like to present:</div>
+                <div id="sections"></div>
+                <div class="section-list-content">Presenting sections:</div>
+                <div class="section-list-content" id="ownedSections">one two three</div>
+            </div>
+        </div>
+    </div>
+    <div id="transpositionListOuterDiv" class="outer" style="visibility: visible;">
+        <div class="middle">
+            <div class="transpo-list">
+                <div class="transpo-list-content">Select Tranposition:</div>
+                <div id="transpos">
+                    <button class="transpoButton transpoButton-large" onClick="onTranspoSelect('A')">A</button>
+                    <button class="transpoButton" onClick="onTranspoSelect('BF')">B<sup>&#9837;</sup></button>               
+                    <button class="transpoButton transpoButton-large" onClick="onTranspoSelect('C')">C</button>
+                    <button class="transpoButton transpoButton-large" onClick="onTranspoSelect('D')">D</button>
+                    <button class="transpoButton" onClick="onTranspoSelect('EF')">E<sup>&#9837;</sup></button>
+                    <button class="transpoButton transpoButton-large" onClick="onTranspoSelect('F')">F</sup></button>
+                    <button class="transpoButton transpoButton-large" onClick="onTranspoSelect('G')">G</sup></button>
+                </div>                
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        function stateBtnClick() {
+            try {
+                zscore.onStateBtn();
+            } catch(err) {
+                onErr("Failed to load ZScore", err);
+                window.location = 'error.html';
+            }
+        }        
+        function onPartSelect(inst) {
+            try {
+                zscore.onPartSelect(inst);
+            } catch(err) {
+                onErr("Failed onPartSelect: " + inst, err);
+            }
+        }
+        function onSectionSelect(section) {
+            try {
+                zscore.onSectionSelect(section);
+            } catch(err) {
+                onErr("Failed onSectionSelect: " + section, err);
+            }
+        }
+        function onInstrumentSelect(slotNo, inst) {
+            try {
+                zscore.onInstrumentSelect(slotNo, inst);
+            } catch(err) {
+                onErr("Failed onInstrumentSelect: " + ins, err);
+            }
+        }       
+        function onMetronmeSelect() {
+            try {
+                zscore.onMetronmeSelect();
+            } catch(err) {
+                onErr("Failed onMetronmeSelect:", err);
+            }
+        }   
+        function onClientIdSelect() {
+            try {
+                zscore.onClientIdSelect();
+            } catch(err) {
+                onErr("Failed onClientIdSelect:", err);
+            }
+        }
+        function onTranspoSelect(transpo) {
+            try {
+                zscore.onTranspoSelect(transpo);
+            } catch(err) {
+                onErr("Failed onTranspoSelect:", err);
+            }
+        }        
+        function onErr(txt, err) {
+            if(zsUtil) {
+                zsUtil.logException(err, txt);
+            } else {
+                console.log(txt + ", err: " + err);
+            }
+        }
+    </script>
+</body>
+
+</html>

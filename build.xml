@@ -4,20 +4,20 @@
     </description>
 
     <property name="src" location="src"/>
-    <property name="dist" location="dist"/>
+    <property name="prod" location="prod"/>
+    <property name="dist" location="webroot"/>
 
-    <fileset id="distFileSet" dir="${src}" casesensitive="yes">
-        <include name="index.html"/>
-        <include name="test.html"/>
+    <fileset id="distSrcFileSet" dir="${src}" casesensitive="yes">
         <include name="audio/*.mp3"/>
-        <include name="css/zscore.css"/>
+        <include name = "js/**/*.min.js"/>
+        <include name = "css/**/*.min.css"/>
         <include name="img/*.*"/>
-        <include name="js/audio/*.js"/>
-        <include name="js/gsap/minified/gsap.min*"/>
-        <include name="js/net/zsNet.js"/>
-        <include name="js/svg/zsSvg.js"/>
-        <include name="js/util/zsUtil.js"/>
-        <include name="js/zscore.js"/>
+        <include name="score/**/*.*"/>
+    </fileset>
+
+    <fileset id="distHtmlFileSet" dir="${prod}" casesensitive="yes">
+        <include name="*.html"/>
+        <include name="*.json"/>
     </fileset>
 
     <target name="init">
@@ -26,7 +26,8 @@
 
     <target name="dist" depends="init" description="generate the distribution">
         <copy todir="${dist}" overwrite="true">
-            <fileset refid="distFileSet"/>
+            <fileset refid="distSrcFileSet"/>
+            <fileset refid="distHtmlFileSet"/>
         </copy>
     </target>
 
