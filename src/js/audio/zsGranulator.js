@@ -8,7 +8,7 @@ var zsGranulator = (function (u) {
     const SIZE_OSCILLATOR_ID = "ZsGranulator_SizeOscillator";
 
     var config = {
-        masterGainVal: 0.1,
+        masterGainVal: 1.0,
         playDurationSec: 30,
         playStartOffsetSec: 0.0,
         maxGrains: 16,
@@ -583,7 +583,7 @@ var zsGranulator = (function (u) {
             var timeSec = u.msecToSec(timeMs);
             var now = _getNow(); 
             var t = _audioCtx.currentTime + timeSec;
-            // _log("setMasterGain: " + g + " timeSec: " + timeSec + " actualTime: " + t + " now: " + now);
+            _log("setMasterGain: " + g + " timeSec: " + timeSec + " actualTime: " + t + " now: " + now);
             _masterGain.gain.linearRampToValueAtTime(g, t);
         } else {
             // _log("setMasterGain: " + g);
