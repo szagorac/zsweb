@@ -1636,8 +1636,11 @@ var zscore = (function (u, n, s, a, win, doc) {
         log("runAudio: " + actionId + BLANK + target);
 
         switch (target) {
-            case 'buffer':
-                runAudioBuffer(actionId, params);
+            case 'all':
+                runAudioMaster(actionId, params);
+                break;
+            case 'player':
+                runAudioPlayer(actionId, params);
                 break;
             case 'granulator':
                 runAudioGranulator(actionId, params);
@@ -1647,17 +1650,34 @@ var zscore = (function (u, n, s, a, win, doc) {
                 break;
         }
     }
-    function runAudioBuffer(actionId, params) {
+    function runAudioMaster(actionId, params) {
+        if (!u.isString(actionId)) {
+            return;
+        }
+
+        switch (actionId) {
+            case 'volume':
+                setAudioMasterVolume(params);
+                break;
+            default:
+                logError("runPlayer: Unknown actionId: " + actionId);
+                return;
+        }
+    }
+    function runAudioPlayer(actionId, params) {
         if (!u.isString(actionId)) {
             return;
         }
 
         switch (actionId) {
             case 'play':
-                runAudioPlayBuffer(params);
+                runAudioPlayerPlay(params);
+                break;
+            case 'volume':
+                setAudioPlayerVolume(params);
                 break;
             default:
-                logError("runAudioBuffer: Unknown actionId: " + actionId);
+                logError("runPlayer: Unknown actionId: " + actionId);
                 return;
         }
     }
@@ -1818,10 +1838,32 @@ var zscore = (function (u, n, s, a, win, doc) {
             case 'rampLinear':
                 rampLinearSpeechParam(params);
                 break;
+            case 'volume':
+                setAudioSpeechVolume(params);
+                break;
             default:
                 logError("runSpeechSynth: Unknown actionId: " + actionId);
                 return;
         }
+    }
+    function setAudioSpeechVolume(params) {
+        if (isNull(a)) {
+            logError("setAudioSpeechVolume: Invalid zsAudio lib");
+            return;
+        }
+        if (!u.isObject(params)) {
+            return;
+        }
+        var level = null;
+        var timeMs = null;
+
+        if (!isNull(params.level)) {
+            level = params.level;
+        }
+        if (!isNull(params.timeMs)) {
+            timeMs = params.timeMs;
+        }
+        a.setSpeechVolume(level, timeMs);
     }
     function runPlaySpeechSynth(params) {
         if (isNull(a)) {
@@ -1923,9 +1965,9 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
         a.rumpLinearSpeechParam(paramName, endValue, durationSec);
     }
-    function runAudioPlayBuffer(params) {
+    function runAudioPlayerPlay(params) {
         if (isNull(a)) {
-            logError("runAudioPlayGranulator: Invalid zsAudio lib");
+            logError("runPlayerPlay: Invalid zsAudio lib");
             return;
         }
         if (!u.isObject(params)) {
@@ -1956,6 +1998,44 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
 
         a.playAudio(bufferIndex, startTime, offset, duration);
+    }
+    function setAudioPlayerVolume(params) {
+        if (isNull(a)) {
+            logError("setAudioMasterVolume: Invalid zsAudio lib");
+            return;
+        }
+        if (!u.isObject(params)) {
+            return;
+        }
+        var level = null;
+        var timeMs = null;
+
+        if (!isNull(params.level)) {
+            level = params.level;
+        }
+        if (!isNull(params.timeMs)) {
+            timeMs = params.timeMs;
+        }
+        a.setPlayerVolume(level, timeMs);
+    }
+    function setAudioMasterVolume(params) {
+        if (isNull(a)) {
+            logError("setAudioMasterVolume: Invalid zsAudio lib");
+            return;
+        }
+        if (!u.isObject(params)) {
+            return;
+        }
+        var level = null;
+        var timeMs = null;
+
+        if (!isNull(params.level)) {
+            level = params.level;
+        }
+        if (!isNull(params.timeMs)) {
+            timeMs = params.timeMs;
+        }
+        a.setMasterVolume(level, timeMs);
     }
     function rotate(actionId, targets, params) {
         if (u.isArray(targets)) {

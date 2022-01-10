@@ -5,6 +5,7 @@ var zsPlayer = (function (u, win) {
     var _szBuffers = null;
     var _audioCtx = null;
     var _isInitialised = false;
+    var _maxGain = 1.0;
 
     var config = {
         gain: 1.0, //0 (lowest) and 1 (highest)
@@ -96,6 +97,9 @@ var zsPlayer = (function (u, win) {
         }
         if(!u.isNumeric(level) || !u.isNumeric(timeSec)) {
             return;
+        }
+        if(level > _maxGain) {
+            level = _maxGain;
         }
         var currentValue = this.gainNode.gain.value;
         if(currentValue === level) {
@@ -189,6 +193,7 @@ var zsPlayer = (function (u, win) {
         }
         
         buffer.onEnded();
+        _szBuffers[bufferIndex] = null;
     }
     function _setPlayerConfig(params) {
         u.setConfig(config, params);
@@ -220,6 +225,20 @@ var zsPlayer = (function (u, win) {
             }
         }
     }
+    function _setMaxGain(level) {
+        if(_isNull(level)) {
+            return;
+        }
+        var g = level;
+        if (u.isString(g)) {
+            g = u.toFloat(g);
+        }        
+        if (!u.isNumeric(g)) {
+            _logError("_setMaxGain: Invalid gain level: " + g);
+            return;
+        }
+        _maxGain = g;
+    }
     function _setGain(level, timeMs, bufferIndex) {
         if (_isNull(_audioCtx)) {
             _logError("setGain: invalid context of master gain");
@@ -241,6 +260,9 @@ var zsPlayer = (function (u, win) {
             g = 0.0;
         } else if (g > 1.0) {
             g = 1.0;
+        }
+        if(g > _maxGain) {
+            g = _maxGain;
         }
         var currentConfig = config.gain;
         if(currentConfig !== g) {
@@ -311,6 +333,9 @@ var zsPlayer = (function (u, win) {
         },
         setGain: function (level, timeMs, bufferIndex) {
             _setGain(level, timeMs, bufferIndex);
+        },
+        setMaxGain: function (level) {
+            _setMaxGain(level);
         },
     }
 }(zsUtil, window));

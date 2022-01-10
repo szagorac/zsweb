@@ -223,7 +223,7 @@ var zsAudio = (function (u, gr, sp, pl, win) {
         if (u.isNumeric(level)) {
             g = level;
         } else {
-            logError("_setMasterVolume: Invalid gain level: " + level);
+            logError("_setMasterVolume: Invalid gain level: " + level); 
             return;
         }
         if (g < 0.0) {
@@ -234,10 +234,13 @@ var zsAudio = (function (u, gr, sp, pl, win) {
         _masterVolume = g;
         _setComponentVolume(_masterVolume, timeMs)
     }
-    function _setComponentVolume(level, timeMs) {
-        _setPlayerVolume(level, timeMs);
-        _setGranulatorVolume(level, timeMs);
-        _setSpeechVolume(level, timeMs);
+    function _setComponentVolume(maxLevel, timeMs) {
+        _setPlayerMaxVolume(maxLevel);
+        _setPlayerVolume(maxLevel, timeMs);
+        _setGranulatorMaxVolume(maxLevel);
+        _setGranulatorVolume(maxLevel, timeMs);
+        _setSpeechMaxVolume(maxLevel, timeMs);
+        _setSpeechVolume(maxLevel, timeMs);
     }
 
     //speech
@@ -253,6 +256,9 @@ var zsAudio = (function (u, gr, sp, pl, win) {
     function _setSpeechVolume(level, timeMs) {       
         sp.setVolume(level);
     }
+    function _setSpeechMaxVolume(level, timeMs) {       
+        sp.setMaxVolume(level);
+    }
     //speech END
 
     //player
@@ -264,6 +270,9 @@ var zsAudio = (function (u, gr, sp, pl, win) {
     }
     function _setPlayerVolume(level, timeMs) {       
         pl.setGain(level, timeMs);
+    }
+    function _setPlayerMaxVolume(level) {       
+        pl.setMaxGain(level);
     }
     //player END
 
@@ -290,8 +299,16 @@ var zsAudio = (function (u, gr, sp, pl, win) {
 
         gr.init(_ctx, _audioBuffers[bufferIndex], destination);
     }
+    function _setGranulatorMaxVolume(level) {
+        if (isNull(gr)) {
+            logError("setGranulatorRampLinear: Invalid granulator");
+            return;
+        }
+        gr.setMaxGain(level);
+    }
     function _setGranulatorVolume(level, timeMs) {       
         _setGranulatorRampLinear('masterGainVal', level, timeMs);
+        // _setGranulatorGain(level, timeMs);
     }
     function _setGranulatorRampLinear(configParamName, rampEndValue, rampDurationMs) {
         if (isNull(gr)) {
@@ -308,21 +325,22 @@ var zsAudio = (function (u, gr, sp, pl, win) {
         gr.addRampSin(configParamName, rampAmplitude, rampFrequency, rampDurationMs);
     }
     function _setGranulatorGain(level, timeMs) {
-        if (isNull(gr) || !_isAudioInitialised) {
-            logError("setGranulatorGain: Invalid granulator");
-            return;
-        }
-        if (u.isString(level)) {
-            level = u.toFloat(level);
-        }
-        var g = _masterVolume;
-        if (u.isNumeric(level) && level <= _masterVolume) {
-            g = level;
-        } else {
-            _logError("_setGranulatorGain: Invalid gain level: " + level);
-            return;
-        }
-        gr.setGain(g, timeMs);
+        _setGranulatorVolume(level, timeMs);
+        // if (isNull(gr) || !_isAudioInitialised) {
+        //     logError("setGranulatorGain: Invalid granulator");
+        //     return;
+        // }
+        // if (u.isString(level)) {
+        //     level = u.toFloat(level);
+        // }
+        // var g = _masterVolume;
+        // if (u.isNumeric(level) && level <= _masterVolume) {
+        //     g = level;
+        // } else {
+        //     _logError("_setGranulatorGain: Invalid gain level: " + level);
+        //     return;
+        // }
+        // gr.setGain(g, timeMs);
     }
     function _setGranulatorEnvelope(envelopeConfig) {
         if (isNull(gr) || !_isAudioInitialised) {
@@ -464,6 +482,9 @@ var zsAudio = (function (u, gr, sp, pl, win) {
         },
         setPlayerVolume: function (level, timeMs) {
             return _setPlayerVolume(level, timeMs);
+        },
+        setPlayerMaxVolume: function (level, timeMs) {
+            return _setPlayerMaxVolume(level, timeMs);
         },
         setSpeechVolume: function (level, timeMs) {
             return _setSpeechVolume(level, timeMs);

@@ -42,6 +42,7 @@ var zsGranulator = (function (u) {
     var _isReady = false;
     var _positionOscillator = null;
     var _sizeOscillator = null;
+    var _maxGain = 1.0;
 
     function ZsGranulatorException(msg) {
         this.message = msg;
@@ -304,7 +305,11 @@ var zsGranulator = (function (u) {
             pitchRate = 1.0;
         }
 
-        _setMasterGain(config.masterGainVal);
+        var mGain = config.masterGainVal;
+        if(mGain > _maxGain) {
+            mGain = _maxGain;
+        }
+        _setMasterGain(mGain);
 
         while (_grains.length < maxGrains) {
             var grainOffsetSec = _calculateRndGrainOffsetSec(_currentPosition);
@@ -547,6 +552,20 @@ var zsGranulator = (function (u) {
 
         _buffer = audioBuffer;
     }
+    function _setMaxGain(level) {
+        if(_isNull(level)) {
+            return;
+        }
+        var g = level;
+        if (u.isString(g)) {
+            g = u.toFloat(g);
+        }        
+        if (!u.isNumeric(g)) {
+            _logError("_setMaxGain: Invalid gain level: " + g);
+            return;
+        }
+        _maxGain = g;
+    }
     function _setMasterGain(level, timeMs) {
         if (!_audioCtx || !_masterGain) {
             _logError("setMasterGain: invalid context of master gain");
@@ -568,6 +587,9 @@ var zsGranulator = (function (u) {
             g = 0.0;
         } else if (g > 1.0) {
             g = 1.0;
+        }
+        if(g > _maxGain) {
+            g = _maxGain;
         }
 
         var currentConfig = config.masterGainVal;
@@ -779,6 +801,9 @@ var zsGranulator = (function (u) {
         },
         setGain: function (level, timeMs) {
             _setMasterGain(level, timeMs);
+        },
+        setMaxGain: function (level) {
+            _setMaxGain(level);
         },
         setBuffer: function (audioBuffer) {
             _setAudioBuffer(audioBuffer);
