@@ -31,11 +31,15 @@ var zsSvg = (function (u, doc) {
     const SVG_PARAM_CX = "cx";
     const SVG_PARAM_CY = "cy";
     const SVG_PARAM_R = "r";
+    const SVG_PARAM_X = "x";
+    const SVG_PARAM_Y = "y";
     const SVG_PARAM_X1 = "x1";
     const SVG_PARAM_Y1 = "y1";
     const SVG_PARAM_X2 = "x2";
     const SVG_PARAM_Y2 = "y2";
     const SVG_PARAM_FILL = "fill";
+    const SVG_PARAM_WIDTH = "width";
+    const SVG_PARAM_HEIGHT = "height";
 
     const SVG_PATH_ABS_M = "M";
     const SVG_PATH_ABS_A = "A";
@@ -104,6 +108,14 @@ var zsSvg = (function (u, doc) {
     }
     function _createRectangleElement(id) {
         return _createSvgElement(id, SVG_ID_RECT);
+    }    
+    function _createSvgRectangle(x, y, width, height, id) {
+        var rectElement = _createRectangleElement(id);
+        rectElement.setAttribute(SVG_PARAM_X, x);
+        rectElement.setAttribute(SVG_PARAM_Y, y);
+        rectElement.setAttribute(SVG_PARAM_WIDTH, width);
+        rectElement.setAttribute(SVG_PARAM_HEIGHT, height);
+        return rectElement;
     }
     function _createSvgArc(startX, startY, rX, rY, xAxisRotation, largeArcFlag, sweepFlag, endX, endY) {
         return new SvgArc(startX, startY, rX, rY, xAxisRotation, largeArcFlag, sweepFlag, endX, endY);
@@ -323,6 +335,9 @@ var zsSvg = (function (u, doc) {
         },
         createRectangleElement: function (id) {
             return _createRectangleElement(id);
+        },
+        createSvgRectangle: function (x, y, width, height, id) {
+            return _createSvgRectangle(x, y, width, height, id);
         },
         createSvgCircle: function (cX, cY, r, id) {
             return _createSvgCircle(cX, cY, r, id);

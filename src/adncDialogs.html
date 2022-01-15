@@ -24,23 +24,56 @@
     <script type="text/javascript" src="js/svg/zsSvg.js"></script>
     <script type="text/javascript" src="js/audio/zsGranulator.js"></script>
     <script type="text/javascript" src="js/audio/zsSpeech.js"></script>
+    <script type="text/javascript" src="js/audio/zsPlayer.js"></script>
     <script type="text/javascript" src="js/audio/zsAudio.js"></script>
     <script type="text/javascript" src="js/adncDialogs.js"></script>
 </head>
 
 <body>
     <!-- <svg version="1.1" xmlns="http://www.w3.org/2000/svg" id="svgCanvas" viewBox="0 0 1525 1525" -->
-    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" id="svgCanvas" viewBox="0 0 1525 1525" preserveAspectRatio="xMidYMid meet">
-
-        <text visibility="visible" opacity="0">
-            <tspan id="testTxt" font-family="Arial" font-size="10px"></tspan>
-        </text>
+    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" id="svgCanvas" viewBox="0 0 900 1600" preserveAspectRatio="xMidYMid meet">
         <defs>
             <style>
-               
+                .clsThumbUp{
+                    fill:none;
+                    stroke: black;
+                    stroke-width: 5;
+                }
+                .clsThumbDown{
+                    fill:none;
+                    stroke: black;
+                    stroke-width: 5;
+                }
             </style>
         </defs>
-        <rect id="backg" fill="white" width="1525" height="1525"></rect>
+        <rect id="backg" fill="white" width="900" height="1600" stroke="black"></rect>
+        <!-- <rect id="backg" fill="white" width="1200" height="1600" stroke="red"></rect> -->
+        <line x1="450" y1="0" x2="450" y2="1600" stroke="black" />
+        <line x1="0" y1="800" x2="900" y2="800" stroke="black" />
+        <!-- <rect id="thUpRect" fill="white" x="0" y="800" width="388" height="438" stroke="blue"></rect>
+        <rect id="thUpRectFit" fill="white" x="14" y="800" width="280" height="310" stroke="red"></rect>
+        <line x1="14" y1="1015" x2="294" y2="1015" stroke="red" />
+        
+        <rect id="thDnRect" fill="white" x="512" y="800" width="388" height="438" stroke="blue"></rect>
+        <rect id="thDnRectFit" fill="white" x="526" y="800" width="280" height="310" stroke="red"></rect>
+        <line x1="526" y1="895" x2="806" y2="895" stroke="red" /> -->
+
+        <g id="meterGrp" visibility="visible"></g>
+
+        <g id="thumbUpGrp" transform="translate(0, 585) scale(0.7)" visibility="visible">
+            <path id="thumbUpPth" class="clsThumbUp" d="M413,196.3c0.1-12.4-6.1-28.7-36.6-35.9c-31.5-7.4-67.6,15.3-84.8-22.5c-20-44,35.7-100.2-21.9-132.6
+                c-7.9-4.4-18.3-7.7-27-3.2c-6.7,3.5-10.5,10.6-11.9,21c-11.8,85.6-46.1,107.7-63,119.2c-28.6,19.4-52,45.2-81.3,63.4l-61.5,0.1
+                c0,63.4,0,127.3,0,190.8c44.2,0,72,4.8,113.5,19.8c44.7,16.1,154.6,37.6,196.3,2.7c13.3-11.1,20.8-28.1,23.6-44.9
+                c12.6-5,24-13.6,28.9-26.7c5.4-14.5,1.3-29.3-2-37.3c12.9-7.1,20.9-16.6,23.9-28.3c4.8-19.3-5-34.1-14.3-49.5
+                C402.5,226.4,412.8,211.7,413,196.3z"/>
+        </g>
+        <g id="thumbDownGrp" transform="translate(594,705) scale(0.7)" visibility="visible">
+            <path id="thumbDownPth" class="clsThumbDown" d="M43,205.4c-9.2-15.5-19.1-30.2-14.3-49.5c3-11.6,11-21.1,23.9-28.3c-3.3-8-7.4-22.8-2-37.3
+                c4.9-13.1,16.3-21.7,28.9-26.7c2.8-16.8,10.3-33.8,23.6-44.9c41.8-34.9,151.6-13.4,196.3,2.7c41.5,14.9,69.4,19.8,113.5,19.8
+                c0,63.4,0,127.3,0,190.8l-61.5,0.1c-29.3,18.2-52.6,44-81.3,63.4c-17,11.5-51.2,33.6-63,119.2c-1.4,10.5-5.2,17.5-11.9,21
+                c-8.7,4.5-19.1,1.2-27-3.2c-57.6-32.3-2-88.5-21.9-132.6c-17.2-37.8-53.3-15.1-84.8-22.5C31,270.3,24.8,254,24.9,241.6
+                C25,226.2,35.3,211.5,43,205.4z"/>
+        </g>
     </svg>
     
     <div class="myTxt" id="instructionTxt"></br>Welcome to ZScore</div>

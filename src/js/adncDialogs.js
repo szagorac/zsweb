@@ -3,52 +3,13 @@ var zscore = (function (u, n, s, a, win, doc) {
 
     // TODO set for prod when ready - gets rid of console logs
     const RUN_MODE = "DEV";
-    const EMPTY = "";
-    const BLANK = " ";
-    const SPACER = "m";
-    const EVENT_ELEMENT_SELECTED = "ELEMENT_SELECTED";
-    const EVENT_PARAM_ELEMENT_ID = "elementId";
-    const EVENT_PARAM_SELECTED = "selected";
-    const ATTR_FILL = "fill";
-    const VISIBLE = "visible";
-    const HIDDEN = "hidden";
-    const COL_WHITE = "#FFFFFF";
-    const COL_BLACK = "#000000";
-    const COL_LAVANDER_BLUSH = "#FFF0F5";
-    const COL_LIGHT_BLUE = "#ADD8E6";
-    const COL_PALE_TURQOISE = "#AFEEEE";
-    const COL_LIGHT_GREEN = "#CCFFCC";
-    const COL_LIGHT_PURPLE = "#CCCCFF";
-    const COL_LIGHT_GRAY = "#DCDCDC";
-    const COL_SILVER = "#C0C0C0";
-    const COL_TEAL_GRAY = "#2F4F4F"; 
-    const COL_DIM_GRAY = "#696969"; 
-    const COL_DARK_GRAY = "#4B4B4B"; 
-    const COL_ORANGE = "#FFA500";
-    const COL_CRYMSON = "#DC143C";    	
-    const FILL_CLICK_COUNT = COL_DIM_GRAY;
-    const FILL_ACTIVE = COL_DARK_GRAY;
-    const FILL_PLAYING = COL_DARK_GRAY;
-    const FILL_VISIBLE = COL_DARK_GRAY;
-    const FILL_INACTIVE = COL_WHITE;
-    const FILL_POINTER_ENTRY = COL_TEAL_GRAY;
-    const FILL_SELECTED = COL_TEAL_GRAY;
-    const FILL_TEXT = COL_WHITE;
-    const FILL_PLAY_NEXT = COL_LIGHT_GREEN;
-    const FILL_OUTER_FRAME = COL_WHITE;
-    const FILL_STAGE_CIRCLE = COL_BLACK;
-    const STROKE_SELECTED = COL_CRYMSON;
-    const STROKE_PLAYING = COL_LIGHT_GREEN;
-    const STROKE_PLAYING_NEXT = COL_ORANGE;
-    const STROKE_GRID = COL_SILVER;
-    const TILE_TEXT_TOKEN = "@TILE_TEXT@";
-    const ALPHA_TOKEN = "@ALPHA@";
-    const TILE_TEXT_FAMILY = "Arial";
-    // const TILE_TEXT_FAMILY = "Garamond";    
-    
-    // const RUN_MODE = "DEV";
     // const RUN_MODE = "PROD";
 
+    const EMPTY = "";
+    const BLANK = " ";
+    const COL_WHITE = "#FFFFFF";
+    const COL_BLACK = "#000000";
+    
     var AUDIO_FLIES = [
         '/audio/violin-tuning.mp3',
     ];
@@ -87,12 +48,53 @@ var zscore = (function (u, n, s, a, win, doc) {
         textSpanIsFadeIn: true,
         textSpanFadeTimeSec: 1.0,
         textSpanFadeStaggerTimeSec: 0.5,
+        elementGroupSuffix: "Grp",
+        meterGroupId: "meterGrp",
+        meterBoxPrefix: "meterBox",
+        meterBoxRectPrefix: "meterBoxRect",
+        thumbsUpPathId: "thumbUpPth",
+        thumbsDownPathId: "thumbDownPth",
+        meterInactiveStyle: { "fill": "none", "stroke": "gray", "stroke-width": "4px" },
+        centerX: 450,
+        centerY: 800,
+        meterBoxWidth: 80,
+        meterBoxHeight: 40,
+        meterBoxNo: 21,
     }
 
     function ZScoreException(message) {
         this.message = message;
         this.name = 'ZScoreException';
     }
+    // ---- ZScoreMeter
+    function ZScoreMeter() {
+        this.boxes = [];
+        this.isInitialised = false;
+    }
+    ZScoreMeter.prototype.init = function (boxNo, midX, midY) {
+        if(!isNumeric(boxNo) || !isNumeric(midX) || !isNumeric(midY)){
+            logError("ZScoreMeter.init: invalid inputs");
+            return;
+        }
+
+        var isOdd = u.isOddNumber(boxNo);
+        var half = Math.round(boxNo/2.0)
+        var yStart = midY + (half * config.meterBoxHeight);
+        if(isOdd) {
+            yStart = midY + config.meterBoxHeight/2.0 + (half * config.meterBoxHeight);
+        }
+        for (var i = 0; i < boxNo; ++i) {
+            var boxId = config.meterBoxPrefix + i; 
+            var rectId = config.meterBoxRectPrefix + i; 
+            var box = new ZScoreMeterBox(boxId, rectId);
+        }
+        this.isInitialised = true;
+    }
+    function ZScoreMeterBox(id, rectId) {
+        this.id = id;
+        this.svgRectId = rectId;
+    }
+    // ---- ZScoreMeter END
 
     // ---------  API -----------
     function onLoad() {
@@ -121,8 +123,17 @@ var zscore = (function (u, n, s, a, win, doc) {
         //init audio
         initAudio();
         // init svg and html
+        initMeter();
         initInstructions();
 
+        // var thUp = u.getElement(config.thumbsUpPathId);
+        // var thUpBb = thUp.getBBox()
+        // log("thUpBb x: " + thUpBb.x + "y: " + thUpBb.y + "width: " + thUpBb.width + "height: " + thUpBb.height );
+        // var thDwn = u.getElement(config.thumbsDownPathId);
+        // var thDwnBb = thDwn.getBBox()
+        // log("thDwnBb x: " + thDwnBb.x + "y: " + thDwnBb.y + "width: " + thDwnBb.width + "height: " + thDwnBb.height );
+        // thUpBb x: 24.999984741210938y: -0.04842710494995117width: 388.001220703125height: 437.9142150878906
+        // thDwnBb x: 24.898815155029297y: -0.06581497192382812width: 388.0011901855469height: 437.91424560546875
         // get server state and initialise
         getServerState();
     }
@@ -151,6 +162,18 @@ var zscore = (function (u, n, s, a, win, doc) {
     }
     function initSvg() {
         s.init();
+    }
+    function initMeter() {
+        var meterGrp = getMeterGroup();
+        var meterLadderBoxId
+        var width = 60; 
+        var height = 20; 
+        var x = config.centerX - (width/2.0);
+        var y = config.centerY - (height/2.0);
+        var id = "meterLadderBox0";
+        var meterBox = s.createSvgRectangle(x, y, width, height, id);
+        u.setElementAttributes(meterBox, config.meterInactiveStyle);
+        u.addChildToParent(meterGrp, meterBox);
     }
     function initInstructions() {
         var inst = getInstructionsElement();
@@ -489,6 +512,9 @@ var zscore = (function (u, n, s, a, win, doc) {
     }
     function getInstructionsElement() {
         return u.getElement(config.instructionTxtElementId);
+    }
+    function getMeterGroup() {
+        return u.getElement(config.meterGroupId);
     }
     function getFontSizeFit(value, fontSize, container) {
         var fs = 1;

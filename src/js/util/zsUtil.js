@@ -1328,6 +1328,12 @@ var zsUtil = (function (console, win, doc) {
         }
         return value.charAt(0).toUpperCase() + value.slice(1);
     }
+    function _isOddNumber(num) {
+        if(!_isNumeric(num)) {
+            return null;
+        }        
+        return num % 2;
+    }
 
     // PUBLIC API
     return {
@@ -1631,6 +1637,9 @@ var zsUtil = (function (console, win, doc) {
         },
         isNumeric: function (num) {
             return _isNumeric(num);
+        },
+        isOddNumber: function (num) {
+            return _isOddNumber(num);
         },
         isString: function (val) {
             return _isString(val);
