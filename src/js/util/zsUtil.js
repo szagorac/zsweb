@@ -715,7 +715,7 @@ var zsUtil = (function (console, win, doc) {
             return false;
         }
         return _isNotNull(element.children) && element.children.length > 0;
-    }    
+    }
     function _clone(elm, elmId) {
         if (_isNull(elm) || _isNull(elmId)) {
             logError("_cloneAndAddElement: invalid element");
@@ -1069,15 +1069,31 @@ var zsUtil = (function (console, win, doc) {
         g = _validateCol(g);
         return (usePound ? "#" : "") + (g | (b << 8) | (r << 16)).toString(16);
     }
+    function _interpolateRgbColours(col1, col2, factor) {
+        if(!_isObject(col1) || !_isObject(col2)) {
+            return null;
+        }
+        if(!col1.hasOwnProperty("r") || !col2.hasOwnProperty("r")) {
+            return;
+        }
+        if (_isNull(factor)) {
+            factor = 0.5;
+        }
+        var result = {};
+        result.r = Math.round(col1.r + factor * (col2.r - col1.r));
+        result.g = Math.round(col1.g + factor * (col2.g - col1.g));
+        result.b = Math.round(col1.b + factor * (col2.b - col1.b));
+        return result;
+    };
     function _rgbToHex(r, g, b) {
         return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
     }
     function _hexToRgb(hex) {
         var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
         return result ? {
-          r: parseInt(result[1], 16),
-          g: parseInt(result[2], 16),
-          b: parseInt(result[3], 16)
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
         } : null;
     }
     function _validateCol(col) {
@@ -1269,7 +1285,7 @@ var zsUtil = (function (console, win, doc) {
             return _getCookieParam(key);
         }
         var out = localStorage.getItem(key);
-        if(_isNull(out)) {
+        if (_isNull(out)) {
             out = _getCookieParam(key);
         }
         return out;
@@ -1320,19 +1336,22 @@ var zsUtil = (function (console, win, doc) {
         _setCookieParam(key, "", -1);
     }
     function _toBoolean(val) {
-        return (val === 'true') ? true : (val === 'false' ? false : val);        
+        return (val === 'true') ? true : (val === 'false' ? false : val);
     }
     function _capitalizeFirstLetter(value) {
-        if(!_isString(value) || value.length < 1) {
+        if (!_isString(value) || value.length < 1) {
             return value;
         }
         return value.charAt(0).toUpperCase() + value.slice(1);
     }
     function _isOddNumber(num) {
-        if(!_isNumeric(num)) {
+        if (!_isNumeric(num)) {
             return null;
-        }        
-        return num % 2;
+        }
+        if(num % 2 === 1) {
+            return true;
+        }
+        return false;
     }
 
     // PUBLIC API
@@ -1377,7 +1396,7 @@ var zsUtil = (function (console, win, doc) {
         },
         arrSortedNonZeroDesc: function (arr) {
             return _arrSortNumNonZeroDesc(arr);
-        },        
+        },
         arrSortNumDesc: function (arr) {
             return _arrSortNumDesc(arr);
         },
@@ -1420,12 +1439,15 @@ var zsUtil = (function (console, win, doc) {
         modColour: function (col, amt) {
             return _modColour(col, amt);
         },
+        interpolateRgbColours: function (col1, col2, factor) {
+            return _interpolateRgbColours(col1, col2, factor);
+        },       
         rgbToHex: function (r, g, b) {
             return _rgbToHex(r, g, b);
         },
         hexToRgb: function (hex) {
             return _hexToRgb(hex);
-        },                
+        },
         cloneObj: function (obj) {
             return _cloneObj(obj);
         },

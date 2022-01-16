@@ -7,6 +7,7 @@ var zscore = (function (u, n, s, a, win, doc) {
 
     const EMPTY = "";
     const BLANK = " ";
+    const RECT = "Rect";
     const COL_WHITE = "#FFFFFF";
     const COL_BLACK = "#000000";
     
@@ -25,6 +26,7 @@ var zscore = (function (u, n, s, a, win, doc) {
     var state = {
         instructions: { isVisible: false, l1: EMPTY, l2: EMPTY, l3: EMPTY, bckgCol: "rgba(225, 225, 225, 0.85)" },
         voteCount: 0,
+        meter: null,
     }
     var config = {
         connectionPreference: "ws,sse,poll",
@@ -50,16 +52,20 @@ var zscore = (function (u, n, s, a, win, doc) {
         textSpanFadeStaggerTimeSec: 0.5,
         elementGroupSuffix: "Grp",
         meterGroupId: "meterGrp",
-        meterBoxPrefix: "meterBox",
-        meterBoxRectPrefix: "meterBoxRect",
+        meterBoxIdPrefix: "meterBox",
         thumbsUpPathId: "thumbUpPth",
         thumbsDownPathId: "thumbDownPth",
-        meterInactiveStyle: { "fill": "none", "stroke": "gray", "stroke-width": "4px" },
-        centerX: 450,
-        centerY: 800,
+        meterBoxNo: 11,
+        meterInactiveStyle: { "fill": "none", "stroke": "black", "stroke-width": "4px" },
+        meterZeroStyle: { "fill": "yellow"},
+        centreX: 450,
+        centreY: 800,
         meterBoxWidth: 80,
         meterBoxHeight: 40,
-        meterBoxNo: 21,
+        negativeMinCol: {r: 255, g: 165, b: 0},
+        negativeMaxCol: {r: 200, g: 0, b: 0}, 
+        positiveMinCol: {r: 255, g: 255, b: 0},
+        positiveMaxCol: {r: 0, g: 125, b: 0},
     }
 
     function ZScoreException(message) {
@@ -67,34 +73,135 @@ var zscore = (function (u, n, s, a, win, doc) {
         this.name = 'ZScoreException';
     }
     // ---- ZScoreMeter
-    function ZScoreMeter() {
+    function ZScoreMeter(boxNo, midX, midY, boxWidth, boxHeight, boxIdPrefix, inactiveStyle, negMinCol, negMaxCol, posMinCol, posMaxCol) {
+        this.boxNo = boxNo;
+        this.midX = midX;
+        this.midY = midY;
+        this.boxWidth = boxWidth;
+        this.boxHeight = boxHeight;
+        this.boxIdPrefix = boxIdPrefix;
+        this.inactiveStyle = inactiveStyle;
+        this.negMinCol = negMinCol;
+        this.negMaxCol = negMaxCol;
+        this.posMinCol = posMinCol;
+        this.posMaxCol = posMaxCol;
+        this.boxSvgIdPrefix = boxIdPrefix + RECT;
         this.boxes = [];
         this.isInitialised = false;
+        this.positiveMinIndex = 0;
+        this.positiveMaxIndex = 0;
+        this.negativeMinIndex = 0;
+        this.negativeMaxIndex = 0;
+        this.zeroIndex = null;
     }
-    ZScoreMeter.prototype.init = function (boxNo, midX, midY) {
-        if(!isNumeric(boxNo) || !isNumeric(midX) || !isNumeric(midY)){
+    ZScoreMeter.prototype.init = function () {
+        if(!u.isNumeric(this.boxNo) || !u.isNumeric(this.midX) || !u.isNumeric(this.midY)){
             logError("ZScoreMeter.init: invalid inputs");
             return;
         }
 
-        var isOdd = u.isOddNumber(boxNo);
-        var half = Math.round(boxNo/2.0)
-        var yStart = midY + (half * config.meterBoxHeight);
+        var isOdd = u.isOddNumber(this.boxNo);
+        var halfBoxNo = Math.round(this.boxNo/2.0)
+        this.positiveMaxIndex = this.boxNo - 1;
+        this.positiveMinIndex = halfBoxNo;
+        this.negativeMinIndex = 0;
+        this.negativeMaxIndex = halfBoxNo - 1;
+        this.zeroIndex = null;
+        var yStart = this.midY + (halfBoxNo * this.boxHeight);
         if(isOdd) {
-            yStart = midY + config.meterBoxHeight/2.0 + (half * config.meterBoxHeight);
+            this.negativeMaxIndex = halfBoxNo - 2;
+            this.zeroIndex = halfBoxNo - 1;
+            yStart = this.midY + this.boxHeight/2.0 + (this.zeroIndex * this.boxHeight);
         }
-        for (var i = 0; i < boxNo; ++i) {
-            var boxId = config.meterBoxPrefix + i; 
-            var rectId = config.meterBoxRectPrefix + i; 
-            var box = new ZScoreMeterBox(boxId, rectId);
+        var yEnd = yStart;
+        var x = this.midX - (this.boxWidth/2.0);
+        for (var i = 0; i < this.boxNo; ++i) {
+            var boxId = this.boxIdPrefix + i; 
+            var rectId = this.boxSvgIdPrefix + i;
+            var y = yEnd - this.boxHeight;
+            var box = new ZScoreMeterBox(boxId, rectId, x, y, this.boxWidth, this.boxHeight);
+            this.boxes[i] = box;
+            yEnd = y; 
         }
+        this.draw();
         this.isInitialised = true;
     }
-    function ZScoreMeterBox(id, rectId) {
-        this.id = id;
-        this.svgRectId = rectId;
+    ZScoreMeter.prototype.clear = function () {
+        for (var i = 0; i < this.boxes.length; ++i) {
+            this.setBoxStyle(i, config.meterInactiveStyle);
+        }
+    }
+    ZScoreMeter.prototype.draw = function () {
+        for (var i = 0; i < this.boxes.length; ++i) {
+            this.boxes[i].draw();
+        }
+    }
+    ZScoreMeter.prototype.set = function (value, maxValAbs) {
+        if(!u.isNumeric(value) || !u.isNumeric(maxValAbs)) {
+            return;
+        }
+        this.clear();
+        if(value === 0) {
+            if(isNull(this.zeroIndex)) {
+                return;
+            }
+            this.setBoxStyle(this.zeroIndex, config.meterZeroStyle);
+            return;
+        }
+        if(value > 0) {
+
+
+        } else {
+
+        }
+     }
+    ZScoreMeter.prototype.setBoxStyle = function (boxIndex, style) {
+        var box = this.boxes[boxIndex];
+        if(isNull(box)) {
+            return;
+        }
+        box.setStyle(style);
     }
     // ---- ZScoreMeter END
+    // ---- ZScoreMeterBox END
+    function ZScoreMeterBox(id, svgId, x, y, width, height, activeStyle, inactiveStyle) {
+        this.id = id;
+        this.svgId = svgId;
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.activeStyle = activeStyle;
+        this.inactiveStyle = inactiveStyle;
+    }
+    ZScoreMeterBox.prototype.draw = function () {
+        var meterGrp = getMeterGroup();
+        if(isNull(meterGrp)) {
+            return;
+        }
+        var meterBox = s.createSvgRectangle(this.x, this.y, this.width, this.height, this.svgId);
+        u.setElementAttributes(meterBox, config.meterInactiveStyle);
+        u.addChildToParent(meterGrp, meterBox);
+    }
+    ZScoreMeterBox.prototype.setStyle = function (style) {
+        var boxSvg = u.getElement(this.svgId);
+        if(isNull(boxSvg)) {
+            return;
+        }
+        u.setElementAttributes(boxSvg, style);
+    }
+    ZScoreMeterBox.prototype.setActive = function (isActive) {
+        var boxSvg = u.getElement(this.svgId);
+        if(isNull(boxSvg)) {
+            return;
+        }
+        if(isActive) {
+            u.setElementAttributes(boxSvg, this.activeStyle);
+        } else {
+            u.setElementAttributes(boxSvg, this.inactiveStyle);
+        }        
+    }
+    // ---- ZScoreMeterBox END
 
     // ---------  API -----------
     function onLoad() {
@@ -164,16 +271,12 @@ var zscore = (function (u, n, s, a, win, doc) {
         s.init();
     }
     function initMeter() {
-        var meterGrp = getMeterGroup();
-        var meterLadderBoxId
-        var width = 60; 
-        var height = 20; 
-        var x = config.centerX - (width/2.0);
-        var y = config.centerY - (height/2.0);
-        var id = "meterLadderBox0";
-        var meterBox = s.createSvgRectangle(x, y, width, height, id);
-        u.setElementAttributes(meterBox, config.meterInactiveStyle);
-        u.addChildToParent(meterGrp, meterBox);
+        var meter = new ZScoreMeter(config.meterBoxNo, config.centreX, config.centreY, config.meterBoxWidth, config.meterBoxHeight, 
+            config.meterBoxIdPrefix, config.meterInactiveStyle, config.negativeMinCol, config.negativeMaxCol, config.positiveMinCol, config.positiveMaxCol);
+        meter.init();
+        state.meter = meter;
+
+        meter.set(0, 10);
     }
     function initInstructions() {
         var inst = getInstructionsElement();
