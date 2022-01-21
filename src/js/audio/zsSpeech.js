@@ -11,7 +11,7 @@ var zsSpeech = (function (u, win) {
     var config = {
         volume: 1.0, //0 (lowest) and 1 (highest) 
         pitch: 1.0,  //0 (lowest) and 2 (highest)
-        rate: 0.7,   //0.1 (lowest) and 10 (highest)     
+        rate: 0.5,   //0.1 (lowest) and 10 (highest)     
         lang: "en-GB",
         maxVoiceLoadAttempts: 10,
         maxUtterances: 5,
