@@ -44,6 +44,7 @@ var zscore = (function (u, n, s, a, win, doc) {
     const STROKE_PLAYING = COL_LIGHT_GREEN;
     const STROKE_PLAYING_NEXT = COL_ORANGE;
     const STROKE_GRID = COL_SILVER;
+    const STROKE_PLAYLINE = COL_SILVER;
     const TILE_TEXT_TOKEN = "@TILE_TEXT@";
     const ALPHA_TOKEN = "@ALPHA@";
     const TILE_TEXT_FAMILY = "Arial";
@@ -105,6 +106,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         linePrefix: "l",
         tilePrefix: "t",
         overlayPrefix: "o",
+        tilePlayLinePrefix: "pl",
         selectedPrefix: "s",
         tileRotationDuration: 2,
         tileRotationAngle: 45,
@@ -129,9 +131,9 @@ var zscore = (function (u, n, s, a, win, doc) {
         stageVisibilityStyle: { "opacity": state.stageAlpha, "visibility": "visible"},
         tilesParentId: "tiles",
         frameStyle: { "fill": FILL_OUTER_FRAME, "stroke-width": "0px", "stroke-opacity": "0", "visibility": "visible", "opacity": 1 },
-        tileStyleOverlayPlayingNext: { "fill": "none", "stroke": STROKE_PLAYING_NEXT, "stroke-width": "1px", "visibility": "visible", "opacity": 1, "pointer-events": "none" },
-        tileStyleOverlayPlaying: { "fill": "none", "stroke": STROKE_PLAYING, "stroke-width": "1px", "visibility": "visible", "opacity": 1, "pointer-events": "none" },
-        tileStyleOverlaySelected: { "fill": "none", "stroke": STROKE_SELECTED, "stroke-width": "2px", "visibility": "visible", "opacity": 1, "pointer-events": "none" },
+        tileStyleOverlayPlayingNext: { "fill": "none", "stroke": STROKE_PLAYING_NEXT, "stroke-width": "1px", "stroke-linecap": "round", "visibility": "visible", "opacity": 1, "pointer-events": "none" },
+        tileStyleOverlayPlaying: { "fill": "none", "stroke": STROKE_PLAYING, "stroke-width": "1px", "stroke-linecap": "round", "visibility": "visible", "opacity": 1, "pointer-events": "none" },
+        tileStyleOverlaySelected: { "fill": "none", "stroke": STROKE_SELECTED, "stroke-width": "2px", "stroke-linecap": "round", "visibility": "visible", "opacity": 1, "pointer-events": "none" },
         tileStyleSelectedPath: { "fill": "none", "stroke": STROKE_SELECTED, "stroke-width": "7px", "visibility": "visible", "opacity": 1, "pointer-events": "none" },
         tileStyleConnectorPath: { "fill": "none", "stroke": STROKE_SELECTED, "stroke-width": "2px", "visibility": "visible", "opacity": 1, "pointer-events": "none" },
         tileStyleVisible: { "fill": FILL_VISIBLE, "stroke": STROKE_GRID, "stroke-width": "2px", "pointer-events": "all", "visibility": "visible", "opacity": 1 },
@@ -152,6 +154,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         tileStyleTextSpan: { "font-family": TILE_TEXT_FAMILY, "dominant-baseline": "middle" },
         tileTextMinLength: 5,
         tileTextSizeMultiplier: { torus: 0.8, pie: 0.7 },
+        tileStylePlayLine: { "fill": "none", "stroke": STROKE_PLAYLINE, "stroke-width": "4px", "stroke-linecap": "round", "visibility": "visible", "opacity": 1, "pointer-events": "none" },
         shapeStyleInvisible: { "visibility": "hidden" },
         shapeStyleVisible: { "visibility": "visible" },
         shapeTimelineDuration: 60,
@@ -195,7 +198,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         this.sizeMultiplier = sizeMultiplier;
     }
 
-    function TileState(id, isSelected, isActive, isVisible, isPlaying, isPlayingNext, isPlayed, clickCount, arc, modFill, txt) {
+    function TileState(id, isSelected, isActive, isVisible, isPlaying, isPlayingNext, isPlayed, clickCount, arc, modFill, txt, playLine) {
         this.id = id;
         this.isSelected = isSelected;
         this.isActive = isActive;
@@ -207,6 +210,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         this.arc = arc;
         this.txt = txt;
         this.modFill = modFill;
+        this.playLine = playLine;
         this.tweens = [];
     }
 
@@ -295,7 +299,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         var isPlayed = false;
         var clickCount = 0;
         var txt = new TileText(EMPTY, false, 1.0);
-        var initalTileState = new TileState(null, isSelected, isActive, isVisible, isPlaying, isPlayingNext, isPlayed, clickCount, null, null, txt);
+        var initalTileState = new TileState(null, isSelected, isActive, isVisible, isPlaying, isPlayingNext, isPlayed, clickCount, null, null, txt, null);
         state.tiles = u.init2DArray(8, 8, initalTileState);
 
         var initialTileCircleState = new TileCircleState(null);
@@ -675,6 +679,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         if (circleNo <= 1) {
             tilePath = s.createPieTilePath(cX, cY, arc);
             createPieTileSvgText(cX, cY, r, startAngle, endAngle, tileNo, tileId, tileGroupId, txtState);
+            addTilePiePlayLine(tileState, cX, cY, arc.endX, arc.endY);
         } else {
             var previousTileState = state.tiles[circleIndex - 1][tileIndex];
             var previousArc = previousTileState.arc;
@@ -685,6 +690,10 @@ var zscore = (function (u, n, s, a, win, doc) {
         if (isNotNull(tilePath)) {
             tileElement.setAttribute("d", tilePath);
         }
+    }
+    function addTilePiePlayLine(tileState, x1, y1, x2, y2) {
+        var id = config.overlayPrefix + config.tilePlayLinePrefix + tileState.id;
+        tileState.playLine = s.createSvgLine(x1, y1, x2, y2, 0, id);      
     }
     function createPieTileSvgText(cX, cY, r, startAngle, endAngle, tileNo, tileId, tileGroupId, txtState) {
         var textPathId = config.tileTextPathElementPrefix + tileId;
@@ -844,6 +853,16 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
 
         return config.tileStyleTextElement;
+    }
+    function getTilePlayLineStyle(tileState) {
+        if (isNull(tileState)) {
+            return null;
+        }
+
+        if (tileState.isPlaying) {
+            return config.tileStylePlayLine;
+        }
+        return null;
     }
     function getInstructionsTextStyle(textState) {
         if (!textState.isVisible) {
@@ -1224,6 +1243,13 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
         return state.tiles[rowColPoint.x][rowColPoint.y];
     }
+    function isTilePlayLineId(id) {
+        if (isNull(id) || !u.isString(id)) {
+            return false;
+        }
+        return u.startsWith(id, config.linePrefix + config.overlayPrefix + config.tilePlayLinePrefix);
+    }
+    
     function isTileId(id) {
         if (isNull(id) || !u.isString(id)) {
             return false;
@@ -1253,6 +1279,16 @@ var zscore = (function (u, n, s, a, win, doc) {
             return false;
         }
         var tileId = id.substring(config.tileTextElementPrefix.length, id.length);
+        if (!isTileId(tileId)) {
+            return null;
+        }
+        return tileId;
+    }
+    function getTileIdFromPlaylineId(id) {
+        if (isNull(id) || !u.isString(id)) {
+            return false;
+        }
+        var tileId = id.substring(config.overlayPrefix.length + config.tilePlayLinePrefix.length, id.length);
         if (!isTileId(tileId)) {
             return null;
         }
@@ -1328,16 +1364,36 @@ var zscore = (function (u, n, s, a, win, doc) {
             if (!isNull(tileOverlay)) {
                 tileOverlay.remove();
             }
-            return;
+        } else {
+            if (isNull(tileOverlay)) {
+                tileOverlay = u.cloneElement(tileObj, tileOverlayId);
+            }
+            setElementAttributes(tileOverlay, overlayStyle);
+            u.addChildToParentId(config.overlayParentId, tileOverlay);
         }
 
-        if (isNull(tileOverlay)) {
-            tileOverlay = u.cloneElement(tileObj, tileOverlayId);
-        }
-        setElementAttributes(tileOverlay, overlayStyle);
-        u.addChildToParentId(config.overlayParentId, tileOverlay);
+        setTilePlayLine(tileState);
     }
-    function displaySelectedTilesOverlay(durationSec) {       
+    function setTilePlayLine(tileState) {
+        if(isNull(tileState.playLine)) {
+            return;
+        }
+        var tilePlayLineId = tileState.playLine.id;
+        var tilePlayLine = u.getElement(tilePlayLineId);
+        if (isNull(tilePlayLine)) {
+            tilePlayLine = tileState.playLine;
+        }
+        var playLineStyle = getTilePlayLineStyle(tileState);
+        if (isNull(playLineStyle)) {
+            // if (!isNull(tilePlayLine)) {
+            //     tilePlayLine.remove();
+            // }
+        } else {
+            setElementAttributes(tilePlayLine, playLineStyle);
+            u.addChildToParentId(config.overlayParentId, tilePlayLine);
+        }
+    }    
+    function displaySelectedTilesOverlay(durationSec) {
         var overlayElements = [];
         var connectorElements = [];
         var firstTileState = null;
@@ -1545,6 +1601,24 @@ var zscore = (function (u, n, s, a, win, doc) {
             yoyo: yoyoval,
             repeat: repetition,
             ease: "power1.inOut"
+        });
+    }
+    function createRotatePlayline(objId, dur, angle) {
+        if (isNull(objId)) {
+            logError("createRotatePlayline: Invalid objectId: " + objId);
+            return;
+        }
+        var lineId = u.toCssIdQuery(objId);
+        return gsap.to(lineId, {
+            duration: dur,
+            rotation: angle,
+            svgOrigin: (EMPTY + config.centre.x + BLANK + config.centre.y),
+            onComplete: onAnimationComplete,
+            onCompleteParams: [objId],
+            paused: true,
+            yoyo: false,
+            repeat: 0,
+            ease: "none"
         });
     }
     function createAlphaTween(objId, dur, val) {
@@ -2086,6 +2160,25 @@ var zscore = (function (u, n, s, a, win, doc) {
                 tween = createRotateAroundSvgCentre(tGroupId, dur, angle);
                 tweens.push(tween);
             }
+        } else if(isTilePlayLineId(target)) {
+            var playline = u.getElement(target);
+            if(isNull(playline)) {
+                var tileId = getTileIdFromPlaylineId(target);
+                if(isNotNull(tileId)) {
+                    var tileState = getTileIdState(tileId);
+                    setTilePlayLine(tileState);
+                    playline = u.getElement(tileState.playLine.id);
+                }
+            }
+            if(isNotNull(playline)) { 
+                var tweens = getObjectTweens(playline);
+                if (u.isArray(tweens) && tweens.length > 0) {
+                    tween = tweens[0];
+                } else {
+                    tween = createRotatePlayline(playline.id, dur, angle);
+                    tweens.push(tween);
+                };
+            }            
         } else if (isCircleGroupId(target)) {
             var tileCircleState = getCircleGroup(target);
             if (!isNull(tileCircleState)) {
@@ -2112,10 +2205,6 @@ var zscore = (function (u, n, s, a, win, doc) {
                     tween.pause(0);
                 }
             }
-        }
-
-        if (config.all === target.toUpperCase()) {
-            state.tiles
         }
     }
     function alpha(actionId, targets, params) {
@@ -2585,10 +2674,20 @@ var zscore = (function (u, n, s, a, win, doc) {
     function onAnimationComplete(rotationObjId) {
         var obj = u.getElement(rotationObjId);
         // log("onAnimationComplete: " + rotationObjId);
+        if(isTilePlayLineId(rotationObjId)) {
+            var tween = createAlphaTween(rotationObjId, 0.5, 0);
+            playOrRestartTween(tween);
+        }
     }
     function onAlphaComplete(objId) {
         var obj = u.getElement(objId);
         log("onAlphaComplete: " + objId + "  opacity: " + obj.style.opacity + "  visiblility: " + obj.style.visibility);
+        if(isTilePlayLineId(objId)) {
+            var playline = u.getElement(objId);
+            if(isNotNull(playline)) {
+                // playline.remove();
+            }
+        }
     }
     function getObjectTweens(obj) {
         if (!u.isObject(obj)) {
