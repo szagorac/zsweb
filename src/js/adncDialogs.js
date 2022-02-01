@@ -52,12 +52,20 @@ var zscore = (function (u, n, s, a, win, doc) {
         textSpanFadeStaggerTimeSec: 0.5,
         elementGroupSuffix: "Grp",
         meterGroupId: "meterGrp",
+        thumbUpRectId: "thUpRect",
+        thumbDownRectId: "thDownRect",  
+        thumbUpGroupId: "thumbUpGrp",
+        thumbUpPathId: "thumbUpPth",
+        thumbDownGroupId: "thumbDownGrp",
+        thumbDownPathId: "thumbDownPth",
         meterBoxIdPrefix: "meterBox",
-        thumbsUpPathId: "thumbUpPth",
-        thumbsDownPathId: "thumbDownPth",
         meterBoxNo: 20,
         meterInactiveStyle: { "fill": "none", "stroke": "black", "stroke-width": "4px" },
         meterZeroStyle: { "fill": "yellow"},
+        thumbsUpActiveStyle: { "fill": "green"},
+        thumbsUpInActiveStyle: { "fill": "none"},
+        thumbsDownActiveStyle: { "fill": "red"},
+        thumbsDownInActiveStyle: { "fill": "none"},
         centreX: 450,
         centreY: 800,
         meterBoxWidth: 80,
@@ -244,7 +252,7 @@ var zscore = (function (u, n, s, a, win, doc) {
             return;
         }
         var meterBox = s.createSvgRectangle(this.x, this.y, this.width, this.height, this.svgId);
-        u.setElementAttributes(meterBox, this.inactiveStyle);
+        setElementAttributes(meterBox, this.inactiveStyle);
         u.addChildToParent(meterGrp, meterBox);
     }
     ZScoreMeterBox.prototype.setStyle = function (style) {
@@ -252,7 +260,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         if(isNull(boxSvg)) {
             return;
         }
-        u.setElementAttributes(boxSvg, style);
+        setElementAttributes(boxSvg, style);
     }
     ZScoreMeterBox.prototype.setActive = function (isActive) {
         var boxSvg = u.getElement(this.svgId);
@@ -260,9 +268,9 @@ var zscore = (function (u, n, s, a, win, doc) {
             return;
         }
         if(isActive) {
-            u.setElementAttributes(boxSvg, this.activeStyle);
+            setElementAttributes(boxSvg, this.activeStyle);
         } else {
-            u.setElementAttributes(boxSvg, this.inactiveStyle);
+            setElementAttributes(boxSvg, this.inactiveStyle);
         }        
     }
     // ---- ZScoreMeterBox END
@@ -324,6 +332,20 @@ var zscore = (function (u, n, s, a, win, doc) {
     }
     function initSvg() {
         s.init();
+        initPointerHandlers();
+    }
+    function initPointerHandlers() {
+        var thUr = getThumbUpRect();
+        if(isNotNull(thUr)) {
+            u.listen('touchend', thUr, onTouchEndThumbsUp);
+            u.listen('mouseup', thUr, onMouseUpThumbsUp);
+        }
+        var thD = getThumbDownRect();
+        if(isNotNull(thD)) {
+            u.listen('touchend', thD, onTouchEndThumbsDown);
+            u.listen('mouseup', thD, onMouseUpThumbsDown);
+        }
+        
     }
     function initMeter() {
         var meterStyleConfig = new ZScoreMeterConfig(config.meterInactiveStyle, config.meterZeroStyle, config.negativeMinCol, config.negativeMaxCol, config.positiveMinCol, config.positiveMaxCol);
@@ -342,6 +364,28 @@ var zscore = (function (u, n, s, a, win, doc) {
         u.listen('orientationchange', win, onWindowResize);
         setInstructions("Welcome to", "<span style='color:blueviolet;'>ZScore</span>", "awaiting performance start ...", null, true);
     }
+    function setThumbsUpStyle(isActive) {
+        var thUpEl = getThumbUpPath();
+        if(isNull(thUpEl)) {
+            return;
+        }
+        if(isActive) {
+            setElementAttributes(thUpEl, config.thumbsUpActiveStyle);
+        } else {
+            setElementAttributes(thUpEl, config.thumbsUpInActiveStyle);
+        }
+    }
+    function setThumbsDownStyle(isActive) {
+        var thDnEl = getThumbDownPath();
+        if(isNull(thDnEl)) {
+            return;
+        }
+        if(isActive) {
+            setElementAttributes(thDnEl, config.thumbsDownActiveStyle);
+        } else {
+            setElementAttributes(thDnEl, config.thumbsDownInActiveStyle);
+        }
+    }    
     function setInstructions(l1, l2, l3, colour, isVisible) {
         if (isNull(instructionsElement)) {
             return;
@@ -672,6 +716,24 @@ var zscore = (function (u, n, s, a, win, doc) {
     function getMeterGroup() {
         return u.getElement(config.meterGroupId);
     }
+    function getThumbUpGroup() {
+        return u.getElement(config.thumbUpGroupId);
+    }
+    function getThumbUpRect() {
+        return u.getElement(config.thumbUpRectId);
+    }
+    function getThumbUpPath() {
+        return u.getElement(config.thumbUpPathId);
+    }
+    function getThumbDownRect() {
+        return u.getElement(config.thumbDownRectId);
+    }
+    function getThumbDownGroup() {
+        return u.getElement(config.thumbDownGroupId);
+    }
+    function getThumbDownPath() {
+        return u.getElement(config.thumbDownPathId);
+    }
     function getFontSizeFit(value, fontSize, container) {
         var fs = 1;
         const overallWidth = win.innerWidth || doc.documentElement.clientWidth || doc.body.clientWidth;
@@ -767,6 +829,48 @@ var zscore = (function (u, n, s, a, win, doc) {
         var result = (end - start) * config.textHeightCompressor;
         return result;
     }
+    function onThumbsUp() {
+        log("onThumbsUp:");
+        setThumbsUpStyle(true);
+        setThumbsDownStyle(false);
+    }
+    function onThumbsDown() {
+        log("onThumbsDown:");
+        setThumbsUpStyle(false);
+        setThumbsDownStyle(true);
+    }
+    function onMouseUpThumbsUp(event) {
+        log("onMouseUpThumbsUp:");
+        if (isTouch) {
+            return;
+        }
+        // event.preventDefault();
+        onThumbsUp();
+    }
+    function onTouchEndThumbsUp(event) {
+        log("onTouchEndThumbsUp:");
+        if (!isTouch) {
+            return;
+        }
+        // event.preventDefault();
+        onThumbsUp();
+    }
+    function onMouseUpThumbsDown(event) {
+        log("onMouseUpThumbsDown:");
+        if (isTouch) {
+            return;
+        }
+        // event.preventDefault();
+        onThumbsDown();
+    }
+    function onTouchEndThumbsDown(event) {
+        log("onTouchEndThumbsDown:");
+        if (!isTouch) {
+            return;
+        }
+        // event.preventDefault();
+        onThumbsDown();   
+    }
     function setElementAttributes(element, attrAssocArr) {
         u.setElementAttributes(element, attrAssocArr);
     }
@@ -787,5 +891,11 @@ var zscore = (function (u, n, s, a, win, doc) {
         load: function () {
             onLoad();
         },
+        onThumbsDownSelect: function () {
+            onThumbsDown();
+        },
+        onThumbsUpSelect: function () {
+            onThumbsUp();
+        }
     }
 }(zsUtil, zsNet, zsSvg, zsAudio, window, document));
