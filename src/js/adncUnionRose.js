@@ -18,6 +18,7 @@ var zscore = (function (u, n, s, a, win, doc) {
     const COL_LIGHT_BLUE = "#ADD8E6";
     const COL_PALE_TURQOISE = "#AFEEEE";
     const COL_LIGHT_GREEN = "#CCFFCC";
+    const COL_GREEN = "#00FF00";
     const COL_LIGHT_PURPLE = "#CCCCFF";
     const COL_LIGHT_GRAY = "#CCCCCC";
     const COL_SILVER = "#C0C0C0";
@@ -44,7 +45,7 @@ var zscore = (function (u, n, s, a, win, doc) {
     const STROKE_PLAYING = COL_LIGHT_GREEN;
     const STROKE_PLAYING_NEXT = COL_ORANGE;
     const STROKE_GRID = COL_SILVER;
-    const STROKE_PLAYLINE = COL_SILVER;
+    const STROKE_PLAYLINE = COL_GREEN;
     const TILE_TEXT_TOKEN = "@TILE_TEXT@";
     const ALPHA_TOKEN = "@ALPHA@";
     const TILE_TEXT_FAMILY = "Arial";
@@ -154,7 +155,8 @@ var zscore = (function (u, n, s, a, win, doc) {
         tileStyleTextSpan: { "font-family": TILE_TEXT_FAMILY, "dominant-baseline": "middle" },
         tileTextMinLength: 5,
         tileTextSizeMultiplier: { torus: 0.8, pie: 0.7 },
-        tileStylePlayLine: { "fill": "none", "stroke": STROKE_PLAYLINE, "stroke-width": "4px", "stroke-linecap": "round", "visibility": "visible", "opacity": 1, "pointer-events": "none" },
+        tileStylePlayLine: { "fill": "none", "stroke": STROKE_PLAYLINE, "stroke-width": "4px", "stroke-linecap": "round", "visibility": "visible", "opacity": 1, "pointer-events": "none"},
+        tileStylePlayLineInactive: { "visibility": "hidden", "opacity": 0},
         shapeStyleInvisible: { "visibility": "hidden" },
         shapeStyleVisible: { "visibility": "visible" },
         shapeTimelineDuration: 60,
@@ -185,7 +187,11 @@ var zscore = (function (u, n, s, a, win, doc) {
         colModPerClick: -20,
         maxColModPerClick: -150,
         overlayInDuration: 12,
+        tilePlaylineAlphaDur: 0.5,
     }
+    const TILE_PLAYLINE_PREFIX_LEN = config.linePrefix.length + config.overlayPrefix.length + config.tilePlayLinePrefix.length;
+    const TILE_PLAYLINE_ID_PREFIX = config.overlayPrefix + config.tilePlayLinePrefix;
+    const TILE_PLAYLINE_FULL_ID_PREFIX = config.linePrefix + config.overlayPrefix + config.tilePlayLinePrefix;
 
     function ZScoreException(message) {
         this.message = message;
@@ -211,6 +217,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         this.txt = txt;
         this.modFill = modFill;
         this.playLine = playLine;
+        this.playLineTl = null;
         this.tweens = [];
     }
 
@@ -679,20 +686,21 @@ var zscore = (function (u, n, s, a, win, doc) {
         if (circleNo <= 1) {
             tilePath = s.createPieTilePath(cX, cY, arc);
             createPieTileSvgText(cX, cY, r, startAngle, endAngle, tileNo, tileId, tileGroupId, txtState);
-            addTilePiePlayLine(tileState, cX, cY, arc.endX, arc.endY);
+            addTilePlayLine(tileState, cX, cY, arc.endX, arc.endY);
         } else {
             var previousTileState = state.tiles[circleIndex - 1][tileIndex];
             var previousArc = previousTileState.arc;
             tilePath = s.createTorusTilePath(arc, previousArc);
             createTorusTileSvgText(cX, cY, startAngle, endAngle, tileNo, previousArc, arc, tileId, tileGroupId, txtState);
+            addTilePlayLine(tileState,  previousArc.endX,  previousArc.endY, arc.endX, arc.endY);
         }
 
         if (isNotNull(tilePath)) {
             tileElement.setAttribute("d", tilePath);
         }
     }
-    function addTilePiePlayLine(tileState, x1, y1, x2, y2) {
-        var id = config.overlayPrefix + config.tilePlayLinePrefix + tileState.id;
+    function addTilePlayLine(tileState, x1, y1, x2, y2) {
+        var id = TILE_PLAYLINE_ID_PREFIX + tileState.id;
         tileState.playLine = s.createSvgLine(x1, y1, x2, y2, 0, id);      
     }
     function createPieTileSvgText(cX, cY, r, startAngle, endAngle, tileNo, tileId, tileGroupId, txtState) {
@@ -856,13 +864,13 @@ var zscore = (function (u, n, s, a, win, doc) {
     }
     function getTilePlayLineStyle(tileState) {
         if (isNull(tileState)) {
-            return null;
+            return config.tileStylePlayLineInactive;
         }
 
         if (tileState.isPlaying) {
             return config.tileStylePlayLine;
         }
-        return null;
+        return config.tileStylePlayLineInactive;
     }
     function getInstructionsTextStyle(textState) {
         if (!textState.isVisible) {
@@ -1247,7 +1255,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         if (isNull(id) || !u.isString(id)) {
             return false;
         }
-        return u.startsWith(id, config.linePrefix + config.overlayPrefix + config.tilePlayLinePrefix);
+        return u.startsWith(id, TILE_PLAYLINE_FULL_ID_PREFIX);
     }
     
     function isTileId(id) {
@@ -1288,7 +1296,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         if (isNull(id) || !u.isString(id)) {
             return false;
         }
-        var tileId = id.substring(config.overlayPrefix.length + config.tilePlayLinePrefix.length, id.length);
+        var tileId = id.substring(TILE_PLAYLINE_PREFIX_LEN, id.length);
         if (!isTileId(tileId)) {
             return null;
         }
@@ -1371,7 +1379,6 @@ var zscore = (function (u, n, s, a, win, doc) {
             setElementAttributes(tileOverlay, overlayStyle);
             u.addChildToParentId(config.overlayParentId, tileOverlay);
         }
-
         setTilePlayLine(tileState);
     }
     function setTilePlayLine(tileState) {
@@ -1383,16 +1390,20 @@ var zscore = (function (u, n, s, a, win, doc) {
         if (isNull(tilePlayLine)) {
             tilePlayLine = tileState.playLine;
         }
-        var playLineStyle = getTilePlayLineStyle(tileState);
-        if (isNull(playLineStyle)) {
-            // if (!isNull(tilePlayLine)) {
-            //     tilePlayLine.remove();
-            // }
-        } else {
-            setElementAttributes(tilePlayLine, playLineStyle);
+        if (isNotNull(tilePlayLine)) {           
+            setPlayLineStyle(tileState, tilePlayLine);
             u.addChildToParentId(config.overlayParentId, tilePlayLine);
         }
-    }    
+    }
+    function setPlayLineStyle(tileState, tilePlayLine) {
+        if(isNull(tilePlayLine)) {
+            return;
+        }
+        var playLineStyle = getTilePlayLineStyle(tileState);
+        if (isNotNull(playLineStyle)) {           
+            setElementAttributes(tilePlayLine, playLineStyle);
+        }
+    }
     function displaySelectedTilesOverlay(durationSec) {
         var overlayElements = [];
         var connectorElements = [];
@@ -1603,22 +1614,57 @@ var zscore = (function (u, n, s, a, win, doc) {
             ease: "power1.inOut"
         });
     }
-    function createRotatePlayline(objId, dur, angle) {
-        if (isNull(objId)) {
-            logError("createRotatePlayline: Invalid objectId: " + objId);
+    function runTilePlayline(timeline) {
+        playOrRestartTween(timeline);
+    }
+    function initTilePlaylineTimeline(tileState, playline, dur, angle) {
+        if (isNull(tileState)) {
+            logError("initTilePlaylineTimeline: Invalid tileState");
             return;
         }
-        var lineId = u.toCssIdQuery(objId);
-        return gsap.to(lineId, {
+        if(isNotNull(tileState.playLineTl)) {
+            return tileState.playLineTl;
+        }
+        if (isNull(playline)) {
+            logError("initTilePlaylineTimeline: Invalid playline: ");
+            return;
+        }
+        var lineId = playline.id;
+        var timeline = gsap.timeline({ paused: true, ease: "none", onComplete: onTilePlaylineTimelineComplete, onCompleteParams: [tileState] });
+        tileState.playLineTl = timeline;
+
+        var startalphaTween = createAlphaPlaylineTween(lineId, config.tilePlaylineAlphaDur, 1);
+        timeline.add(startalphaTween, 0);
+        var rotateTween = createRotatePlayline(lineId, dur, angle);
+        timeline.add(rotateTween, 0);
+        var alphaTween = createAlphaPlaylineTween(lineId, config.tilePlaylineAlphaDur, 0);
+        // var startPosition = ">-" + config.tilePlaylineAlphaDur;
+        var startPosition = ">";
+        timeline.add(alphaTween, startPosition);
+        
+        return timeline;
+    }
+    function onTilePlaylineTimelineComplete(tileState) {
+        log("onTilePlaylineTimelineComplete: progress: " + tileState.playLineTl.progress());
+    }
+    function createRotatePlayline(objId, dur, angle) {
+        return gsap.to(u.toCssIdQuery(objId), {
             duration: dur,
             rotation: angle,
             svgOrigin: (EMPTY + config.centre.x + BLANK + config.centre.y),
             onComplete: onAnimationComplete,
             onCompleteParams: [objId],
-            paused: true,
             yoyo: false,
             repeat: 0,
             ease: "none"
+        });
+    }
+    function createAlphaPlaylineTween(objId, dur, val) {
+        return gsap.to(u.toCssIdQuery(objId), {
+            duration: dur,
+            autoAlpha: val,
+            onComplete: onAlphaComplete,
+            onCompleteParams: [objId],
         });
     }
     function createAlphaTween(objId, dur, val) {
@@ -2161,23 +2207,20 @@ var zscore = (function (u, n, s, a, win, doc) {
                 tweens.push(tween);
             }
         } else if(isTilePlayLineId(target)) {
+            tween = null;
             var playline = u.getElement(target);
+            var tileId = getTileIdFromPlaylineId(target);
+            var tileState = getTileIdState(tileId);
             if(isNull(playline)) {
-                var tileId = getTileIdFromPlaylineId(target);
                 if(isNotNull(tileId)) {
-                    var tileState = getTileIdState(tileId);
                     setTilePlayLine(tileState);
                     playline = u.getElement(tileState.playLine.id);
                 }
             }
-            if(isNotNull(playline)) { 
-                var tweens = getObjectTweens(playline);
-                if (u.isArray(tweens) && tweens.length > 0) {
-                    tween = tweens[0];
-                } else {
-                    tween = createRotatePlayline(playline.id, dur, angle);
-                    tweens.push(tween);
-                };
+            if(isNotNull(playline)) {
+                var tl = initTilePlaylineTimeline(tileState, playline, dur, angle);
+                // setPlayLineStyle(tileState, playline);
+                runTilePlayline(tl);
             }            
         } else if (isCircleGroupId(target)) {
             var tileCircleState = getCircleGroup(target);
@@ -2674,20 +2717,10 @@ var zscore = (function (u, n, s, a, win, doc) {
     function onAnimationComplete(rotationObjId) {
         var obj = u.getElement(rotationObjId);
         // log("onAnimationComplete: " + rotationObjId);
-        if(isTilePlayLineId(rotationObjId)) {
-            var tween = createAlphaTween(rotationObjId, 0.5, 0);
-            playOrRestartTween(tween);
-        }
     }
     function onAlphaComplete(objId) {
         var obj = u.getElement(objId);
-        log("onAlphaComplete: " + objId + "  opacity: " + obj.style.opacity + "  visiblility: " + obj.style.visibility);
-        if(isTilePlayLineId(objId)) {
-            var playline = u.getElement(objId);
-            if(isNotNull(playline)) {
-                // playline.remove();
-            }
-        }
+        // log("onAlphaComplete: " + objId + "  opacity: " + obj.style.opacity + "  visiblility: " + obj.style.visibility);       
     }
     function getObjectTweens(obj) {
         if (!u.isObject(obj)) {
@@ -3077,7 +3110,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         } else {
             tween.play();
         }
-    }
+    }   
     function getInstructionsElement() {
         return u.getElement(config.instructionTxtElementId);
     }
