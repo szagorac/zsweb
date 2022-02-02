@@ -10,6 +10,10 @@ var zscore = (function (u, n, s, a, win, doc) {
     const RECT = "Rect";
     const COL_WHITE = "#FFFFFF";
     const COL_BLACK = "#000000";
+    const EVENT_VOTE = "VOTE";
+    const EVENT_PARAM_VALUE = "value";
+    const VOTE_UP = 1;
+    const VOTE_DOWN = -1;
     
     var AUDIO_FLIES = [
         '/audio/violin-tuning.mp3',
@@ -363,6 +367,11 @@ var zscore = (function (u, n, s, a, win, doc) {
         u.listen('resize', win, onWindowResize);
         u.listen('orientationchange', win, onWindowResize);
         setInstructions("Welcome to", "<span style='color:blueviolet;'>ZScore</span>", "awaiting performance start ...", null, true);
+    }
+    function onVote(value) {
+        var evParams = {};
+        evParams[EVENT_PARAM_VALUE] = value;
+        n.sendEvent(EVENT_VOTE, evParams);
     }
     function setThumbsUpStyle(isActive) {
         var thUpEl = getThumbUpPath();
@@ -833,11 +842,13 @@ var zscore = (function (u, n, s, a, win, doc) {
         log("onThumbsUp:");
         setThumbsUpStyle(true);
         setThumbsDownStyle(false);
+        onVote(VOTE_UP);
     }
     function onThumbsDown() {
         log("onThumbsDown:");
         setThumbsUpStyle(false);
         setThumbsDownStyle(true);
+        onVote(VOTE_DOWN);
     }
     function onMouseUpThumbsUp(event) {
         log("onMouseUpThumbsUp:");
