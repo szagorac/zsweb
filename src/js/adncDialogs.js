@@ -30,7 +30,10 @@ var zscore = (function (u, n, s, a, win, doc) {
     var state = {
         instructions: { isVisible: false, l1: EMPTY, l2: EMPTY, l3: EMPTY, bckgCol: "rgba(225, 225, 225, 0.85)" },
         voteCount: 0,
+        userNo: 10,
         meter: null,
+        currentVote: null,
+        voteTimeMs: 0,
     }
     var config = {
         connectionPreference: "ws,sse,poll",
@@ -54,6 +57,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         textSpanIsFadeIn: true,
         textSpanFadeTimeSec: 1.0,
         textSpanFadeStaggerTimeSec: 0.5,
+        voteTimeoutMs: 10 * 1000,
         elementGroupSuffix: "Grp",
         meterGroupId: "meterGrp",
         thumbUpRectId: "thUpRect",
@@ -64,6 +68,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         thumbDownPathId: "thumbDownPth",
         meterBoxIdPrefix: "meterBox",
         meterBoxNo: 20,
+        meterMaxVotes: 5,
         meterInactiveStyle: { "fill": "none", "stroke": "black", "stroke-width": "4px" },
         meterZeroStyle: { "fill": "yellow"},
         thumbsUpActiveStyle: { "fill": "green"},
@@ -369,6 +374,17 @@ var zscore = (function (u, n, s, a, win, doc) {
         setInstructions("Welcome to", "<span style='color:blueviolet;'>ZScore</span>", "awaiting performance start ...", null, true);
     }
     function onVote(value) {
+        var now = Date.now();        
+        if(isNotNull(state.currentVote) && state.currentVote === value) {
+            var prevVoteTime = state.voteTimeMs;
+            var threshold = prevVoteTime + config.voteTimeoutMs;
+            var diff = now - threshold;
+            if(diff < 0) {
+                return;
+            }
+        }        
+        state.currentVote = value;
+        state.voteTimeMs = now;
         var evParams = {};
         evParams[EVENT_PARAM_VALUE] = value;
         n.sendEvent(EVENT_VOTE, evParams);
@@ -450,7 +466,17 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
 
         state.voteCount = voteCount;
-    } 
+    }
+    function setUserNo(userNo) {
+        if (isNull(userNo)) {
+            return;
+        }
+        if(!u.isNumeric(userNo)) {
+            userNo = u.toInt(userNo);
+        }
+
+        state.userNo = userNo;
+    }
     function onWindowResize(event) {
         if (!u.isObject(this)) {
             return null;
@@ -533,13 +559,21 @@ var zscore = (function (u, n, s, a, win, doc) {
         if(isNotNull(counter.count)) {
             setVote(counter.count);
         }
-        setMeter()
+        if(isNotNull(counter.maxCount)) {
+            setUserNo(counter.maxCount);
+        }        
+        setMeter();
     }
     function setMeter() {
         if(isNull(state.meter)) {
             return;
         }
-        state.meter.set(state.voteCount, 10);
+        var maxVotes = state.userNo;
+        if(maxVotes <= config.meterMaxVotes) {
+            maxVotes = config.meterMaxVotes;
+        }
+        
+        state.meter.set(state.voteCount, maxVotes);
     }
     function getSvg() {
         return u.getElement("svgCanvas");
