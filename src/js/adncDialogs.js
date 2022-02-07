@@ -533,8 +533,14 @@ var zscore = (function (u, n, s, a, win, doc) {
         if(isNotNull(counter.count)) {
             setVote(counter.count);
         }
+        setMeter()
     }
-    
+    function setMeter() {
+        if(isNull(state.meter)) {
+            return;
+        }
+        state.meter.set(state.voteCount, 10);
+    }
     function getSvg() {
         return u.getElement("svgCanvas");
     }
