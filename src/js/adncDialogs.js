@@ -14,6 +14,8 @@ var zscore = (function (u, n, s, a, win, doc) {
     const EVENT_PARAM_VALUE = "value";
     const VOTE_UP = 1;
     const VOTE_DOWN = -1;
+    const SINGLE_QUOTE_HTML = "&#39;";
+    const SINGLE_QUOTE = "'";
     
     var AUDIO_FLIES = [
         '/audio/violin-tuning.mp3',
@@ -596,20 +598,20 @@ var zscore = (function (u, n, s, a, win, doc) {
             val = EMPTY;
             if (!u.isEmptyString(l1)) {
                 longestLine = checkLongestLine(l1, longestLine);
-                l1 = u.wrapInSpanElement(l1, spanId1);
+                l1 = parseLine(l1, spanId1);
                 val += l1;
             }
             if (!u.isEmptyString(l2)) {
                 log("displayInstructions: processing line2 " + l2);
                 longestLine = checkLongestLine(l2, longestLine);
-                l2 = u.wrapInSpanElement(l2, spanId2);
+                l2 = parseLine(l2, spanId2);
                 val = u.addSuffixIfNotThere(val, config.textLineBreak);
                 val += l2;
             }
             if (!u.isEmptyString(l3)) {
                 log("displayInstructions: processing line3 " + l3);
                 longestLine = checkLongestLine(l3, longestLine);
-                l3 = u.wrapInSpanElement(l3, spanId3);
+                l3 = parseLine(l3, spanId3);
                 val = u.addSuffixIfNotThere(val, config.textLineBreak);
                 val += l3;
             }
@@ -662,6 +664,13 @@ var zscore = (function (u, n, s, a, win, doc) {
                 span3.style.opacity = 1;
             }
         }
+    }
+    function parseLine(lineToCheck, spanId) {
+        while(u.contains(lineToCheck, SINGLE_QUOTE_HTML)) {
+            lineToCheck =  u.replace(lineToCheck, SINGLE_QUOTE_HTML, SINGLE_QUOTE);
+        }  
+        lineToCheck = u.wrapInSpanElement(lineToCheck, spanId); 
+        return lineToCheck;
     }
     function checkLongestLine(lineToCheck, longestLine) {
         var line = u.removeMarkup(lineToCheck);
