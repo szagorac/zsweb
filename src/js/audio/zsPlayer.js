@@ -61,7 +61,7 @@ var zsPlayer = (function (u, win) {
     ZsBuffer.prototype.play = function (startTime, offset, duration) {
         if(_isNull(this.audioSourceNode)) {
             return;
-        }
+        } 
         this.audioSourceNode.start(startTime, offset, duration);
         this.isPlaying = true;
     }

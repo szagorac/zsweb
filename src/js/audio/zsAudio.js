@@ -1,4 +1,4 @@
-var zsAudio = (function (u, gr, sp, pl, win) {
+var zsAudio = (function (u, gr, sp, pl, nz, win) {
     "use strict";
 
     //static members
@@ -11,11 +11,11 @@ var zsAudio = (function (u, gr, sp, pl, win) {
     var _isAudioInitialised = false;
     var _audioCtxRetryCount = 1;
     var _audioBuffers = null;
-    var _granulatorFileIndex = 0;
     var _masterVolume = 1.0;
     var _audioFilesToLoad = [
         '/audio/violin-tuning.mp3',
     ];
+    var _onLoadedCallback = null;
 
     //Class defs
     function ZsAudioException(msg) {
@@ -67,7 +67,7 @@ var zsAudio = (function (u, gr, sp, pl, win) {
     // ----- AudioBufferLoader  END
 
     //Private functions
-    function _initAudio(audioFilesToLoad, granulatorFileIndex) {
+    function _initAudio(audioFilesToLoad, onLoadedCallback) {
         if (!u || !gr || !sp || !pl) {
             throw new ZsAudioException("Invalid libraries. Required: zsUtil, zsGranulator and zsSpeech");
         }
@@ -79,7 +79,9 @@ var zsAudio = (function (u, gr, sp, pl, win) {
                 _ctx = new AudioContext();
                 log("initAudio:  created audio context");
             }
-
+            if(u.isNotNull(onLoadedCallback)) {
+                _onLoadedCallback = onLoadedCallback;
+            }
             if (_ctx.state === 'suspended') {
                 log("initAudio: Context suspended, resuming context : " + _ctx.state);
                 if (_audioCtxRetryCount >= CTX_MAX_RETRY_COUNT) {
@@ -101,24 +103,16 @@ var zsAudio = (function (u, gr, sp, pl, win) {
 
                 _audioCtxRetryCount++;
                 setTimeout(function () {
-                    _initAudio(audioFilesToLoad, granulatorFileIndex);
+                    _initAudio(audioFilesToLoad, onLoadedCallback);
                 }, 1000);
                 return;
             }
 
-            log("initAudio: AudioContext state: " + _ctx.state);
-            _initSpeech();
-
+            log("initAudio: AudioContext state: " + _ctx.state);            
             if (u.isArray(audioFilesToLoad)) {
                 _audioFilesToLoad = audioFilesToLoad;
             } else {
                 logError("Invalid audio files to load array");
-            }
-
-            if (granulatorFileIndex < 0 || granulatorFileIndex >= _audioFilesToLoad.length) {
-                logError("Invalid granulator file index: " + granulatorFileIndex);
-            } else {
-                _granulatorFileIndex = granulatorFileIndex;
             }
 
             var bufferLoader = new AudioBufferLoader(
@@ -133,10 +127,27 @@ var zsAudio = (function (u, gr, sp, pl, win) {
     }
     function _onAudioLoaded(bufferList) {
         _audioBuffers = bufferList;
-        _initPlayer(bufferList);
-        _initGranulator(_granulatorFileIndex);
+
+        if(u.isNotNull(_onLoadedCallback)) {
+            _onLoadedCallback();
+        } else {
+            _initSpeech();
+            _initPlayer();
+            _initGranulator(0);
+            _initNoise();
+        }
         _isAudioInitialised = true;
-        
+
+        // _playNoise(0.5);
+        // setTimeout(function () {
+        //     _playNoise(0.2);
+        // }, 3000);
+        // setTimeout(function () {
+        //     _playNoise(0.0);
+        // }, 4000);
+        // setTimeout(function () {
+        //     _stopNoise();
+        // }, 5000);
         // pl.play(1);
         // _playGranulator();
         // var text = "This is a very long text."
@@ -262,8 +273,8 @@ var zsAudio = (function (u, gr, sp, pl, win) {
     //speech END
 
     //player
-    function _initPlayer(bufferList) {
-        pl.init(_ctx, bufferList);
+    function _initPlayer() {
+        pl.init(_ctx, _audioBuffers);
     }
     function _playAudioBuffer(bufferIndex, startTime, offset, duration) {
         pl.play(bufferIndex, startTime, offset, duration);
@@ -405,6 +416,26 @@ var zsAudio = (function (u, gr, sp, pl, win) {
     }
     //granulator END
 
+    //noise
+    function _initNoise(destination) {
+        if(!nz) {
+            return;
+        }
+        if (isNull(nz)) {
+            nz = null;
+            return;
+        }
+
+        nz.init(_ctx, destination);
+    }
+    function _playNoise(volume) {
+        nz.play(volume);
+    }
+    function _stopNoise() {
+        nz.stop();
+    }
+    //noise END
+
     function logError(val) {
         u.logError(val, LOG_ID);
     }
@@ -417,9 +448,21 @@ var zsAudio = (function (u, gr, sp, pl, win) {
 
     // PUBLIC API
     return {
-        init: function (audioFilesToLoadArr, granulatorFileIndex) {
-            _initAudio(audioFilesToLoadArr, granulatorFileIndex);
+        init: function (audioFilesToLoadArr, onLoadedCallback) {
+            _initAudio(audioFilesToLoadArr, onLoadedCallback);
         },
+        initSpeech: function () {
+            _initSpeech();
+        },
+        initPlayer: function () {
+            _initPlayer();
+        },
+        initGranulator: function (granulatorFileIndex) {
+            _initGranulator(granulatorFileIndex);
+        },        
+        initNoise: function () {
+            _initNoise();
+        },        
         isReady: function () {
             return _isAudioInitialised;
         },
@@ -468,6 +511,12 @@ var zsAudio = (function (u, gr, sp, pl, win) {
         setSpeechConfig: function (params) {
             return sp.setSpeechConfig(params);
         },
+        playNoise: function (volume) {
+            _playNoise(volume);
+        },
+        stopNoise: function () {
+            _stopNoise();
+        },
         rumpLinearSpeechParam: function (param, endValue, duration) {
             return sp.rampLinearConfigParam(param, endValue, duration);
         },
@@ -494,4 +543,4 @@ var zsAudio = (function (u, gr, sp, pl, win) {
         },
     }
 
-}(zsUtil, zsGranulator, zsSpeech, zsPlayer, window));
+}(zsUtil, zsGranulator, zsSpeech, zsPlayer, zsNoise, window));

@@ -16,9 +16,10 @@ var zscore = (function (u, n, s, a, win, doc) {
     const VOTE_DOWN = -1;
     const SINGLE_QUOTE_HTML = "&#39;";
     const SINGLE_QUOTE = "'";
-    
+
     var AUDIO_FLIES = [
         '/audio/violin-tuning.mp3',
+        '/audio/DialogsPitchAudio1.mp3',        
     ];
 
     var isTouch = null;
@@ -59,11 +60,11 @@ var zscore = (function (u, n, s, a, win, doc) {
         textSpanIsFadeIn: true,
         textSpanFadeTimeSec: 1.0,
         textSpanFadeStaggerTimeSec: 0.5,
-        voteTimeoutMs: 10 * 1000,
+        voteTimeoutMs: 5000,
         elementGroupSuffix: "Grp",
         meterGroupId: "meterGrp",
         thumbUpRectId: "thUpRect",
-        thumbDownRectId: "thDownRect",  
+        thumbDownRectId: "thDownRect",
         thumbUpGroupId: "thumbUpGrp",
         thumbUpPathId: "thumbUpPth",
         thumbDownGroupId: "thumbDownGrp",
@@ -72,19 +73,19 @@ var zscore = (function (u, n, s, a, win, doc) {
         meterBoxNo: 20,
         meterMaxVotes: 5,
         meterInactiveStyle: { "fill": "none", "stroke": "black", "stroke-width": "4px" },
-        meterZeroStyle: { "fill": "yellow"},
-        thumbsUpActiveStyle: { "fill": "green"},
-        thumbsUpInActiveStyle: { "fill": "none"},
-        thumbsDownActiveStyle: { "fill": "red"},
-        thumbsDownInActiveStyle: { "fill": "none"},
+        meterZeroStyle: { "fill": "yellow" },
+        thumbsUpActiveStyle: { "fill": "green" },
+        thumbsUpInActiveStyle: { "fill": "none" },
+        thumbsDownActiveStyle: { "fill": "red" },
+        thumbsDownInActiveStyle: { "fill": "none" },
         centreX: 450,
         centreY: 800,
         meterBoxWidth: 80,
         meterBoxHeight: 40,
-        negativeMinCol: {r: 255, g: 165, b: 0},
-        negativeMaxCol: {r: 255, g: 0, b: 0}, 
-        positiveMinCol: {r: 255, g: 255, b: 0},
-        positiveMaxCol: {r: 0, g: 125, b: 0},
+        negativeMinCol: { r: 255, g: 165, b: 0 },
+        negativeMaxCol: { r: 255, g: 0, b: 0 },
+        positiveMinCol: { r: 255, g: 255, b: 0 },
+        positiveMaxCol: { r: 0, g: 125, b: 0 },
     }
 
     function ZScoreException(message) {
@@ -108,66 +109,67 @@ var zscore = (function (u, n, s, a, win, doc) {
         this.negativeMinIndex = 0;
         this.negativeMaxIndex = 0;
         this.zeroIndex = null;
+        this.isPlayAudio = true;
     }
     ZScoreMeter.prototype.init = function () {
-        if(isNull(this.styleConfig) || !u.isNumeric(this.boxNo) || !u.isNumeric(this.midX) || !u.isNumeric(this.midY)){
+        if (isNull(this.styleConfig) || !u.isNumeric(this.boxNo) || !u.isNumeric(this.midX) || !u.isNumeric(this.midY)) {
             logError("ZScoreMeter.init: invalid inputs");
             return;
         }
 
         var isOdd = u.isOddNumber(this.boxNo);
-        var halfBoxNo = Math.round(this.boxNo/2.0)
+        var halfBoxNo = Math.round(this.boxNo / 2.0)
         this.positiveMaxIndex = this.boxNo - 1;
         this.positiveMinIndex = halfBoxNo;
         this.negativeMinIndex = halfBoxNo - 1;
         this.negativeMaxIndex = 0;
         this.zeroIndex = null;
         var yStart = this.midY + (halfBoxNo * this.boxHeight);
-        if(isOdd) {
+        if (isOdd) {
             this.negativeMinIndex = halfBoxNo - 2;
             this.zeroIndex = halfBoxNo - 1;
-            yStart = this.midY + this.boxHeight/2.0 + (this.zeroIndex * this.boxHeight);
+            yStart = this.midY + this.boxHeight / 2.0 + (this.zeroIndex * this.boxHeight);
         }
         var yEnd = yStart;
-        var x = this.midX - (this.boxWidth/2.0);
+        var x = this.midX - (this.boxWidth / 2.0);
         for (var i = 0; i < this.boxNo; ++i) {
-            var boxId = this.boxIdPrefix + i; 
+            var boxId = this.boxIdPrefix + i;
             var rectId = this.boxSvgIdPrefix + i;
             var y = yEnd - this.boxHeight;
             var activeStyle = this.getActiveStyle(i);
             var box = new ZScoreMeterBox(boxId, rectId, x, y, this.boxWidth, this.boxHeight, this.styleConfig.inactiveStyle, activeStyle);
             this.boxes[i] = box;
-            yEnd = y; 
+            yEnd = y;
         }
         this.draw();
         this.isInitialised = true;
     }
     ZScoreMeter.prototype.getActiveStyle = function (boxIdx) {
         var col = "yellow";
-        if(!isNull(this.zeroIndex) && boxIdx === this.zeroIndex) {
+        if (!isNull(this.zeroIndex) && boxIdx === this.zeroIndex) {
             return this.styleConfig.zeroStyle;
         }
-        if(boxIdx >= this.positiveMinIndex && boxIdx <= this.positiveMaxIndex) {
+        if (boxIdx >= this.positiveMinIndex && boxIdx <= this.positiveMaxIndex) {
             var factor = 0.0;
-            if(this.positiveMaxIndex != this.positiveMinIndex) {
-                factor = (boxIdx - this.positiveMinIndex)/(this.positiveMaxIndex - this.positiveMinIndex);
+            if (this.positiveMaxIndex != this.positiveMinIndex) {
+                factor = (boxIdx - this.positiveMinIndex) / (this.positiveMaxIndex - this.positiveMinIndex);
             }
             var colRGB = u.interpolateRgbColours(this.styleConfig.posMinRGB, this.styleConfig.posMaxRGB, factor);
-            if(!isNull(colRGB)) {
+            if (!isNull(colRGB)) {
                 col = u.rgbToHex(colRGB.r, colRGB.g, colRGB.b);
-            }            
-        } else if(boxIdx >= this.negativeMaxIndex && boxIdx <= this.negativeMinIndex) {
+            }
+        } else if (boxIdx >= this.negativeMaxIndex && boxIdx <= this.negativeMinIndex) {
             var factor = 0.0;
-            if(this.negativeMinIndex != this.negativeMaxIndex) {
-                factor = (this.negativeMinIndex - boxIdx)/(this.negativeMinIndex - this.negativeMaxIndex);
+            if (this.negativeMinIndex != this.negativeMaxIndex) {
+                factor = (this.negativeMinIndex - boxIdx) / (this.negativeMinIndex - this.negativeMaxIndex);
             }
             var colRGB = u.interpolateRgbColours(this.styleConfig.negMinRGB, this.styleConfig.negMaxRGB, factor);
-            if(!isNull(colRGB)) {
+            if (!isNull(colRGB)) {
                 col = u.rgbToHex(colRGB.r, colRGB.g, colRGB.b);
-            }   
+            }
         }
 
-        return { "fill": col};
+        return { "fill": col };
     }
     ZScoreMeter.prototype.clear = function () {
         for (var i = 0; i < this.boxes.length; ++i) {
@@ -179,61 +181,81 @@ var zscore = (function (u, n, s, a, win, doc) {
             this.boxes[i].draw();
         }
     }
+    ZScoreMeter.prototype.setPlayAudio = function (value) {
+        this.isPlayAudio = value;
+    }
     ZScoreMeter.prototype.set = function (value, maxValAbs) {
-        if(!u.isNumeric(value) || !u.isNumeric(maxValAbs)) {
+        if (!u.isNumeric(value) || !u.isNumeric(maxValAbs)) {
             return;
         }
         this.clear();
-        if(!isNull(this.zeroIndex)) {
+        if (!isNull(this.zeroIndex)) {
             this.activateBox(this.zeroIndex, true);
-        }        
-        if(value > 0) {
-            if(maxValAbs < 0) {
-                maxValAbs = -1*maxValAbs;
+        }
+        if (value > 0) {
+            if (maxValAbs < 0) {
+                maxValAbs = -1 * maxValAbs;
             }
             var minVal = 1;
             var maxVal = maxValAbs;
-            if(maxVal < minVal) {
+            if (maxVal < minVal) {
                 maxVal = minVal;
             }
-            if(value > maxVal) {
+            if (value > maxVal) {
                 value = maxVal;
             }
             var activeIdx = Math.floor(u.mapRange(value, minVal, maxVal, this.positiveMinIndex, this.positiveMaxIndex));
             for (var i = this.positiveMinIndex; i <= activeIdx; i++) {
                 this.activateBox(i, true);
-            }            
+            }
+            this.playAudio(value, maxVal);
         } else {
-            if(maxValAbs > 0) {
-                maxValAbs = -1*maxValAbs;
+            if (maxValAbs > 0) {
+                maxValAbs = -1 * maxValAbs;
             }
             var minVal = -1;
             var maxVal = maxValAbs;
-            if(maxVal > minVal) {
+            if (maxVal > minVal) {
                 maxVal = minVal;
             }
-            if(value < maxVal) {
+            if (value < maxVal) {
                 value = maxVal;
             }
             var activeIdx = Math.ceil(u.mapRange(value, minVal, maxVal, this.negativeMinIndex, this.negativeMaxIndex));
             for (var i = this.negativeMinIndex; i >= activeIdx; i--) {
                 this.activateBox(i, true);
             }
+            this.playAudio(value, maxVal);
         }
     }
     ZScoreMeter.prototype.activateBox = function (boxIndex, isActive) {
         var box = this.boxes[boxIndex];
-        if(isNull(box)) {
+        if (isNull(box)) {
             return;
         }
         box.setActive(isActive);
     }
     ZScoreMeter.prototype.setBoxStyle = function (boxIndex, style) {
         var box = this.boxes[boxIndex];
-        if(isNull(box)) {
+        if (isNull(box)) {
             return;
         }
         box.setStyle(style);
+    }
+    ZScoreMeter.prototype.playAudio = function (value, maxVal) {
+        if (!this.isPlayAudio) {
+            return;
+        }
+        if (value === 0) {
+            a.playNoise(0.0);
+            return;
+        } else if (value > 0) {
+            a.playNoise(0.0);
+            a.playAudio(1, null, null, null);
+        } else {
+            var vol = u.mapRange(Math.abs(value), 0.0, Math.abs(maxVal), 0.0, 1.0);
+            a.playNoise(vol);
+        }        
     }
     // ---- ZScoreMeter END
     // ---- ZScoreMeterConfig 
@@ -244,7 +266,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         this.negMaxRGB = negMaxRGB;
         this.posMinRGB = posMinRGB;
         this.posMaxRGB = posMaxRGB;
-    }   
+    }
     // ---- ZScoreMeterConfig END
     // ---- ZScoreMeterBox
     function ZScoreMeterBox(id, svgId, x, y, width, height, inactiveStyle, activeStyle) {
@@ -259,7 +281,7 @@ var zscore = (function (u, n, s, a, win, doc) {
     }
     ZScoreMeterBox.prototype.draw = function () {
         var meterGrp = getMeterGroup();
-        if(isNull(meterGrp)) {
+        if (isNull(meterGrp)) {
             return;
         }
         var meterBox = s.createSvgRectangle(this.x, this.y, this.width, this.height, this.svgId);
@@ -268,21 +290,21 @@ var zscore = (function (u, n, s, a, win, doc) {
     }
     ZScoreMeterBox.prototype.setStyle = function (style) {
         var boxSvg = u.getElement(this.svgId);
-        if(isNull(boxSvg)) {
+        if (isNull(boxSvg)) {
             return;
         }
         setElementAttributes(boxSvg, style);
     }
     ZScoreMeterBox.prototype.setActive = function (isActive) {
         var boxSvg = u.getElement(this.svgId);
-        if(isNull(boxSvg)) {
+        if (isNull(boxSvg)) {
             return;
         }
-        if(isActive) {
+        if (isActive) {
             setElementAttributes(boxSvg, this.activeStyle);
         } else {
             setElementAttributes(boxSvg, this.inactiveStyle);
-        }        
+        }
     }
     // ---- ZScoreMeterBox END
 
@@ -327,12 +349,16 @@ var zscore = (function (u, n, s, a, win, doc) {
     function getServerState() {
         n.getServerState();
     }
+    function onAudioLoaded() {
+        a.initNoise();
+        a.initPlayer();
+    }
     function initAudio() {
         if (isNull(a)) {
             logError("initAudio: invalid zsAudio lib");
             return;
         }
-        a.init(AUDIO_FLIES, 0);
+        a.init(AUDIO_FLIES, onAudioLoaded);
     }
     function resetAudio() {
         if (isNull(a)) {
@@ -347,16 +373,16 @@ var zscore = (function (u, n, s, a, win, doc) {
     }
     function initPointerHandlers() {
         var thUr = getThumbUpRect();
-        if(isNotNull(thUr)) {
+        if (isNotNull(thUr)) {
             u.listen('touchend', thUr, onTouchEndThumbsUp);
             u.listen('mouseup', thUr, onMouseUpThumbsUp);
         }
         var thD = getThumbDownRect();
-        if(isNotNull(thD)) {
+        if (isNotNull(thD)) {
             u.listen('touchend', thD, onTouchEndThumbsDown);
             u.listen('mouseup', thD, onMouseUpThumbsDown);
         }
-        
+
     }
     function initMeter() {
         var meterStyleConfig = new ZScoreMeterConfig(config.meterInactiveStyle, config.meterZeroStyle, config.negativeMinCol, config.negativeMaxCol, config.positiveMinCol, config.positiveMaxCol);
@@ -376,15 +402,15 @@ var zscore = (function (u, n, s, a, win, doc) {
         setInstructions("Welcome to", "<span style='color:blueviolet;'>ZScore</span>", "awaiting performance start ...", null, true);
     }
     function onVote(value) {
-        var now = Date.now();        
-        if(isNotNull(state.currentVote) && state.currentVote === value) {
+        var now = Date.now();
+        if (isNotNull(state.currentVote) && state.currentVote === value) {
             var prevVoteTime = state.voteTimeMs;
             var threshold = prevVoteTime + config.voteTimeoutMs;
             var diff = now - threshold;
-            if(diff < 0) {
+            if (diff < 0) {
                 return;
             }
-        }        
+        }
         state.currentVote = value;
         state.voteTimeMs = now;
         var evParams = {};
@@ -393,10 +419,10 @@ var zscore = (function (u, n, s, a, win, doc) {
     }
     function setThumbsUpStyle(isActive) {
         var thUpEl = getThumbUpPath();
-        if(isNull(thUpEl)) {
+        if (isNull(thUpEl)) {
             return;
         }
-        if(isActive) {
+        if (isActive) {
             setElementAttributes(thUpEl, config.thumbsUpActiveStyle);
         } else {
             setElementAttributes(thUpEl, config.thumbsUpInActiveStyle);
@@ -404,15 +430,15 @@ var zscore = (function (u, n, s, a, win, doc) {
     }
     function setThumbsDownStyle(isActive) {
         var thDnEl = getThumbDownPath();
-        if(isNull(thDnEl)) {
+        if (isNull(thDnEl)) {
             return;
         }
-        if(isActive) {
+        if (isActive) {
             setElementAttributes(thDnEl, config.thumbsDownActiveStyle);
         } else {
             setElementAttributes(thDnEl, config.thumbsDownInActiveStyle);
         }
-    }    
+    }
     function setInstructions(l1, l2, l3, colour, isVisible) {
         if (isNull(instructionsElement)) {
             return;
@@ -458,12 +484,12 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
         inst = val;
         return true;
-    }   
+    }
     function setVote(voteCount) {
         if (isNull(voteCount)) {
             return;
         }
-        if(!u.isNumeric(voteCount)) {
+        if (!u.isNumeric(voteCount)) {
             voteCount = u.toInt(voteCount);
         }
 
@@ -473,7 +499,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         if (isNull(userNo)) {
             return;
         }
-        if(!u.isNumeric(userNo)) {
+        if (!u.isNumeric(userNo)) {
             userNo = u.toInt(userNo);
         }
 
@@ -552,29 +578,29 @@ var zscore = (function (u, n, s, a, win, doc) {
                 return;
         }
     }
-   
+
     function processInstructions(instructions) {
         setInstructions(instructions.line1, instructions.line2, instructions.line3, instructions.colour, instructions.isVisible);
     }
 
     function processCounter(counter) {
-        if(isNotNull(counter.count)) {
+        if (isNotNull(counter.count)) {
             setVote(counter.count);
         }
-        if(isNotNull(counter.maxCount)) {
+        if (isNotNull(counter.maxCount)) {
             setUserNo(counter.maxCount);
-        }        
+        }
         setMeter();
     }
     function setMeter() {
-        if(isNull(state.meter)) {
+        if (isNull(state.meter)) {
             return;
         }
         var maxVotes = state.userNo;
-        if(maxVotes <= config.meterMaxVotes) {
+        if (maxVotes <= config.meterMaxVotes) {
             maxVotes = config.meterMaxVotes;
         }
-        
+
         state.meter.set(state.voteCount, maxVotes);
     }
     function getSvg() {
@@ -666,10 +692,10 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
     }
     function parseLine(lineToCheck, spanId) {
-        while(u.contains(lineToCheck, SINGLE_QUOTE_HTML)) {
-            lineToCheck =  u.replace(lineToCheck, SINGLE_QUOTE_HTML, SINGLE_QUOTE);
-        }  
-        lineToCheck = u.wrapInSpanElement(lineToCheck, spanId); 
+        while (u.contains(lineToCheck, SINGLE_QUOTE_HTML)) {
+            lineToCheck = u.replace(lineToCheck, SINGLE_QUOTE_HTML, SINGLE_QUOTE);
+        }
+        lineToCheck = u.wrapInSpanElement(lineToCheck, spanId);
         return lineToCheck;
     }
     function checkLongestLine(lineToCheck, longestLine) {
@@ -712,7 +738,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         if (isNotNull(serverState.counter)) {
             processCounter(serverState.counter);
         }
-        
+
     }
     function getInstructionsTextStyle(textState) {
         if (!textState.isVisible) {
@@ -929,7 +955,7 @@ var zscore = (function (u, n, s, a, win, doc) {
             return;
         }
         // event.preventDefault();
-        onThumbsDown();   
+        onThumbsDown();
     }
     function setElementAttributes(element, attrAssocArr) {
         u.setElementAttributes(element, attrAssocArr);

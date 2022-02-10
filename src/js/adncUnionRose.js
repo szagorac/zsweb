@@ -277,12 +277,17 @@ var zscore = (function (u, n, s, a, win, doc) {
     function getServerState() {
         n.getServerState();
     }
+    function onAudioLoaded() {
+        a.initSpeech();
+        a.initPlayer();
+        a.initGranulator(5);
+    }
     function initAudio() {
         if (isNull(a)) {
             logError("initAudio: invalid zsAudio lib");
             return;
         }
-        a.init(AUDIO_FLIES, 5);
+        a.init(AUDIO_FLIES, onAudioLoaded);
     }
     function resetTweens() {
         tween.reset
