@@ -18,8 +18,22 @@ var zscore = (function (u, n, s, a, win, doc) {
     const SINGLE_QUOTE = "'";
 
     var AUDIO_FLIES = [
-        '/audio/violin-tuning.mp3',
-        '/audio/DialogsPitchAudio1.mp3',        
+        '/audio/DialogsPitch1-1.mp3',
+        '/audio/DialogsPitch1-2.mp3',
+        '/audio/DialogsPitch1-3.mp3',
+        '/audio/DialogsPitch2-1.mp3',
+        '/audio/DialogsPitch2-2.mp3',
+        '/audio/DialogsPitch2-3.mp3',
+        '/audio/DialogsPitch3-1.mp3',
+        '/audio/DialogsPitch3-2.mp3',
+        '/audio/DialogsPitch3-3.mp3',
+    ];
+
+    var AUDIO_FILE_INDEX_MAP = [
+        [],
+        [0,1,2],
+        [3,4,5],
+        [6,7,8],
     ];
 
     var isTouch = null;
@@ -86,6 +100,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         negativeMaxCol: { r: 255, g: 0, b: 0 },
         positiveMinCol: { r: 255, g: 255, b: 0 },
         positiveMaxCol: { r: 0, g: 125, b: 0 },
+        maxNoiseLevel: 0.5,
     }
 
     function ZScoreException(message) {
@@ -110,6 +125,8 @@ var zscore = (function (u, n, s, a, win, doc) {
         this.negativeMaxIndex = 0;
         this.zeroIndex = null;
         this.isPlayAudio = true;
+        this.currentValue = 0;
+        this.currentMaxVal = 0;
     }
     ZScoreMeter.prototype.init = function () {
         if (isNull(this.styleConfig) || !u.isNumeric(this.boxNo) || !u.isNumeric(this.midX) || !u.isNumeric(this.midY)) {
@@ -208,6 +225,8 @@ var zscore = (function (u, n, s, a, win, doc) {
             for (var i = this.positiveMinIndex; i <= activeIdx; i++) {
                 this.activateBox(i, true);
             }
+            this.currentValue = value;
+            this.currentMaxVal = maxVal;
             this.playAudio(value, maxVal);
         } else {
             if (maxValAbs > 0) {
@@ -225,6 +244,8 @@ var zscore = (function (u, n, s, a, win, doc) {
             for (var i = this.negativeMinIndex; i >= activeIdx; i--) {
                 this.activateBox(i, true);
             }
+            this.currentValue = value;
+            this.currentMaxVal = maxVal;
             this.playAudio(value, maxVal);
         }
     }
@@ -248,12 +269,15 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
         if (value === 0) {
             a.playNoise(0.0);
+            a.setPlayerVolume(0.0, 100);
             return;
         } else if (value > 0) {
             a.playNoise(0.0);
-            a.playAudio(1, null, null, null);
-        } else {
             var vol = u.mapRange(Math.abs(value), 0.0, Math.abs(maxVal), 0.0, 1.0);
+            a.setPlayerVolume(vol, 500);
+        } else {
+            a.setPlayerVolume(0.0, 100);
+            var vol = u.mapRange(Math.abs(value), 0.0, Math.abs(maxVal), 0.0, config.maxNoiseLevel);
             a.playNoise(vol);
         }        
     }
@@ -546,13 +570,90 @@ var zscore = (function (u, n, s, a, win, doc) {
         log("runAudio: " + actionId + BLANK + target);
 
         switch (target) {
-            case 'buffer':
+            case 'player':
+                runAudioPlayer(actionId, params);
                 break;
             case 'granulator':
                 break;
             case 'speechSynth':
                 break;
         }
+    }
+    function runAudioPlayer(actionId, params) {
+        if (!u.isString(actionId)) {
+            return;
+        }
+
+        switch (actionId) {
+            case 'play':
+                runAudioPlayerPlay(params);
+                break;
+            case 'volume':
+                setAudioPlayerVolume(params);
+                break;
+            default:
+                logError("runPlayer: Unknown actionId: " + actionId);
+                return;
+        }
+    }
+    function runAudioPlayerPlay(params) {
+        if (isNull(a)) {
+            logError("runPlayerPlay: Invalid zsAudio lib");
+            return;
+        }
+        if (!u.isObject(params)) {
+            return;
+        }
+
+        var sectionIndex = 0;
+        if (!isNull(params.index)) {
+            if (u.isString(params.index)) {
+                sectionIndex = u.toInt(params.index);
+            } else if (u.isNumeric(params.index)) {
+                sectionIndex = params.index;
+            }
+        }
+
+        var bufferIndex = sectionIndex;
+        if(sectionIndex > 0  && sectionIndex < AUDIO_FILE_INDEX_MAP.length) {
+            var fileIdxArr = AUDIO_FILE_INDEX_MAP[sectionIndex];
+            bufferIndex = u.randomArrayElement(fileIdxArr);            
+        }
+
+        var startTime = null;
+        var offset = null;
+        var duration = null;
+
+        if (!isNull(params.startTime)) {
+            startTime = params.startTime;
+        }
+        if (!isNull(params.offset)) {
+            offset = params.offset;
+        }
+        if (!isNull(params.duration)) {
+            duration = params.duration;
+        }
+
+        a.playAudio(bufferIndex, startTime, offset, duration);
+    }
+    function setAudioPlayerVolume(params) {
+        if (isNull(a)) {
+            logError("setAudioMasterVolume: Invalid zsAudio lib");
+            return;
+        }
+        if (!u.isObject(params)) {
+            return;
+        }
+        var level = null;
+        var timeMs = null;
+
+        if (!isNull(params.level)) {
+            level = params.level;
+        }
+        if (!isNull(params.timeMs)) {
+            timeMs = params.timeMs;
+        }
+        a.setPlayerVolume(level, timeMs);
     }
     function reset(actionId, targets, params) {
         if (u.isArray(targets)) {
@@ -779,6 +880,9 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
 
         switch (actionType) {
+            case "AUDIO":
+                audio(id, elementIds, params);
+                break;
             default:
                 logError("doAction: Unknown actionType: " + actionType);
         }

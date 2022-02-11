@@ -62,6 +62,9 @@ var zsPlayer = (function (u, win) {
         if(_isNull(this.audioSourceNode)) {
             return;
         } 
+        if(this.isPlaying) {
+            return;
+        }
         this.audioSourceNode.start(startTime, offset, duration);
         this.isPlaying = true;
     }
@@ -105,10 +108,24 @@ var zsPlayer = (function (u, win) {
         if(currentValue === level) {
             return;
         }
-        var t = _getNow();
-        t  = t + timeSec;
+        var now = _getNow();
+
+        var v1 = level / 4.0;
+        var t1 = now + (timeSec / 2.0);
+        var v2 = level;
+        var t2 = now + timeSec;
+        if (level === 0.0) {
+            v1 = 0.0;
+            v2 = 0.0;
+        } else if (level < currentValue) {
+            v1 = level - v1;
+        } else {
+            v1 = level + v1;
+        }
+
         _log("ZsBuffer setGain: time:" + _getNow() + " index: " + this.index + " level: " + level + " duration: " + timeSec);
-        this.gainNode.gain.linearRampToValueAtTime(level, t);
+        this.gainNode.gain.linearRampToValueAtTime(v1, t1);
+        this.gainNode.gain.linearRampToValueAtTime(v2, t2);
     }
     // ----- ZsBuffer END
 

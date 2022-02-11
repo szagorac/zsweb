@@ -274,15 +274,31 @@ var zsAudio = (function (u, gr, sp, pl, nz, win) {
 
     //player
     function _initPlayer() {
+        if (isNull(pl)) {
+            logError("_playAudioBuffer: Invalid granulator");
+            return;
+        }
         pl.init(_ctx, _audioBuffers);
     }
     function _playAudioBuffer(bufferIndex, startTime, offset, duration) {
+        if (isNull(pl) || !_isAudioInitialised) {
+            logError("_playAudioBuffer: Invalid granulator");
+            return;
+        }
         pl.play(bufferIndex, startTime, offset, duration);
     }
-    function _setPlayerVolume(level, timeMs) {       
+    function _setPlayerVolume(level, timeMs) {
+        if (isNull(pl) || !_isAudioInitialised) {
+            logError("_setPlayerVolume: Invalid granulator");
+            return;
+        }
         pl.setGain(level, timeMs);
     }
-    function _setPlayerMaxVolume(level) {       
+    function _setPlayerMaxVolume(level) {
+        if (isNull(pl) || !_isAudioInitialised) {
+            logError("_setPlayerMaxVolume: Invalid granulator");
+            return;
+        }
         pl.setMaxGain(level);
     }
     //player END
