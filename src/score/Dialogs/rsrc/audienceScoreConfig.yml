@@ -1,6 +1,57 @@
 scoreName: "Dialogs"
 presets:
+
+  - id: -2
+    config:
+      - granulator: {
+        masterGainVal: 0.1,
+        playDurationSec: 30.0,
+        playStartOffsetSec: 0.0,
+        maxGrains: 16,
+        bufferPositionPlayRate: 0.5,
+        audioStopToleranceMs: 5,
+        isUsePositionOscillator: true,
+        isUseSizeOscillator: true,
+        isUsePositionFrequencyMod: true,
+        isUsePositionRangeMod: true,
+        panner: { isUsePanner: false, panningModel: "equalpower", distanceModel: "linear", maxPanAngle: 45 },
+        envelope: { attackTime: 0.5, decayTime: 0.0, sustainTime: 0.0, releaseTime: 0.5, sustainLevel: 1.0 },
+        grain: { sizeMs: 100, pitchRate: 1.0, maxPositionOffsetRangeMs: 100, maxPitchRateRange: 0.03, timeOffsetStepMs: 10 },
+        positionOscillator: { minValue: 500.0, maxValue: 4500.0, type: "TRIANGLE", frequency: 0.2,
+                              frequencyLFO: { minValue: -0.1, maxValue: 0.0, type: "TRIANGLE", frequency: 0.02 },
+                              startLFO: { minValue: -500.0, maxValue: 500.0, type: "TRIANGLE", frequency: 0.1 },
+                              endLFO: { minValue: -500.0, maxValue: 500.0, type: "TRIANGLE", frequency: 0.1 } },
+        sizeOscillator: { minValue: -30.0, maxValue: 500.0, type: "TRIANGLE", frequency: 0.1 },
+      }
+      - speechSynth: {
+        volume: 1.0,
+        pitch: 1.0,
+        rate: 0.7,
+        lang: "en-GB",
+        maxVoiceLoadAttempts: 10,
+        maxUtterances: 5,
+        utteranceTimeoutSec: 30,
+        isInterrupt: false,
+        interruptTimeout: 250,
+      }
+  - id: -1
+    scripts: [
+        "webScore.setInstructions('','', '', false);"
+    ]
+  - id: 0
+    scripts: [
+        "webScore.setInstructions('Get ready','Turn up the volume!','');"
+    ]
   - id: 1
     scripts: [
         "webScore.resetState();",
+        "webScore.setInstructions('Preparing for the next','<span style=\\'color:blueviolet;\\'>Dialog</span>', '');"
+    ]
+  - id: 2
+    scripts: [
+        "webScore.reset(1);",
+    ]
+  - id: 3
+    scripts: [
+        "webScore.reset(1);",
     ]

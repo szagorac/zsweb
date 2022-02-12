@@ -101,6 +101,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         positiveMinCol: { r: 255, g: 255, b: 0 },
         positiveMaxCol: { r: 0, g: 125, b: 0 },
         maxNoiseLevel: 0.5,
+        audioFadeInMs: 1000,
     }
 
     function ZScoreException(message) {
@@ -269,14 +270,14 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
         if (value === 0) {
             a.playNoise(0.0);
-            a.setPlayerVolume(0.0, 100);
+            a.setPlayerVolume(0.0, 500);
             return;
         } else if (value > 0) {
             a.playNoise(0.0);
             var vol = u.mapRange(Math.abs(value), 0.0, Math.abs(maxVal), 0.0, 1.0);
-            a.setPlayerVolume(vol, 500);
+            a.setPlayerVolume(vol, config.audioFadeInMs);
         } else {
-            a.setPlayerVolume(0.0, 100);
+            a.setPlayerVolume(0.0, config.audioFadeInMs);
             var vol = u.mapRange(Math.abs(value), 0.0, Math.abs(maxVal), 0.0, config.maxNoiseLevel);
             a.playNoise(vol);
         }        
