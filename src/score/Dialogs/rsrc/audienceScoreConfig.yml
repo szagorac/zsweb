@@ -1,6 +1,5 @@
 scoreName: "Dialogs"
 presets:
-
   - id: -2
     config:
       - granulator: {
@@ -52,6 +51,45 @@ presets:
         "webScore.reset(1);",
     ]
   - id: 3
+    config:
+      - player: {
+          files: [
+              "/audio/DialogsRhythm2-1.wav",
+              "/audio/DialogsRhythm2-2.wav",
+              "/audio/DialogsRhythm3-1.wav",
+              "/audio/DialogsRhythm3-2.wav",
+              "/audio/DialogsRhythm4-1.wav",
+              "/audio/DialogsRhythm4-2.wav",
+              "/audio/DialogsRhythm5-1.wav",
+              "/audio/DialogsRhythm5-2.wav",
+              "/audio/DialogsRhythm6-1.wav",
+              "/audio/DialogsRhythm6-2.wav",
+              "/audio/DialogsRhythm7-1.wav",
+              "/audio/DialogsRhythm7-2.wav",
+              "/audio/DialogsRhythm8-1.wav",
+              "/audio/DialogsRhythm8-2.wav",
+              "/audio/DialogsRhythm9-1.wav",
+              "/audio/DialogsRhythm9-2.wav",
+              "/audio/DialogsRhythm10-1.wav",
+              "/audio/DialogsRhythm10-2.wav",
+              "/audio/DialogsRhythm11-1.wav",
+              "/audio/DialogsRhythm11-2.wav",
+          ],
+          file_map:  [
+            [],
+            [0,1],
+            [2,3],
+            [4,5],
+            [6,7],
+            [8,9],
+            [10,11],
+            [12,13],
+            [14,15],
+            [16,17],
+            [18,19],
+          ];
+      }
     scripts: [
         "webScore.reset(1);",
+        "webScore.sendAudioFileConfig();",
     ]
