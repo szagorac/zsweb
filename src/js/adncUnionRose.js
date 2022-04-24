@@ -1819,7 +1819,7 @@ var zscore = (function (u, n, s, a, win, doc) {
                 runAudioStopGranulator(params);
                 break;
             case 'config':
-                updateGranulatorCofig(params);
+                updateGranulatorConfig(params);
                 break;
             case 'rampLinear':
                 runAudioGranulatorRampLinear(params);
@@ -1932,7 +1932,7 @@ var zscore = (function (u, n, s, a, win, doc) {
     function resetSelectedTiles() {
         resetSelectedTilesState();
     }
-    function updateGranulatorCofig(params) {
+    function updateGranulatorConfig(params) {
         if (isNull(a)) {
             logError("runAudioPlayGranulator: Invalid zsAudio lib");
             return;
@@ -1955,7 +1955,7 @@ var zscore = (function (u, n, s, a, win, doc) {
                 runStopSpeechSynth(params);
                 break;
             case 'config':
-                updateSpeechCofig(params);
+                updateSpeechConfig(params);
                 break;
             case 'state':
                 setSpeechState(params);
@@ -2045,7 +2045,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
         a.stopSpeach();
     }
-    function updateSpeechCofig(params) {
+    function updateSpeechConfig(params) {
         if (isNull(a)) {
             logError("updateSpeechCofig: Invalid zsAudio lib");
             return;

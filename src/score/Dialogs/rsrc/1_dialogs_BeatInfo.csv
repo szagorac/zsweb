@@ -870,7 +870,7 @@ Dialogs,AV,page13,13,bar13,13,12,4,100,4,145,108600,600,109200,291,2,293,68,123,
 Dialogs,AV,page13,13,bar13,13,12,4,100,4,145,108600,600,109200,291,2,293,68,123,100,100,0,max:beat=-1:reset=only:setFile|b4|DialogsRhythm_b2.wav,291
 Dialogs,AV,page13,13,bar13,13,12,4,100,4,145,108600,600,109200,291,2,293,68,123,100,100,0,max:beat=1:play|b1,291
 Dialogs,AV,page13,13,bar13,13,12,4,100,4,145,108600,600,109200,291,2,293,68,123,100,100,0,max:beat=8:setFile|b2|DialogsRhythm_b2.wav,291
-Dialogs,AV,page13,13,bar13,13,12,4,100,4,145,108600,600,109200,291,2,293,68,123,100,100,0,web:beat=-1:reset=only:webScore.reset(2);,291
+Dialogs,AV,page13,13,bar13,13,12,4,100,4,145,108600,600,109200,291,2,293,68,123,100,100,0,web:beat=-1:reset=only:webScore.reset(3);,291
 Dialogs,AV,page13,13,bar13,13,12,4,100,4,145,108600,600,109200,291,2,293,68,123,100,100,0,web:beat=2:webScore.setInstructions('<span style=@Q@color:blueviolet;@Q@>Dialogs:</span>'|'Rhythm'| '');,291
 Dialogs,AV,page13,13,bar13,13,12,4,100,4,145,108600,600,109200,291,2,293,68,123,100,100,0,web:beat=8:webScore.setInstructions(false);,291
 Dialogs,Concur,page13,13,bar12,12,12,4,100,4,144,108000,600,108600,289,2,291,30,68,100,100,1,/Users/slavko/MyHome/Music/scoreExport/Dialogs/merged/Dialogs_Concur_page13,289

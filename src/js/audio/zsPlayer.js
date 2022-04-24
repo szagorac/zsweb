@@ -225,7 +225,6 @@ var zsPlayer = (function (u, win) {
         }
         var buffer = _szBuffers[bufferIndex];
         if(_isNull(buffer)) {
-            _logError("stop: invalid bufferIndex: " + bufferIndex);
             return;
         }
         buffer.stop();

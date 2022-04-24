@@ -6,7 +6,7 @@ var zscore = (function (u, n, s, a, win, doc) {
     // const RUN_MODE = "PROD";
 
     const EMPTY = "";
-    const BLANK = " ";
+    const SPACE = " ";
     const RECT = "Rect";
     const COL_WHITE = "#FFFFFF";
     const COL_BLACK = "#000000";
@@ -17,28 +17,11 @@ var zscore = (function (u, n, s, a, win, doc) {
     const SINGLE_QUOTE_HTML = "&#39;";
     const SINGLE_QUOTE = "'";
 
-    var AUDIO_FLIES = [
-        '/audio/DialogsPitch1-1.mp3',
-        '/audio/DialogsPitch1-2.mp3',
-        '/audio/DialogsPitch1-3.mp3',
-        '/audio/DialogsPitch2-1.mp3',
-        '/audio/DialogsPitch2-2.mp3',
-        '/audio/DialogsPitch2-3.mp3',
-        '/audio/DialogsPitch3-1.mp3',
-        '/audio/DialogsPitch3-2.mp3',
-        '/audio/DialogsPitch3-3.mp3',
-    ];
-
-    var AUDIO_FILE_INDEX_MAP = [
-        [],
-        [0,1,2],
-        [3,4,5],
-        [6,7,8],
-    ];
-
-    var isTouch = null;
-    var isSafari = null;
-    var instructionsElement = null;
+    var _audioFiles = ['/audio/DialogsPitch1-1.mp3'];
+    var _audioFileIndexMap = [[0]];
+    var _isTouch = null;
+    var _isSafari = null;
+    var _instructionsElement = null;
 
     // INIT on window load
     // u.listen("load", window, onLoad);
@@ -346,9 +329,9 @@ var zscore = (function (u, n, s, a, win, doc) {
         u.setRunMode(RUN_MODE);
 
         log("init: ");
-        isTouch = u.isTouchDevice()
-        isSafari = u.isSafari(navigator);
-        log("init: IsTouch Device: " + isTouch + " isSafari: " + isSafari);
+        _isTouch = u.isTouchDevice()
+        _isSafari = u.isSafari(navigator);
+        log("init: IsTouch Device: " + _isTouch + " isSafari: " + _isSafari);
 
         state.fontCanvas = doc.createElement("canvas");
         state.canvasCtx = state.fontCanvas.getContext('2d');
@@ -377,13 +360,14 @@ var zscore = (function (u, n, s, a, win, doc) {
     function onAudioLoaded() {
         a.initNoise();
         a.initPlayer();
+        log("onAudioLoaded: completed");
     }
     function initAudio() {
         if (isNull(a)) {
             logError("initAudio: invalid zsAudio lib");
             return;
         }
-        a.init(AUDIO_FLIES, onAudioLoaded);
+        a.init(_audioFiles, onAudioLoaded);
     }
     function resetAudio() {
         if (isNull(a)) {
@@ -421,7 +405,7 @@ var zscore = (function (u, n, s, a, win, doc) {
             return;
         }
 
-        instructionsElement = inst;
+        _instructionsElement = inst;
         u.listen('resize', win, onWindowResize);
         u.listen('orientationchange', win, onWindowResize);
         setInstructions("Welcome to", "<span style='color:blueviolet;'>ZScore</span>", "awaiting performance start ...", null, true);
@@ -465,7 +449,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
     }
     function setInstructions(l1, l2, l3, colour, isVisible) {
-        if (isNull(instructionsElement)) {
+        if (isNull(_instructionsElement)) {
             return;
         }
 
@@ -568,7 +552,7 @@ var zscore = (function (u, n, s, a, win, doc) {
             return;
         }
 
-        log("runAudio: " + actionId + BLANK + target);
+        log("runAudio: " + actionId + SPACE + target);
 
         switch (target) {
             case 'player':
@@ -592,10 +576,46 @@ var zscore = (function (u, n, s, a, win, doc) {
             case 'volume':
                 setAudioPlayerVolume(params);
                 break;
+            case 'config':
+                updateAudioPlayerCofig(params);
+                break;                
             default:
                 logError("runPlayer: Unknown actionId: " + actionId);
                 return;
         }
+    }
+    function updateAudioPlayerCofig(params) {
+        if (isNull(a)) {
+            logError("runAudioPlayGranulator: Invalid zsAudio lib");
+            return;
+        }
+        if (!u.isObject(params)) {
+            return;
+        }        
+        var isLoadBuffers = false;
+        if (!isNull(params.audioFiles)) {
+            var audioFiles = params.audioFiles;
+            if(!u.isArray(audioFiles)) {
+                logError("updateAudioPlayerCofig: invalid audioFiles array");
+            } else if (u.arrEquals(_audioFiles, audioFiles)) {
+                log("updateAudioPlayerCofig: audioFiles array identical, ignoring update");
+            } else {
+                _audioFiles = audioFiles;                
+                isLoadBuffers = true;
+            }
+        }
+        if (!isNull(params.audioFilesIndexMap)) {
+            var fileIndexMap = params.audioFilesIndexMap;
+            if(!u.isArray(fileIndexMap) || fileIndexMap.length < 1) {
+                logError("updateAudioPlayerCofig: invalid fileIndexMap array");
+            } else {
+                _audioFileIndexMap = fileIndexMap;                
+            }
+        }
+        if(isLoadBuffers) {
+            log("updateAudioPlayerCofig: laoding audioFiles");
+            a.loadAudioBuffers(_audioFiles);
+        }        
     }
     function runAudioPlayerPlay(params) {
         if (isNull(a)) {
@@ -616,8 +636,8 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
 
         var bufferIndex = sectionIndex;
-        if(sectionIndex > 0  && sectionIndex < AUDIO_FILE_INDEX_MAP.length) {
-            var fileIdxArr = AUDIO_FILE_INDEX_MAP[sectionIndex];
+        if(sectionIndex > 0  && sectionIndex < _audioFileIndexMap.length) {
+            var fileIdxArr = _audioFileIndexMap[sectionIndex];
             bufferIndex = u.randomArrayElement(fileIdxArr);            
         }
 
@@ -670,7 +690,7 @@ var zscore = (function (u, n, s, a, win, doc) {
             return;
         }
 
-        log("reset: actionId: " + actionId + BLANK + target);
+        log("reset: actionId: " + actionId + SPACE + target);
 
         switch (actionId) {
             case 'all':
@@ -694,6 +714,9 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
         setMeter();
     }
+    function processPlayerConfig(playerConfig) {
+        updateAudioPlayerCofig(playerConfig);
+    }
     function setMeter() {
         if (isNull(state.meter)) {
             return;
@@ -709,11 +732,11 @@ var zscore = (function (u, n, s, a, win, doc) {
         return u.getElement("svgCanvas");
     }
     function displayInstructions(val) {
-        if (isNull(instructionsElement)) {
+        if (isNull(_instructionsElement)) {
             return;
         }
 
-        instructionsElement.innerHTML = EMPTY;
+        _instructionsElement.innerHTML = EMPTY;
         var l1 = state.instructions.l1;
         var spanId1 = config.textSpanPrefix + "1";
         var l2 = state.instructions.l2;
@@ -747,27 +770,27 @@ var zscore = (function (u, n, s, a, win, doc) {
 
         var defaultFontSize = config.textFontSize;
 
-        var fontSize = getFontSizeFit(longestLine, defaultFontSize, instructionsElement);
+        var fontSize = getFontSizeFit(longestLine, defaultFontSize, _instructionsElement);
         //log("Setting font size: " + fontSize);
-        instructionsElement.style.fontSize = EMPTY + fontSize + "px";
-        instructionsElement.style.fontFamily = config.textFontFamily;
-        instructionsElement.innerHTML = val;
+        _instructionsElement.style.fontSize = EMPTY + fontSize + "px";
+        _instructionsElement.style.fontFamily = config.textFontFamily;
+        _instructionsElement.innerHTML = val;
 
-        var span1 = u.getChildElement(instructionsElement, u.toCssIdQuery(spanId1));
+        var span1 = u.getChildElement(_instructionsElement, u.toCssIdQuery(spanId1));
         if (!isNull(span1)) {
             span1.style.opacity = 0;
         }
-        var span2 = u.getChildElement(instructionsElement, u.toCssIdQuery(spanId2));
+        var span2 = u.getChildElement(_instructionsElement, u.toCssIdQuery(spanId2));
         if (!isNull(span2)) {
             span2.style.opacity = 0;
         }
-        var span3 = u.getChildElement(instructionsElement, u.toCssIdQuery(spanId3));
+        var span3 = u.getChildElement(_instructionsElement, u.toCssIdQuery(spanId3));
         if (!isNull(span3)) {
             span3.style.opacity = 0;
         }
 
         state.instructions.isVisible = true;
-        setInstructionsTextStyle(instructionsElement, state.instructions);
+        setInstructionsTextStyle(_instructionsElement, state.instructions);
 
         if (config.textSpanIsFadeIn) {
             var du = config.textSpanFadeTimeSec;
@@ -805,17 +828,17 @@ var zscore = (function (u, n, s, a, win, doc) {
         return (line.length > longestLine.length) ? line : longestLine;
     }
     function getFontString(size) {
-        return config.textFontType + BLANK + size + "px " + config.textFontFamily;
+        return config.textFontType + SPACE + size + "px " + config.textFontFamily;
     }
     function hideInstructions() {
-        if (isNull(instructionsElement)) {
+        if (isNull(_instructionsElement)) {
             return;
         }
 
-        instructionsElement.innerHTML = EMPTY;
+        _instructionsElement.innerHTML = EMPTY;
 
         state.instructions.isVisible = false;
-        setInstructionsTextStyle(instructionsElement, state.instructions);
+        setInstructionsTextStyle(_instructionsElement, state.instructions);
     }
     function setInstructionsTextStyle(instructionsElement, instructionsState) {
         var instructionsTextStyle = getInstructionsTextStyle(instructionsState);
@@ -840,7 +863,9 @@ var zscore = (function (u, n, s, a, win, doc) {
         if (isNotNull(serverState.counter)) {
             processCounter(serverState.counter);
         }
-
+        if (isNotNull(serverState.playerConfig)) {
+            processPlayerConfig(serverState.playerConfig);
+        }
     }
     function getInstructionsTextStyle(textState) {
         if (!textState.isVisible) {
@@ -884,9 +909,66 @@ var zscore = (function (u, n, s, a, win, doc) {
             case "AUDIO":
                 audio(id, elementIds, params);
                 break;
+            case "STOP":
+                stop(id, elementIds, params);
+                break;
             default:
                 logError("doAction: Unknown actionType: " + actionType);
         }
+    }
+    function stop(actionId, targets, params) {
+        if (u.isArray(targets)) {
+            for (var i = 0; i < targets.length; i++) {
+                runStop(actionId, targets[i], params);
+            }
+        } else {
+            runStop(actionId, targets, params);
+        }
+    }
+    function runStop(actionId, target, params) {
+        if (!u.isString(actionId)) {
+            return;
+        }
+
+        log("stop: actionId: " + actionId + SPACE + target);
+
+        switch (actionId) {
+            case 'stop':
+                runStopAction(target, params);
+                break;
+            default:
+                logError("Unknown stop actionId: " + actionId);
+                return;
+        }
+    }
+    function runStopAction(target, params) {
+        if (isNull(target)) {
+            return;
+        }
+
+        log("runStopAction: target: " + target);
+
+        switch (target) {
+            case 'all':
+                runStopAll(params);
+                break;
+            case 'player':
+                runAudioStopPlayer(params);
+                break;
+        }
+    }
+    function runStopAll(params) {
+        log("runStopAll: ");
+        if (!isNull(a) && a.isReady()) {
+            runAudioStopPlayer(params);
+        }
+    }
+    function runAudioStopPlayer(params) {
+        if (isNull(a)) {
+            logError("runAudioStopPlayer: Invalid zsAudio lib");
+            return;
+        }
+        a.stopPlayer();
     }
     function playOrRestartTween(tween) {
         if (isNull(tween)) {
@@ -1032,7 +1114,7 @@ var zscore = (function (u, n, s, a, win, doc) {
     }
     function onMouseUpThumbsUp(event) {
         log("onMouseUpThumbsUp:");
-        if (isTouch) {
+        if (_isTouch) {
             return;
         }
         // event.preventDefault();
@@ -1040,7 +1122,7 @@ var zscore = (function (u, n, s, a, win, doc) {
     }
     function onTouchEndThumbsUp(event) {
         log("onTouchEndThumbsUp:");
-        if (!isTouch) {
+        if (!_isTouch) {
             return;
         }
         // event.preventDefault();
@@ -1048,7 +1130,7 @@ var zscore = (function (u, n, s, a, win, doc) {
     }
     function onMouseUpThumbsDown(event) {
         log("onMouseUpThumbsDown:");
-        if (isTouch) {
+        if (_isTouch) {
             return;
         }
         // event.preventDefault();
@@ -1056,7 +1138,7 @@ var zscore = (function (u, n, s, a, win, doc) {
     }
     function onTouchEndThumbsDown(event) {
         log("onTouchEndThumbsDown:");
-        if (!isTouch) {
+        if (!_isTouch) {
             return;
         }
         // event.preventDefault();

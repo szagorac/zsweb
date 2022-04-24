@@ -1616,6 +1616,9 @@ var zsUtil = (function (console, win, doc) {
             return Math.random() * (max - min) + min;
         },
         randomArrayElement: function (arr) {
+            if(!_isArray(arr)) {
+                return null;
+            }
             return arr[Math.floor(Math.random() * arr.length)];
         },
         round: function (val, decimalPlaces) {
