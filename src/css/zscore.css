@@ -59,6 +59,15 @@ sup {
 /*whatever width you want*/
 }
 
+.loading {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    visibility: hidden;
+    /* height: 100%;
+    width: 100%; */
+}
+
 .top-3cm-spacer {
     margin-top: 3cm;
 }

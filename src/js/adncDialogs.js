@@ -58,6 +58,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         textSpanFadeTimeSec: 1.0,
         textSpanFadeStaggerTimeSec: 0.5,
         voteTimeoutMs: 5000,
+        loadingIconId: "loadingIcon",
         elementGroupSuffix: "Grp",
         meterGroupId: "meterGrp",
         thumbUpRectId: "thUpRect",
@@ -360,6 +361,7 @@ var zscore = (function (u, n, s, a, win, doc) {
     function onAudioLoaded() {
         a.initNoise();
         a.initPlayer();
+        u.makeInVisible(config.loadingIconId);
         log("onAudioLoaded: completed");
     }
     function initAudio() {
@@ -614,6 +616,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
         if(isLoadBuffers) {
             log("updateAudioPlayerCofig: laoding audioFiles");
+            u.makeVisible(config.loadingIconId);
             a.loadAudioBuffers(_audioFiles);
         }        
     }
