@@ -114,3 +114,45 @@ presets:
         "webScore.reset(1);",
         "webScore.sendAudioFileConfig();",
     ]
+  - id: 4
+    config:
+      - player: {
+      audioFiles: [
+          "/audio/DialogsMelody2-1.wav",
+          "/audio/DialogsMelody2-2.wav",
+          "/audio/DialogsMelody3-1.wav",
+          "/audio/DialogsMelody3-2.wav",
+          "/audio/DialogsMelody4-1.wav",
+          "/audio/DialogsMelody4-2.wav",
+          "/audio/DialogsMelody5-1.wav",
+          "/audio/DialogsMelody5-2.wav",
+          "/audio/DialogsMelody6-1.wav",
+          "/audio/DialogsMelody6-2.wav",
+          "/audio/DialogsMelody7-1.wav",
+          "/audio/DialogsMelody7-2.wav",
+          "/audio/DialogsMelody9-1.wav",
+          "/audio/DialogsMelody9-2.wav",
+          "/audio/DialogsMelody11-1.wav",
+          "/audio/DialogsMelody11-2.wav",
+          "/audio/DialogsMelody12-1.wav",
+          "/audio/DialogsMelody12-2.wav",
+      ],
+      audioFilesIndexMap:  [
+        [],
+        [0,1],
+        [2,3],
+        [4,5],
+        [6,7],
+        [8,9],
+        [10,11],
+        [],
+        [12,13],
+        [],
+        [14,15],
+        [16,17],
+      ],
+    }
+    scripts: [
+        "webScore.reset(1);",
+        "webScore.sendAudioFileConfig();",
+    ]
