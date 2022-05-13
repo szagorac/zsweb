@@ -71,6 +71,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     const EVENT_PARAM_SECTION = "section";
     const EVENT_PARAM_CLIENT_ID = "clientId";
     const EVENT_PARAM_TRANSPOSITION = "transposition";
+    const EVENT_PARAM_TEXT = "text";
 
     const DEFAULT_PAGE_IMG_URL = "img/blankStave.png";
     const DEFAULT_PAGE_ID = "p0";
@@ -1553,6 +1554,9 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             case "OVERLAY_COLOUR":
                 callForTargets(onOverlayColour, targets, params);
                 break;
+            case "OVERLAY_TEXT":
+                callForTargets(setOverlayText, targets, params);
+                break;                
             default:
                 logError("doAction: Unknown actionType: " + actionType);
         }
@@ -1679,6 +1683,23 @@ var zscore = (function (u, n, s, a, m, win, doc) {
                 log("setOverlayElement: unknown overlay type: " + overlayType);
         }
     }
+    function setOverlayText(stave, overlayType, text, isEnabled) {
+        if (isNull(stave) || isNull(overlayType)) {
+            return;
+        }
+        var staveConf = stave.config;
+        if (isNull(staveConf)) {
+            return;
+        }
+        logDebug("setOverlayText: overlayType: " + overlayType);
+        switch (overlayType) {
+            case "PITCH":
+                setPitchOverlayText(staveConf, text, isEnabled);
+                break;            
+            default:
+                log("setOverlayElement: unknown overlay type: " + overlayType);
+        }
+    }
     function setTimbreOverlay(staveConf, overlayElement, isEnabled, opacity) {
         if (isNull(overlayElement) || isNull(staveConf)) {
             return;
@@ -1749,6 +1770,25 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         setPitchStaveOverlay(staveConf, "PITCH_STAVE_MID_LINE", isEnabled, 1.0);
     }
     function setPitchOverlay(staveConf, overlayElement, isEnabled, opacity) {
+        if (isNull(overlayElement) || isNull(staveConf)) {
+            return;
+        }
+        switch (overlayElement) {
+            case "PITCH_BOX":
+                setOverlayVisibility(staveConf.ovrlPitchId + config.idRectSuffix, isEnabled, opacity);
+                setOverlayVisibility(staveConf.ovrlPitchId, isEnabled, opacity);
+                if (!isEnabled) {
+                    setOverlayVisibility(staveConf.ovrlPitchId + config.idLineSuffix, isEnabled, opacity);
+                }
+                break;
+            case "PITCH_LINE":
+                setOverlayVisibility(staveConf.ovrlPitchId + config.idLineSuffix, isEnabled, opacity);
+                break;
+            default:
+                log("setPitchOverlay: unknown overlay element: " + overlayElement);
+        }
+    }
+    function setPitchOverlayText(staveConf, text, isEnabled) {
         if (isNull(overlayElement) || isNull(staveConf)) {
             return;
         }
