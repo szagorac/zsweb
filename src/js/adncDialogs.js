@@ -412,6 +412,14 @@ var zscore = (function (u, n, s, a, win, doc) {
         u.listen('orientationchange', win, onWindowResize);
         setInstructions("Welcome to", "<span style='color:blueviolet;'>ZScore</span>", "awaiting performance start ...", null, true);
     }
+    function startVoteTimeout(id) {
+        // CSSPlugin.useSVGTransformAttr = false;
+        if(isNull(id)) {
+            return;
+        }
+        var duration = config.voteTimeoutMs/1000;
+        gsap.from(u.toCssIdQuery(id), { duration: duration, scaleY:0, fill: "white", transformOrigin:"right bottom" });
+    }
     function onVote(value) {
         var now = Date.now();
         if (isNotNull(state.currentVote) && state.currentVote === value) {
@@ -422,6 +430,7 @@ var zscore = (function (u, n, s, a, win, doc) {
                 return;
             }
         }
+        startVoteTimeout(config.thumbUpPathId);
         state.currentVote = value;
         state.voteTimeMs = now;
         var evParams = {};
