@@ -71,7 +71,10 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     const EVENT_PARAM_SECTION = "section";
     const EVENT_PARAM_CLIENT_ID = "clientId";
     const EVENT_PARAM_TRANSPOSITION = "transposition";
-    const EVENT_PARAM_TEXT = "text";
+    const EVENT_PARAM_TEXT_L1 = "l1";
+    const EVENT_PARAM_TEXT_L2 = "l2";
+    const EVENT_PARAM_TEXT_L3 = "l3";
+
 
     const DEFAULT_PAGE_IMG_URL = "img/blankStave.png";
     const DEFAULT_PAGE_ID = "p0";
@@ -98,6 +101,9 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         pageIdPrefix: "p",
         tsBaseBeatDenom: 8,
         tsY: 0,
+        textSpanFadeTimeSec: 1.0,
+        textSpanFadeStaggerTimeSec: 0.5,
+        textSpanIsFadeIn: true,
         beatIdPrefix: "b",
         tweenIdPrefix: "tw",
         beatTweenIdPrefix: "btw",
@@ -125,6 +131,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         idOrdSuffix: "Ord",
         idMidSuffix: "Mid",
         idRectSuffix: "Rect",
+        idTxtSuffix: "Txt",
+        idTxtLineSuffix: "TxtLn",        
         idClientIdGroup: "clientIdGroup",
         idClientId: "clientId",
         idTranspoKey: "transpoKey",
@@ -1555,7 +1563,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
                 callForTargets(onOverlayColour, targets, params);
                 break;
             case "OVERLAY_TEXT":
-                callForTargets(setOverlayText, targets, params);
+                callForTargets(setOverlayTextInfo, targets, params);
                 break;                
             default:
                 logError("doAction: Unknown actionType: " + actionType);
@@ -1653,6 +1661,18 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         var opacity = params[EVENT_PARAM_OPACITY];
         setOverlayElement(stave, overlayType, overlayElement, isEnabled, opacity);
     }
+    function setOverlayTextInfo(target, params) {
+        if (isNull(params) || isNull(target)) {
+            return;
+        }
+        var stave = state[target];
+        var overlayType = params[EVENT_PARAM_OVERLAY_TYPE];
+        var isEnabled = params[EVENT_PARAM_IS_ENABLED];
+        var l1 = params[EVENT_PARAM_TEXT_L1];
+        var l2 = params[EVENT_PARAM_TEXT_L2];
+        var l3 = params[EVENT_PARAM_TEXT_L3];
+        setOverlayText(stave, overlayType, l1, l2, l3, isEnabled);
+    }
     function setOverlayElement(stave, overlayType, overlayElement, isEnabled, opacity) {
         if (isNull(stave) || isNull(overlayType)) {
             return;
@@ -1683,7 +1703,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
                 log("setOverlayElement: unknown overlay type: " + overlayType);
         }
     }
-    function setOverlayText(stave, overlayType, text, isEnabled) {
+    function setOverlayText(stave, overlayType, l1, l2, l3, isEnabled) {
         if (isNull(stave) || isNull(overlayType)) {
             return;
         }
@@ -1694,7 +1714,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         logDebug("setOverlayText: overlayType: " + overlayType);
         switch (overlayType) {
             case "PITCH":
-                setPitchOverlayText(staveConf, text, isEnabled);
+                setPitchOverlayText(staveConf, l1, l2, l3, isEnabled);
                 break;            
             default:
                 log("setOverlayElement: unknown overlay type: " + overlayType);
@@ -1788,24 +1808,57 @@ var zscore = (function (u, n, s, a, m, win, doc) {
                 log("setPitchOverlay: unknown overlay element: " + overlayElement);
         }
     }
-    function setPitchOverlayText(staveConf, text, isEnabled) {
-        if (isNull(overlayElement) || isNull(staveConf)) {
+    function setPitchOverlayText(staveConf, l1, l2, l3, isEnabled) {
+        if (isNull(staveConf)) {
             return;
         }
-        switch (overlayElement) {
-            case "PITCH_BOX":
-                setOverlayVisibility(staveConf.ovrlPitchId + config.idRectSuffix, isEnabled, opacity);
-                setOverlayVisibility(staveConf.ovrlPitchId, isEnabled, opacity);
-                if (!isEnabled) {
-                    setOverlayVisibility(staveConf.ovrlPitchId + config.idLineSuffix, isEnabled, opacity);
-                }
-                break;
-            case "PITCH_LINE":
-                setOverlayVisibility(staveConf.ovrlPitchId + config.idLineSuffix, isEnabled, opacity);
-                break;
-            default:
-                log("setPitchOverlay: unknown overlay element: " + overlayElement);
+        if (isEnabled) {          
+            displayInstructions(staveConf.ovrlPitchId, l1, l2, l3); 
+        } else {
+            u.makeInVisible(ovrlId);
         }
+    }
+    function displayInstructions(textElementId, l1, l2, l3) {
+        var textElement = u.getElement(textElementId);
+        if(isNull(textElement)) {
+            return;
+        }
+
+        var spanPrefix = textElementId +  config.idTxtLineSuffix;
+        var spanId1 = spanPrefix + "1";
+        var spanId2 = spanPrefix + "2";
+        var spanId3 = spanPrefix + "3";
+
+        var span1 = u.getChildElement(textElement, u.toCssIdQuery(spanId1));
+        if (!isNull(span1)) {
+            span1.style.opacity = 0;
+            u.setText(span1, l1);
+        }
+        var span2 = u.getChildElement(textElement, u.toCssIdQuery(spanId2));
+        if (!isNull(span2)) {
+            span2.style.opacity = 0;
+            u.setText(span2, l2);
+        }
+        var span3 = u.getChildElement(textElement, u.toCssIdQuery(spanId3));
+        if (!isNull(span3)) {
+            span3.style.opacity = 0;
+            u.setText(span3, l3);
+        }
+        var txtELementId = textElementId +  config.idTxtSuffix;
+        u.makeVisible(txtELementId);
+        if (config.textSpanIsFadeIn) {
+            var du = config.textSpanFadeTimeSec;
+            var dl = config.textSpanFadeStaggerTimeSec;
+            if (!isNull(span1)) {
+                gsap.to(span1, { duration: du, autoAlpha: 1, ease: "power1.in" });
+            }
+            if (!isNull(span2)) {
+                gsap.to(span2, { delay: dl, duration: du, autoAlpha: 1, ease: "power1.in" });
+            }
+            if (!isNull(span3)) {
+                gsap.to(span3, { delay: 2 * dl, duration: du, autoAlpha: 1, ease: "power1.in" });
+            }
+        } 
     }
     function setOverlayVisibility(ovrlId, isEnabled, opacity) {
         if (isNull(ovrlId)) {
