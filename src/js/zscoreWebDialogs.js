@@ -307,11 +307,17 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         resetStaveOnStop(state.topStave);
         resetStaveOnStop(state.bottomStave);
     }
+    function resetOverlay(stave) {
+        if (isNull(stave) || isNull(stave.config)) {
+            return;
+        }
+        var conf = stave.config;        
+        u.removeChildren(conf.ovrlPitchStaveInfoId);
+    }
     function resetStaveOnStop(stave) {
         if (isNull(stave) || isNull(stave.config)) {
             return;
         }
-
         var conf = stave.config;
         u.setElementIdAttributes(conf.positionLineId, conf.posLineConf);
         u.setElementIdAttributes(conf.beatBallId, conf.posBallConf);
@@ -1812,13 +1818,9 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         if (isNull(staveConf)) {
             return;
         }
-        if (isEnabled) {          
-            displayInstructions(staveConf.ovrlPitchId, l1, l2, l3); 
-        } else {
-            u.makeInVisible(ovrlId);
-        }
+        displayInstructions(staveConf.ovrlPitchId, l1, l2, l3, isEnabled); 
     }
-    function displayInstructions(textElementId, l1, l2, l3) {
+    function displayInstructions(textElementId, l1, l2, l3, isEnabled) {
         var textElement = u.getElement(textElementId);
         if(isNull(textElement)) {
             return;
@@ -1845,20 +1847,24 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             u.setText(span3, l3);
         }
         var txtELementId = textElementId +  config.idTxtSuffix;
-        u.makeVisible(txtELementId);
-        if (config.textSpanIsFadeIn) {
-            var du = config.textSpanFadeTimeSec;
-            var dl = config.textSpanFadeStaggerTimeSec;
-            if (!isNull(span1)) {
-                gsap.to(span1, { duration: du, autoAlpha: 1, ease: "power1.in" });
-            }
-            if (!isNull(span2)) {
-                gsap.to(span2, { delay: dl, duration: du, autoAlpha: 1, ease: "power1.in" });
-            }
-            if (!isNull(span3)) {
-                gsap.to(span3, { delay: 2 * dl, duration: du, autoAlpha: 1, ease: "power1.in" });
-            }
-        } 
+        if(isEnabled) {
+            u.makeVisible(txtELementId);
+            if (config.textSpanIsFadeIn) {
+                var du = config.textSpanFadeTimeSec;
+                var dl = config.textSpanFadeStaggerTimeSec;
+                if (!isNull(span1)) {
+                    gsap.to(span1, { duration: du, autoAlpha: 1, ease: "power1.in" });
+                }
+                if (!isNull(span2)) {
+                    gsap.to(span2, { delay: dl, duration: du, autoAlpha: 1, ease: "power1.in" });
+                }
+                if (!isNull(span3)) {
+                    gsap.to(span3, { delay: 2 * dl, duration: du, autoAlpha: 1, ease: "power1.in" });
+                }
+            }     
+        } else {
+            u.makeInVisible(txtELementId);
+        }
     }
     function setOverlayVisibility(ovrlId, isEnabled, opacity) {
         if (isNull(ovrlId)) {
@@ -1892,6 +1898,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         stave.isPlaying = false;
         stave.currentBeat = null;
         resetStaveOnStop(stave);
+        resetOverlay(stave);
         showDefaultStavePage(stave);
     }
     function onResetInstrumentSlots() {
