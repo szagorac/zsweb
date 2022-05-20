@@ -1353,6 +1353,16 @@ var zsUtil = (function (console, win, doc) {
         }
         return false;
     }
+    function _playOrRestartTween(tween) {
+        if (_isNull(tween)) {
+            return;
+        }
+        var progress = tween.progress();
+        if (progress > 0) {
+            tween.progress( 0.0 ); 
+        }
+        tween.play();
+    }  
 
     // PUBLIC API
     return {
@@ -1364,6 +1374,9 @@ var zsUtil = (function (console, win, doc) {
         Point: Point,
         Oscillator: Oscillator,
         ParamOscillator: ParamOscillator,
+        playOrRestartTween: function (tween) {
+            return _playOrRestartTween(tween);
+        },
         hasChildrenElements: function (element) {
             return _hasChildrenElements(element);
         },

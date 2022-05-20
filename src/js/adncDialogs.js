@@ -34,6 +34,10 @@ var zscore = (function (u, n, s, a, win, doc) {
         meter: null,
         currentVote: null,
         voteTimeMs: 0,
+        thumbUpTween: null,
+        thumbDownTween: null,
+        noteUpTween: null,
+        noteDownTween: null,
     }
     var config = {
         connectionPreference: "ws,sse,poll",
@@ -65,8 +69,10 @@ var zscore = (function (u, n, s, a, win, doc) {
         thumbDownRectId: "thDownRect",
         thumbUpGroupId: "thumbUpGrp",
         thumbUpPathId: "thumbUpPth",
+        thumbUpSymId: "thumbUpSym",
         thumbDownGroupId: "thumbDownGrp",
         thumbDownPathId: "thumbDownPth",
+        thumbDownSymId: "thumbDownSym",
         meterBoxIdPrefix: "meterBox",
         meterBoxNo: 20,
         meterMaxVotes: 5,
@@ -86,6 +92,9 @@ var zscore = (function (u, n, s, a, win, doc) {
         positiveMaxCol: { r: 0, g: 125, b: 0 },
         maxNoiseLevel: 0.5,
         audioFadeInMs: 1000,
+        filterGreenAttrib: { "filter": "url(#dropshadowgreen)" },
+        filterRedAttrib: { "filter": "url(#dropshadowred)" },
+        filterInActiveAttrib: { "filter": "none" },
     }
 
     function ZScoreException(message) {
@@ -346,11 +355,19 @@ var zscore = (function (u, n, s, a, win, doc) {
         // init svg and html
         initMeter();
         initInstructions();
+        initThumbs();
+        initNotes();
 
+        initView();
         getServerState();
     }
     function resetAll() {
         resetAudio();
+    }
+    function initView() {
+        u.makeVisible(config.thumbUpGroupId);
+        u.makeVisible(config.thumbDownGroupId);
+        u.makeVisible(config.meterGroupId);
     }
     function initNet() {
         n.init(config.connectionPreference, config.appUrlSse, config.appUrlWebsockets, config.appUrlHttp, processSeverState);
@@ -412,52 +429,48 @@ var zscore = (function (u, n, s, a, win, doc) {
         u.listen('orientationchange', win, onWindowResize);
         setInstructions("Welcome to", "<span style='color:blueviolet;'>ZScore</span>", "awaiting performance start ...", null, true);
     }
-    function startVoteTimeout(id) {
-        // CSSPlugin.useSVGTransformAttr = false;
-        if(isNull(id)) {
-            return;
-        }
+    function initThumbs() {
         var duration = config.voteTimeoutMs/1000;
-        gsap.from(u.toCssIdQuery(id), { duration: duration, scaleY:0, fill: "white", transformOrigin:"right bottom" });
+        state.thumbUpTween = gsap.from(u.toCssIdQuery(config.thumbUpSymId), {
+            duration: duration, 
+            scaleY: 0.5, 
+            fill: "green", 
+            transformOrigin:"right bottom",
+            paused: true,
+            ease: "slow(0.9, 0.4, false)",
+            onComplete: onThumbUpComplete,
+        });
+        state.thumbUpTween.progress(1);
+        state.thumbDownTween = gsap.from(u.toCssIdQuery(config.thumbDownSymId), {
+                duration: duration, 
+                scaleY: 0.5, 
+                fill: "red", 
+                transformOrigin:"left top",
+                paused: true,
+                ease: "slow(0.9, 0.4, false)",
+                onComplete: onThumbDownComplete,
+        });
+        state.thumbDownTween.progress(1);
+    }    
+    function initNotes() {
     }
+    function onThumbUpComplete() {
+        u.setElementAttributes(getThumbUpGroup(), config.filterGreenAttrib);
+    }
+    function onThumbDownComplete() {
+        u.setElementAttributes(getThumbDownGroup(), config.filterRedAttrib);
+    } 
     function onVote(value) {
-        var now = Date.now();
-        if (isNotNull(state.currentVote) && state.currentVote === value) {
-            var prevVoteTime = state.voteTimeMs;
-            var threshold = prevVoteTime + config.voteTimeoutMs;
-            var diff = now - threshold;
-            if (diff < 0) {
-                return;
-            }
-        }
-        startVoteTimeout(config.thumbUpPathId);
         state.currentVote = value;
-        state.voteTimeMs = now;
         var evParams = {};
         evParams[EVENT_PARAM_VALUE] = value;
         n.sendEvent(EVENT_VOTE, evParams);
     }
-    function setThumbsUpStyle(isActive) {
-        var thUpEl = getThumbUpPath();
-        if (isNull(thUpEl)) {
-            return;
-        }
-        if (isActive) {
-            setElementAttributes(thUpEl, config.thumbsUpActiveStyle);
-        } else {
-            setElementAttributes(thUpEl, config.thumbsUpInActiveStyle);
-        }
+    function isThumbsUpActive() {
+        return isNotNull(state.thumbUpTween) && state.thumbUpTween.isActive();
     }
-    function setThumbsDownStyle(isActive) {
-        var thDnEl = getThumbDownPath();
-        if (isNull(thDnEl)) {
-            return;
-        }
-        if (isActive) {
-            setElementAttributes(thDnEl, config.thumbsDownActiveStyle);
-        } else {
-            setElementAttributes(thDnEl, config.thumbsDownInActiveStyle);
-        }
+    function isThumbsDownActive() {
+        return isNotNull(state.thumbDownTween) && state.thumbDownTween.isActive();
     }
     function setInstructions(l1, l2, l3, colour, isVisible) {
         if (isNull(_instructionsElement)) {
@@ -1006,7 +1019,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         return u.getElement(config.thumbUpRectId);
     }
     function getThumbUpPath() {
-        return u.getElement(config.thumbUpPathId);
+        return u.getElement(config.thumbUpSymId);
     }
     function getThumbDownRect() {
         return u.getElement(config.thumbDownRectId);
@@ -1015,7 +1028,13 @@ var zscore = (function (u, n, s, a, win, doc) {
         return u.getElement(config.thumbDownGroupId);
     }
     function getThumbDownPath() {
-        return u.getElement(config.thumbDownPathId);
+        return u.getElement(config.thumbDownSymId);
+    }
+    function getThumbUpTween() {
+        return state.thumbUpTween;
+    }
+    function getThumbDownTween() {
+        return state.thumbDownTween;
     }
     function getFontSizeFit(value, fontSize, container) {
         var fs = 1;
@@ -1114,14 +1133,20 @@ var zscore = (function (u, n, s, a, win, doc) {
     }
     function onThumbsUp() {
         log("onThumbsUp:");
-        setThumbsUpStyle(true);
-        setThumbsDownStyle(false);
+        if(isThumbsUpActive()) {
+            return;
+        }
+        u.setElementAttributes(getThumbUpGroup(), config.filterInActiveAttrib);
+        u.playOrRestartTween(getThumbUpTween());       
         onVote(VOTE_UP);
     }
     function onThumbsDown() {
         log("onThumbsDown:");
-        setThumbsUpStyle(false);
-        setThumbsDownStyle(true);
+        if(isThumbsDownActive()) {
+            return;
+        }
+        u.setElementAttributes(getThumbDownGroup(), config.filterInActiveAttrib);
+        u.playOrRestartTween(getThumbDownTween());
         onVote(VOTE_DOWN);
     }
     function onMouseUpThumbsUp(event) {
