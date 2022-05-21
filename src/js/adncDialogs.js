@@ -1,4 +1,4 @@
-var zscore = (function (u, n, s, a, win, doc) {
+var zscore = (function (u, n, s, a, m, win, doc) {
     "use strict";
 
     // TODO set for prod when ready - gets rid of console logs
@@ -28,6 +28,7 @@ var zscore = (function (u, n, s, a, win, doc) {
 
     // ---------  MODEL -----------
     var state = {
+        bpm: 80,
         instructions: { isVisible: false, l1: EMPTY, l2: EMPTY, l3: EMPTY, bckgCol: "rgba(225, 225, 225, 0.85)" },
         voteCount: 0,
         userNo: 10,
@@ -38,6 +39,9 @@ var zscore = (function (u, n, s, a, win, doc) {
         thumbDownTween: null,
         noteUpTween: null,
         noteDownTween: null,
+        isVotingEnabled: false,
+        isThumbEnabled: false,
+        isNoteEnabled: true,
     }
     var config = {
         connectionPreference: "ws,sse,poll",
@@ -62,6 +66,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         textSpanFadeTimeSec: 1.0,
         textSpanFadeStaggerTimeSec: 0.5,
         voteTimeoutMs: 5000,
+        noteDurationMultipler: 4,
         loadingIconId: "loadingIcon",
         elementGroupSuffix: "Grp",
         meterGroupId: "meterGrp",
@@ -73,6 +78,10 @@ var zscore = (function (u, n, s, a, win, doc) {
         thumbDownGroupId: "thumbDownGrp",
         thumbDownPathId: "thumbDownPth",
         thumbDownSymId: "thumbDownSym",
+        noteUpGroupId: "noteUpGrp",
+        noteUpSymId: "noteUpSym",
+        noteDownGroupId: "noteDownGrp",
+        noteDownSymId: "noteDownSym",
         meterBoxIdPrefix: "meterBox",
         meterBoxNo: 20,
         meterMaxVotes: 5,
@@ -118,7 +127,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         this.negativeMinIndex = 0;
         this.negativeMaxIndex = 0;
         this.zeroIndex = null;
-        this.isPlayAudio = true;
+        this.isPlayAudio = false;
         this.currentValue = 0;
         this.currentMaxVal = 0;
     }
@@ -273,7 +282,7 @@ var zscore = (function (u, n, s, a, win, doc) {
             a.setPlayerVolume(0.0, config.audioFadeInMs);
             var vol = u.mapRange(Math.abs(value), 0.0, Math.abs(maxVal), 0.0, config.maxNoiseLevel);
             a.playNoise(vol);
-        }        
+        }
     }
     // ---- ZScoreMeter END
     // ---- ZScoreMeterConfig 
@@ -332,8 +341,8 @@ var zscore = (function (u, n, s, a, win, doc) {
         init();
     }
     function init() {
-        if (!u || !n || !s || !a) {
-            throw new ZScoreException("Invalid libraries. Required: zsUtil, zsNet, zsSvg and zsAudio");
+        if (!u || !n || !s || !a || !m) {
+            throw new ZScoreException("Invalid libraries. Required: zsUtil, zsNet, zsSvg, zsAudio and zsMusic");
         }
 
         u.setRunMode(RUN_MODE);
@@ -365,9 +374,9 @@ var zscore = (function (u, n, s, a, win, doc) {
         resetAudio();
     }
     function initView() {
-        u.makeVisible(config.thumbUpGroupId);
-        u.makeVisible(config.thumbDownGroupId);
-        u.makeVisible(config.meterGroupId);
+        enableVoting();
+        disableThumbs();
+        enableNotes();
     }
     function initNet() {
         n.init(config.connectionPreference, config.appUrlSse, config.appUrlWebsockets, config.appUrlHttp, processSeverState);
@@ -430,36 +439,110 @@ var zscore = (function (u, n, s, a, win, doc) {
         setInstructions("Welcome to", "<span style='color:blueviolet;'>ZScore</span>", "awaiting performance start ...", null, true);
     }
     function initThumbs() {
-        var duration = config.voteTimeoutMs/1000;
+        var duration = config.voteTimeoutMs / 1000;
         state.thumbUpTween = gsap.from(u.toCssIdQuery(config.thumbUpSymId), {
-            duration: duration, 
-            scaleY: 0.5, 
-            fill: "green", 
-            transformOrigin:"right bottom",
+            duration: duration,
+            scaleY: 0.5,
+            fill: "green",
+            transformOrigin: "right bottom",
             paused: true,
             ease: "slow(0.9, 0.4, false)",
             onComplete: onThumbUpComplete,
         });
         state.thumbUpTween.progress(1);
         state.thumbDownTween = gsap.from(u.toCssIdQuery(config.thumbDownSymId), {
-                duration: duration, 
-                scaleY: 0.5, 
-                fill: "red", 
-                transformOrigin:"left top",
-                paused: true,
-                ease: "slow(0.9, 0.4, false)",
-                onComplete: onThumbDownComplete,
+            duration: duration,
+            scaleY: 0.5,
+            fill: "red",
+            transformOrigin: "left top",
+            paused: true,
+            ease: "slow(0.9, 0.4, false)",
+            onComplete: onThumbDownComplete,
         });
         state.thumbDownTween.progress(1);
-    }    
+    }
     function initNotes() {
+        var noteDurationSec = getNoteDuration();
+        state.noteUpTween = createNoteUpTween(noteDurationSec);
+        state.noteDownTween = createNoteDownTween(noteDurationSec);
+    }
+    function getBeatDuration() {
+        var beatDurationSec = m.getBeatDurationSec(state.bpm);
+        if (isNull(beatDurationSec)) {
+            beatDurationSec = 1;
+        }
+        return beatDurationSec;
+    }
+    function getNoteDuration() {
+        var beatDurationSec = getBeatDuration();
+        return beatDurationSec * config.noteDurationMultipler;
+    }
+    function createNoteUpTween(duration) {
+        var rotAngle =  u.randomIntFromInterval(-720, 720);
+        var angle =  u.randomIntFromInterval(0, 140);
+        var r = u.randomIntFromInterval(10, 50);
+        var dx = 0;
+        var dy = r;
+        if(angle < 90) {
+            var rad = u.toRadians(angle);
+            dx = -1.0 * r * Math.sin(rad);
+            dy = -1.0 * r * Math.cos(rad);
+        } else if (angle > 90) {
+            var rad = u.toRadians(angle - 90);
+            dx = r * Math.sin(rad);
+            dy =  -1.0 * r * Math.cos(rad);
+        }
+        
+        return gsap.to(u.toCssIdQuery(config.noteUpSymId), {
+            duration: duration,
+            scale: 0.1,
+            autoAlpha: 0,
+            rotation: rotAngle,
+            x: dx,
+            y: dy,
+            ease: "slow(0.9, 0.4, false)",
+            paused: true,
+            onComplete: onNoteUpComplete,
+        });
+    }
+    function createNoteDownTween(duration) {
+        return gsap.to(u.toCssIdQuery(config.noteDownSymId), {
+            duration: duration,
+            scale: 0.1,
+            // autoAlpha: 0,
+            // rotation: 360,
+            x: 60,
+            y: 90,
+            ease: "slow(0.9, 0.4, false)",
+            paused: true,
+            onComplete: onNoteDownComplete,
+        });
     }
     function onThumbUpComplete() {
         u.setElementAttributes(getThumbUpGroup(), config.filterGreenAttrib);
     }
     function onThumbDownComplete() {
         u.setElementAttributes(getThumbDownGroup(), config.filterRedAttrib);
-    } 
+    }
+    function onNoteUpComplete() {
+        gsap.set(u.toCssIdQuery(config.noteUpSymId), {
+            autoAlpha: 0,
+            scale: 1.0,
+            rotation: 0,
+            x: 0,
+            y: 0,
+        });
+        gsap.to(u.toCssIdQuery(config.noteUpSymId), {
+            duration: 1,
+            autoAlpha: 1,
+        });        
+        state.noteUpTween = createNoteUpTween(getNoteDuration());
+    }
+    function onNoteDownComplete() {
+        if(isNotNull(state.noteDownTween)){
+            // state.noteDownTween.pause(0.0);
+        }
+    }
     function onVote(value) {
         state.currentVote = value;
         var evParams = {};
@@ -471,6 +554,40 @@ var zscore = (function (u, n, s, a, win, doc) {
     }
     function isThumbsDownActive() {
         return isNotNull(state.thumbDownTween) && state.thumbDownTween.isActive();
+    }
+    function isNoteUpActive() {
+        return isNotNull(state.noteUpTween) && state.noteUpTween.isActive();
+    }
+    function isNoteDownActive() {
+        return isNotNull(state.noteDownTween) && state.noteDownTween.isActive();
+    }
+    function enableVoting() {
+        u.makeVisible(config.meterGroupId);
+        state.isVotingEnabled = true;
+    }
+    function disableVoting() {
+        u.makeInVisible(config.meterGroupId);
+        state.isVotingEnabled = false;
+    }
+    function enableThumbs() {
+        u.makeVisible(config.thumbUpGroupId);
+        u.makeVisible(config.thumbDownGroupId);
+        state.isThumbEnabled = true;
+    }
+    function disableThumbs() {
+        u.makeInVisible(config.thumbUpGroupId);
+        u.makeInVisible(config.thumbDownGroupId);
+        state.isThumbEnabled = false;
+    }
+    function enableNotes() {
+        u.makeVisible(config.noteUpGroupId);
+        u.makeVisible(config.noteDownGroupId);
+        state.isNoteEnabled = true;
+    }
+    function disableNotes() {
+        u.makeInVisible(config.noteUpGroupId);
+        u.makeInVisible(config.noteDownGroupId);
+        state.isNoteEnabled = false;
     }
     function setInstructions(l1, l2, l3, colour, isVisible) {
         if (isNull(_instructionsElement)) {
@@ -602,7 +719,7 @@ var zscore = (function (u, n, s, a, win, doc) {
                 break;
             case 'config':
                 updateAudioPlayerCofig(params);
-                break;                
+                break;
             default:
                 logError("runPlayer: Unknown actionId: " + actionId);
                 return;
@@ -615,32 +732,32 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
         if (!u.isObject(params)) {
             return;
-        }        
+        }
         var isLoadBuffers = false;
         if (!isNull(params.audioFiles)) {
             var audioFiles = params.audioFiles;
-            if(!u.isArray(audioFiles)) {
+            if (!u.isArray(audioFiles)) {
                 logError("updateAudioPlayerCofig: invalid audioFiles array");
             } else if (u.arrEquals(_audioFiles, audioFiles)) {
                 log("updateAudioPlayerCofig: audioFiles array identical, ignoring update");
             } else {
-                _audioFiles = audioFiles;                
+                _audioFiles = audioFiles;
                 isLoadBuffers = true;
             }
         }
         if (!isNull(params.audioFilesIndexMap)) {
             var fileIndexMap = params.audioFilesIndexMap;
-            if(!u.isArray(fileIndexMap) || fileIndexMap.length < 1) {
+            if (!u.isArray(fileIndexMap) || fileIndexMap.length < 1) {
                 logError("updateAudioPlayerCofig: invalid fileIndexMap array");
             } else {
-                _audioFileIndexMap = fileIndexMap;                
+                _audioFileIndexMap = fileIndexMap;
             }
         }
-        if(isLoadBuffers) {
+        if (isLoadBuffers) {
             log("updateAudioPlayerCofig: laoding audioFiles");
             u.makeVisible(config.loadingIconId);
             a.loadAudioBuffers(_audioFiles);
-        }        
+        }
     }
     function runAudioPlayerPlay(params) {
         if (isNull(a)) {
@@ -661,9 +778,9 @@ var zscore = (function (u, n, s, a, win, doc) {
         }
 
         var bufferIndex = sectionIndex;
-        if(sectionIndex > 0  && sectionIndex < _audioFileIndexMap.length) {
+        if (sectionIndex > 0 && sectionIndex < _audioFileIndexMap.length) {
             var fileIdxArr = _audioFileIndexMap[sectionIndex];
-            bufferIndex = u.randomArrayElement(fileIdxArr);            
+            bufferIndex = u.randomArrayElement(fileIdxArr);
         }
 
         var startTime = null;
@@ -1036,6 +1153,12 @@ var zscore = (function (u, n, s, a, win, doc) {
     function getThumbDownTween() {
         return state.thumbDownTween;
     }
+    function getNoteUpTween() {
+        return state.noteUpTween;
+    }
+    function getNoteDownTween() {
+        return state.noteDownTween;
+    }
     function getFontSizeFit(value, fontSize, container) {
         var fs = 1;
         const overallWidth = win.innerWidth || doc.documentElement.clientWidth || doc.body.clientWidth;
@@ -1133,21 +1256,47 @@ var zscore = (function (u, n, s, a, win, doc) {
     }
     function onThumbsUp() {
         log("onThumbsUp:");
-        if(isThumbsUpActive()) {
-            return;
+        if (state.isThumbEnabled) {
+            if (isThumbsUpActive()) {
+                return;
+            }
+            u.setElementAttributes(getThumbUpGroup(), config.filterInActiveAttrib);
+            u.playOrRestartTween(getThumbUpTween());
         }
-        u.setElementAttributes(getThumbUpGroup(), config.filterInActiveAttrib);
-        u.playOrRestartTween(getThumbUpTween());       
-        onVote(VOTE_UP);
+        if (state.isNoteEnabled) {
+            if(isNoteUpActive()) {
+                return;
+            }
+            u.playOrRestartTween(getNoteUpTween());
+            // var bufferIndex = u.randomArrayElement(_audioFiles);
+            // var noteDurationSec = getNoteDuration();
+            // a.playAudio(bufferIndex, 0, 0, noteDurationSec);
+        }
+        if (state.isVotingEnabled) {
+            onVote(VOTE_UP);
+        }
     }
     function onThumbsDown() {
         log("onThumbsDown:");
-        if(isThumbsDownActive()) {
-            return;
+        if (state.isThumbEnabled) {
+            if (isThumbsDownActive()) {
+                return;
+            }
+            u.setElementAttributes(getThumbDownGroup(), config.filterInActiveAttrib);
+            u.playOrRestartTween(getThumbDownTween());
         }
-        u.setElementAttributes(getThumbDownGroup(), config.filterInActiveAttrib);
-        u.playOrRestartTween(getThumbDownTween());
-        onVote(VOTE_DOWN);
+        if (state.isNoteEnabled) {
+            if(isNoteDownActive()) {
+                return;
+            }
+            u.playOrRestartTween(getNoteDownTween());
+            // var bufferIndex = u.randomArrayElement(_audioFiles);
+            // var noteDurationSec = getNoteDuration();
+            // a.playAudio(bufferIndex, 0, 0, noteDurationSec);
+        }
+        if (state.isVotingEnabled) {
+            onVote(VOTE_DOWN);
+        }
     }
     function onMouseUpThumbsUp(event) {
         log("onMouseUpThumbsUp:");
@@ -1208,4 +1357,4 @@ var zscore = (function (u, n, s, a, win, doc) {
             onThumbsUp();
         }
     }
-}(zsUtil, zsNet, zsSvg, zsAudio, window, document));
+}(zsUtil, zsNet, zsSvg, zsAudio, zsMusic, window, document));

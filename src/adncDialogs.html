@@ -22,6 +22,7 @@
     <script type="text/javascript" src="js/util/zsUtil.js"></script>
     <script type="text/javascript" src="js/net/zsNet.js"></script>
     <script type="text/javascript" src="js/svg/zsSvg.js"></script>
+    <script type="text/javascript" src="js/music/zsMusic.js"></script>
     <script type="text/javascript" src="js/audio/zsGranulator.js"></script>
     <script type="text/javascript" src="js/audio/zsSpeech.js"></script>
     <script type="text/javascript" src="js/audio/zsPlayer.js"></script>
@@ -90,7 +91,9 @@
             <use id="thumbUpSym" fill="none" href="#thmbUp" xlink:href="#thmbUp"/>
         </g>
         <!-- note up -->
-        <g id="noteUpGrp" transform="translate(50, 430) scale(10.0)" style="visibility:hidden;"><use id="noteUpSym" href="#crotchetUp" xlink:href="#crotchetUp"/></g>
+        <g id="noteUpGrp" transform="translate(50, 430) scale(10.0)" style="visibility:hidden;">
+            <use id="noteUpSym" href="#crotchetUp" xlink:href="#crotchetUp"/>
+        </g>
         
         <!-- thumbs down -->
         <rect id="thDownRect" x="600" y="700" width="300" height="460" style="opacity:0.0;stroke-width:1;stroke:black;fill:white;fill-opacity:0" rx="1"/>
@@ -98,7 +101,9 @@
             <use id="thumbDownSym" fill="none" href="#thmbDown" xlink:href="#thmbDown"/>
         </g>
         <!-- note down -->
-        <g id="noteDownGrp" transform="translate(715, 750) scale(10.0)" style="visibility:hidden;"><use id="noteDownSym" href="#crotchetDown" xlink:href="#crotchetDown"/></g>
+        <g id="noteDownGrp" transform="translate(715, 750) scale(10.0)" style="visibility:hidden;">
+            <use id="noteDownSym" href="#crotchetDown" xlink:href="#crotchetDown"/>
+        </g>
     </svg>
     
     <div class="myTxt" id="instructionTxt"></br>Welcome to ZScore</div>

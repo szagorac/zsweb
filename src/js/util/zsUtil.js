@@ -821,6 +821,12 @@ var zsUtil = (function (console, win, doc) {
             y: centerY + (radius * Math.sin(angleInRadians))
         };
     }
+    function _toRadians(angle) {
+        if(_isNull(angle)) {
+            return 0;
+        }
+        return angle * (Math.PI/180);
+    }
     function _getWindowWidth() {
         return win.innerWidth
             || doc.documentElement.clientWidth
@@ -1070,10 +1076,10 @@ var zsUtil = (function (console, win, doc) {
         return (usePound ? "#" : "") + (g | (b << 8) | (r << 16)).toString(16);
     }
     function _interpolateRgbColours(col1, col2, factor) {
-        if(!_isObject(col1) || !_isObject(col2)) {
+        if (!_isObject(col1) || !_isObject(col2)) {
             return null;
         }
-        if(!col1.hasOwnProperty("r") || !col2.hasOwnProperty("r")) {
+        if (!col1.hasOwnProperty("r") || !col2.hasOwnProperty("r")) {
             return;
         }
         if (_isNull(factor)) {
@@ -1348,7 +1354,7 @@ var zsUtil = (function (console, win, doc) {
         if (!_isNumeric(num)) {
             return null;
         }
-        if(num % 2 === 1) {
+        if (num % 2 === 1) {
             return true;
         }
         return false;
@@ -1359,10 +1365,11 @@ var zsUtil = (function (console, win, doc) {
         }
         var progress = tween.progress();
         if (progress > 0) {
-            tween.progress( 0.0 ); 
+            tween.pause();
+            tween.progress(0.0);
         }
         tween.play();
-    }  
+    }
 
     // PUBLIC API
     return {
@@ -1374,6 +1381,9 @@ var zsUtil = (function (console, win, doc) {
         Point: Point,
         Oscillator: Oscillator,
         ParamOscillator: ParamOscillator,
+        toRadians: function (angle) {
+            return _toRadians(angle);
+        },
         playOrRestartTween: function (tween) {
             return _playOrRestartTween(tween);
         },
@@ -1454,7 +1464,7 @@ var zsUtil = (function (console, win, doc) {
         },
         interpolateRgbColours: function (col1, col2, factor) {
             return _interpolateRgbColours(col1, col2, factor);
-        },       
+        },
         rgbToHex: function (r, g, b) {
             return _rgbToHex(r, g, b);
         },
@@ -1629,7 +1639,7 @@ var zsUtil = (function (console, win, doc) {
             return Math.random() * (max - min) + min;
         },
         randomArrayElement: function (arr) {
-            if(!_isArray(arr)) {
+            if (!_isArray(arr)) {
                 return null;
             }
             return arr[Math.floor(Math.random() * arr.length)];
