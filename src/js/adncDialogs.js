@@ -104,6 +104,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         filterGreenAttrib: { "filter": "url(#dropshadowgreen)" },
         filterRedAttrib: { "filter": "url(#dropshadowred)" },
         filterInActiveAttrib: { "filter": "none" },
+        noteUpConfig: { minAngle: 0, maxAngle: 360 },
     }
 
     function ZScoreException(message) {
@@ -478,22 +479,30 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         return beatDurationSec * config.noteDurationMultipler;
     }
     function createNoteUpTween(duration) {
-        var rotAngle =  u.randomIntFromInterval(-720, 720);
-        var angle =  u.randomIntFromInterval(0, 140);
-        var r = u.randomIntFromInterval(10, 50);
+        var conf = { sign: -1.0, angleMin: 0, angleMax: 120, rMin: 5, rMax: 10, rotAngleMin: -360, rotAngleMax: 360 };
+        return createNoteTween(duration, config.noteUpSymId, conf, onNoteUpComplete);
+    }
+    function createNoteDownTween(duration) {
+        var conf = { sign: 1.0, angleMin: 0, angleMax: 120, rMin: 30, rMax: 50, rotAngleMin: -360, rotAngleMax: 360 };
+        return createNoteTween(duration, config.noteDownSymId, conf, onNoteDownComplete);
+    }
+    function createNoteTween(duration, symbolId, conf, callback) {
+        var angle =  u.randomIntFromInterval(conf.angleMin, conf.angleMax);
+        var r = u.randomIntFromInterval(conf.rMin, conf.rMax);
         var dx = 0;
-        var dy = r;
+        var s = conf.sign;
+        var dy = s * r;        
         if(angle < 90) {
             var rad = u.toRadians(angle);
-            dx = -1.0 * r * Math.sin(rad);
-            dy = -1.0 * r * Math.cos(rad);
+            dx =  s * r * Math.cos(rad);
+            dy =  s * r * Math.sin(rad);
         } else if (angle > 90) {
-            var rad = u.toRadians(angle - 90);
-            dx = r * Math.sin(rad);
-            dy =  -1.0 * r * Math.cos(rad);
+            var rad = u.toRadians(180 - angle);
+            dx =  -1.0 * s * r * Math.cos(rad);
+            dy =  s * r * Math.sin(rad);
         }
-        
-        return gsap.to(u.toCssIdQuery(config.noteUpSymId), {
+        var rotAngle =  u.randomIntFromInterval(conf.rotAngleMin, conf.rotAngleMax);        
+        return gsap.to(u.toCssIdQuery(symbolId), {
             duration: duration,
             scale: 0.1,
             autoAlpha: 0,
@@ -502,22 +511,9 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             y: dy,
             ease: "slow(0.9, 0.4, false)",
             paused: true,
-            onComplete: onNoteUpComplete,
+            onComplete: callback,
         });
-    }
-    function createNoteDownTween(duration) {
-        return gsap.to(u.toCssIdQuery(config.noteDownSymId), {
-            duration: duration,
-            scale: 0.1,
-            // autoAlpha: 0,
-            // rotation: 360,
-            x: 60,
-            y: 90,
-            ease: "slow(0.9, 0.4, false)",
-            paused: true,
-            onComplete: onNoteDownComplete,
-        });
-    }
+    }    
     function onThumbUpComplete() {
         u.setElementAttributes(getThumbUpGroup(), config.filterGreenAttrib);
     }
@@ -525,23 +521,25 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         u.setElementAttributes(getThumbDownGroup(), config.filterRedAttrib);
     }
     function onNoteUpComplete() {
-        gsap.set(u.toCssIdQuery(config.noteUpSymId), {
+        runNoteCompleteTween(config.noteUpSymId);
+        state.noteUpTween = createNoteUpTween(getNoteDuration());
+    }
+    function onNoteDownComplete() {
+        runNoteCompleteTween(config.noteDownSymId);
+        state.noteDownTween = createNoteDownTween(getNoteDuration());
+    }
+    function runNoteCompleteTween(symbolId) {
+        gsap.set(u.toCssIdQuery(symbolId), {
             autoAlpha: 0,
             scale: 1.0,
             rotation: 0,
             x: 0,
             y: 0,
         });
-        gsap.to(u.toCssIdQuery(config.noteUpSymId), {
+        gsap.to(u.toCssIdQuery(symbolId), {
             duration: 1,
             autoAlpha: 1,
-        });        
-        state.noteUpTween = createNoteUpTween(getNoteDuration());
-    }
-    function onNoteDownComplete() {
-        if(isNotNull(state.noteDownTween)){
-            // state.noteDownTween.pause(0.0);
-        }
+        });
     }
     function onVote(value) {
         state.currentVote = value;
