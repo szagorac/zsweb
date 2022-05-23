@@ -17,8 +17,9 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     const SINGLE_QUOTE_HTML = "&#39;";
     const SINGLE_QUOTE = "'";
 
-    var _audioFiles = ['/audio/DialogsPitch1-1.mp3'];
+    var _audioFiles = ["/audio/DialogsRhythm7-1.wav",];
     var _audioFileIndexMap = [[0]];
+    var _granulatorAudioIndex = 0;
     var _isTouch = null;
     var _isSafari = null;
     var _instructionsElement = null;
@@ -42,6 +43,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         isVotingEnabled: false,
         isThumbEnabled: false,
         isNoteEnabled: true,
+        granulatorIndex: 0,
     }
     var config = {
         connectionPreference: "ws,sse,poll",
@@ -388,6 +390,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     function onAudioLoaded() {
         a.initNoise();
         a.initPlayer();
+        a.initGranulator(state.granulatorIndex);
         u.makeInVisible(config.loadingIconId);
         log("onAudioLoaded: completed");
     }
@@ -420,7 +423,6 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             u.listen('touchend', thD, onTouchEndThumbsDown);
             u.listen('mouseup', thD, onMouseUpThumbsDown);
         }
-
     }
     function initMeter() {
         var meterStyleConfig = new ZScoreMeterConfig(config.meterInactiveStyle, config.meterZeroStyle, config.negativeMinCol, config.negativeMaxCol, config.positiveMinCol, config.positiveMaxCol);
@@ -466,6 +468,36 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         var noteDurationSec = getNoteDuration();
         state.noteUpTween = createNoteUpTween(noteDurationSec);
         state.noteDownTween = createNoteDownTween(noteDurationSec);
+    }
+    function playNoteUp() {
+        a.stopGranulator();
+        a.initGranulator(state.granulatorIndex);
+        playNote(0.1, 1, -0.7, 1.5);
+    }
+    function playNoteDown() {
+        a.stopGranulator();
+        a.initGranulator(1);
+        playNote(0.2, 5, 0.1, 2);
+    }
+    function playNote(durMin, durMax, pRateMin, pRateMax) {
+        // var bufferIndex = 0; // u.randomArrayElement(_audioFiles);
+        // var noteDurationSec = getNoteDuration();
+        // a.playAudio(bufferIndex, 0, 0, noteDurationSec);        
+        // var noteDurationSec = getNoteDuration()*1000;
+        // a.stopGranulator();
+        var noteDurationSec = u.randomFloatFromInterval(durMin, durMax);
+        var noteDurationMs = noteDurationSec * 1000;
+        var pRate = u.randomFloatFromInterval(pRateMin, pRateMax);
+        var conf = {pitchRate: pRate};
+        a.setGranulatorGrainConfig(conf);
+        a.playGranulator();
+        var sinStart = noteDurationMs*0.2;
+        var sinDur = noteDurationMs*0.5;
+        setTimeout(a.setGranulatorRampSin("grain.pitchRate", 0.2, 0.2, sinDur), sinStart);        
+        setTimeout(stopNote, noteDurationMs);        
+    }
+    function stopNote() {
+        a.stopGranulator();
     }
     function getBeatDuration() {
         var beatDurationSec = m.getBeatDurationSec(state.bpm);
@@ -694,14 +726,51 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         log("runAudio: " + actionId + SPACE + target);
 
         switch (target) {
+            case 'all':
+                runAudioMaster(actionId, params);
+                break;
             case 'player':
                 runAudioPlayer(actionId, params);
                 break;
             case 'granulator':
+                runAudioGranulator(actionId, params);
                 break;
             case 'speechSynth':
                 break;
         }
+    }
+    function runAudioMaster(actionId, params) {
+        if (!u.isString(actionId)) {
+            return;
+        }
+
+        switch (actionId) {
+            case 'volume':
+                setAudioMasterVolume(params);
+                break;
+            default:
+                logError("runPlayer: Unknown actionId: " + actionId);
+                return;
+        }
+    }
+    function setAudioMasterVolume(params) {
+        if (isNull(a)) {
+            logError("setAudioMasterVolume: Invalid zsAudio lib");
+            return;
+        }
+        if (!u.isObject(params)) {
+            return;
+        }
+        var level = null;
+        var timeMs = null;
+
+        if (!isNull(params.level)) {
+            level = params.level;
+        }
+        if (!isNull(params.timeMs)) {
+            timeMs = params.timeMs;
+        }
+        a.setMasterVolume(level, timeMs);
     }
     function runAudioPlayer(actionId, params) {
         if (!u.isString(actionId)) {
@@ -725,7 +794,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     }
     function updateAudioPlayerCofig(params) {
         if (isNull(a)) {
-            logError("runAudioPlayGranulator: Invalid zsAudio lib");
+            logError("updateAudioPlayerCofig: Invalid zsAudio lib");
             return;
         }
         if (!u.isObject(params)) {
@@ -816,6 +885,143 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         }
         a.setPlayerVolume(level, timeMs);
     }
+    function runAudioGranulator(actionId, params) {
+        if (!u.isString(actionId)) {
+            return;
+        }
+
+        switch (actionId) {
+            case 'play':
+                runAudioPlayGranulator(params);
+                break;
+            case 'stop':
+                runAudioStopGranulator(params);
+                break;
+            case 'config':
+                updateGranulatorConfig(params);
+                break;
+            case 'rampLinear':
+                runAudioGranulatorRampLinear(params);
+                break;
+            case 'rampSin':
+                runAudioGranulatorRampSin(params);
+                break;
+            case 'volume':
+                setGranulatorVolume(params);
+                break;
+            default:
+                logError("runAudioGranulator: Unknown actionId: " + actionId);
+                return;
+        }
+    }
+    function runAudioPlayGranulator(params) {
+        if (isNull(a)) {
+            logError("runAudioPlayGranulator: Invalid zsAudio lib");
+            return;
+        }
+        a.playGranulator();
+    }
+    function runAudioStopGranulator(params) {
+        if (isNull(a)) {
+            logError("runAudioPlayGranulator: Invalid zsAudio lib");
+            return;
+        }
+        a.stopGranulator();
+    }
+    function runAudioGranulatorRampLinear(params) {
+        if (isNull(a)) {
+            logError("runAudioPlayGranulator: Invalid zsAudio lib");
+            return;
+        }
+        if (!u.isObject(params)) {
+            return;
+        }
+
+        var configParamName = null;
+        var rampEndValue = null;
+        var rampDurationMs = null;
+
+        if (!isNull(params.paramName)) {
+            configParamName = params.paramName;
+        }
+        if (!isNull(params.endValue)) {
+            rampEndValue = params.endValue;
+        }
+        if (!isNull(params.duration)) {
+            rampDurationMs = params.duration;
+        }
+
+        a.setGranulatorRampLinear(configParamName, rampEndValue, rampDurationMs);
+    }
+    function setGranulatorVolume(params) {
+        if (isNull(a)) {
+            logError("runAudioPlayGranulator: Invalid zsAudio lib");
+            return;
+        }
+        if (!u.isObject(params)) {
+            return;
+        }
+        var level = null;
+        var timeMs = null;
+
+        if (!isNull(params.level)) {
+            level = params.level;
+        }
+        if (!isNull(params.timeMs)) {
+            timeMs = params.timeMs;
+        }
+        a.setGranulatorGain(level, timeMs);
+    }
+    function runAudioGranulatorRampSin(params) {
+        if (isNull(a)) {
+            logError("runAudioPlayGranulator: Invalid zsAudio lib");
+            return;
+        }
+        if (!u.isObject(params)) {
+            return;
+        }
+
+        var configParamName = null;
+        var rampAmplitude = null;
+        var rampFrequency = null;
+        var rampDurationMs = null;
+
+        if (!isNull(params.paramName)) {
+            configParamName = params.paramName;
+        }
+        if (!isNull(params.amplitude)) {
+            rampAmplitude = params.amplitude;
+        }
+        if (!isNull(params.frequency)) {
+            rampFrequency = params.frequency;
+        }
+        if (!isNull(params.duration)) {
+            rampDurationMs = params.duration;
+        }
+
+        a.setGranulatorRampSin(configParamName, rampAmplitude, rampFrequency, rampDurationMs);
+    }
+    function resetGranulator() {
+        if (isNull(a)) {
+            logError("runAudioPlayGranulator: Invalid zsAudio lib");
+            return;
+        }
+        a.resetGranulator();
+    }
+    function resetSelectedTiles() {
+        resetSelectedTilesState();
+    }
+    function updateGranulatorConfig(params) {
+        if (isNull(a)) {
+            logError("runAudioPlayGranulator: Invalid zsAudio lib");
+            return;
+        }
+        if (!u.isObject(params)) {
+            return;
+        }
+        a.setGranulatorConfig(params);
+        a.initGranulator(state.granulatorIndex);
+    }
     function reset(actionId, targets, params) {
         if (u.isArray(targets)) {
             for (var i = 0; i < targets.length; i++) {
@@ -856,6 +1062,9 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     }
     function processPlayerConfig(playerConfig) {
         updateAudioPlayerCofig(playerConfig);
+    }
+    function processGranulatorConfig(granulatorConfig) {
+        updateGranulatorConfig(granulatorConfig);
     }
     function setMeter() {
         if (isNull(state.meter)) {
@@ -1005,6 +1214,9 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         }
         if (isNotNull(serverState.playerConfig)) {
             processPlayerConfig(serverState.playerConfig);
+        }
+        if (isNotNull(serverState.granulatorConfig)) {
+            processGranulatorConfig(serverState.granulatorConfig);
         }
     }
     function getInstructionsTextStyle(textState) {
@@ -1266,9 +1478,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
                 return;
             }
             u.playOrRestartTween(getNoteUpTween());
-            // var bufferIndex = u.randomArrayElement(_audioFiles);
-            // var noteDurationSec = getNoteDuration();
-            // a.playAudio(bufferIndex, 0, 0, noteDurationSec);
+            playNoteUp();
         }
         if (state.isVotingEnabled) {
             onVote(VOTE_UP);
@@ -1288,9 +1498,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
                 return;
             }
             u.playOrRestartTween(getNoteDownTween());
-            // var bufferIndex = u.randomArrayElement(_audioFiles);
-            // var noteDurationSec = getNoteDuration();
-            // a.playAudio(bufferIndex, 0, 0, noteDurationSec);
+            playNoteDown();
         }
         if (state.isVotingEnabled) {
             onVote(VOTE_DOWN);

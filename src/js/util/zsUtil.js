@@ -166,7 +166,7 @@ var zsUtil = (function (console, win, doc) {
             return;
         }
         if (!playTime) {
-            playTime = audioCtx.currentTime;
+            playTime = 0;
         }
         if (!durationSec) {
             durationSec = buffer.duration;

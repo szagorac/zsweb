@@ -384,28 +384,35 @@ var zsAudio = (function (u, gr, sp, pl, nz, win) {
         // gr.setGain(g, timeMs);
     }
     function _setGranulatorEnvelope(envelopeConfig) {
-        if (isNull(gr) || !_isAudioInitialised) {
+        if (isNull(gr)) {
             logError("setGranulatorEnvelope: Invalid granulator");
             return;
         }
         gr.setGrainEnvelope(envelopeConfig);
     }
+    function _applyGranulatorGainEvelope(envelope, durationSec) {
+        if (isNull(gr)) {
+            logError("_applyGranulatorGainEvelope: Invalid granulator");
+            return;
+        }
+        gr.applyGainEvelope(envelope, durationSec);
+    }
     function _setGranulatorConfig(granulatorConfig) {
-        if (isNull(gr) || !_isAudioInitialised) {
+        if (isNull(gr)) {
             logError("setGranulatorConfig: Invalid granulator");
             return;
         }
         gr.setGranulatorConfig(granulatorConfig);
     }
     function _setGranulatorGrainConfig(grainConfig) {
-        if (isNull(gr) || !_isAudioInitialised) {
+        if (isNull(gr)) {
             logError("setGranulatorGrainConfig: Invalid granulator");
             return;
         }
         gr.setGrainConfig(grainConfig);
     }
     function _setGranulatorPlayDuration(durationSec) {
-        if (isNull(gr) || !_isAudioInitialised) {
+        if (isNull(gr)) {
             logError("setGranulatorPlayDuration: Invalid granulator");
             return;
         }
@@ -425,6 +432,12 @@ var zsAudio = (function (u, gr, sp, pl, nz, win) {
             return;
         }
         gr.play();
+    }
+    function _isGranulatorPlaying() {
+        if (isNull(gr) || !_isAudioInitialised) {            
+            return false;
+        }        
+        return gr.isPlaying();
     }
     function _stopGranulator() {
         if (isNull(gr) || !_isAudioInitialised) {
@@ -526,6 +539,9 @@ var zsAudio = (function (u, gr, sp, pl, nz, win) {
         playGranulator: function () {
             _playGranulator();
         },
+        isGranulatorPlaying: function () {
+            return _isGranulatorPlaying();
+        },
         stopGranulator: function () {
             _stopGranulator();
         },
@@ -576,6 +592,9 @@ var zsAudio = (function (u, gr, sp, pl, nz, win) {
         },
         setGranulatorVolume: function (level, timeMs) {
             return _setGranulatorVolume(level, timeMs);
+        },
+        applyGranulatorGainEvelope: function (envelope, durationSec) {
+            return _applyGranulatorGainEvelope(envelope, durationSec);
         },
     }
 
