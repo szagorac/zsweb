@@ -39,7 +39,9 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         thumbUpTween: null,
         thumbDownTween: null,
         noteUpTween: null,
+        noteUpDurationSec: 1,
         noteDownTween: null,
+        noteDownDurationSec: 1,
         isVotingEnabled: false,
         isThumbEnabled: false,
         isNoteEnabled: true,
@@ -107,6 +109,9 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         filterRedAttrib: { "filter": "url(#dropshadowred)" },
         filterInActiveAttrib: { "filter": "none" },
         noteUpConfig: { minAngle: 0, maxAngle: 360 },
+        noteDurations: [m.DURATION.MINIM, m.DURATION.CROTCHET, m.DURATION.QUAVER, m.DURATION.SEMI_QUAVER],
+        noteSymbolsUp: ["minimUp", "crotchetUp", "quaverUp", "semiquaverUp"],
+        noteSymbolsDown: ["minimDown", "crotchetDown", "quaverDown", "semiquaverDown"],
     }
 
     function ZScoreException(message) {
@@ -465,14 +470,25 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         state.thumbDownTween.progress(1);
     }
     function initNotes() {
-        var noteDurationSec = getNoteDuration();
-        state.noteUpTween = createNoteUpTween(noteDurationSec);
-        state.noteDownTween = createNoteDownTween(noteDurationSec);
+        initNoteUp();
+        // state.noteDownTween = createNoteDownTween(noteDurationSec);
     }
-    function playNoteUp() {
+    function initNoteUp() {
+        var noteIdx = u.getRandomIntFromRange(0, config.noteDurations.length-1);
+        var noteDuration = config.noteDurations[noteIdx];
+        var symRef = u.toCssIdQuery(config.noteSymbolsUp[noteIdx]);
+        var symbol = u.getElement(config.noteUpSymId);
+        symbol.setAttribute("href", symRef);
+        symbol.setAttribute("xlink:href", symRef);
+        var noteDurationSec = getWholeNoteDuration() * config.noteDurationMultipler;
+        state.noteUpDurationSec = noteDuration * noteDurationSec;
+        state.noteUpTween = createNoteUpTween();
+    }
+    function playNoteUp(noteDuration) {
         a.stopGranulator();
         a.initGranulator(state.granulatorIndex);
-        playNote(0.1, 1, -0.7, 1.5);
+        var duration = state.noteUpDurationSec;
+        playNote(duration, duration, -0.7, 1.5);
     }
     function playNoteDown() {
         a.stopGranulator();
@@ -485,6 +501,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         // a.playAudio(bufferIndex, 0, 0, noteDurationSec);        
         // var noteDurationSec = getNoteDuration()*1000;
         // a.stopGranulator();
+        state.noteUpDurationSec;
         var noteDurationSec = u.randomFloatFromInterval(durMin, durMax);
         var noteDurationMs = noteDurationSec * 1000;
         var pRate = u.randomFloatFromInterval(pRateMin, pRateMax);
@@ -506,11 +523,12 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         }
         return beatDurationSec;
     }
-    function getNoteDuration() {
+    function getWholeNoteDuration() {
         var beatDurationSec = getBeatDuration();
-        return beatDurationSec * config.noteDurationMultipler;
+        return beatDurationSec * 4;
     }
-    function createNoteUpTween(duration) {
+    function createNoteUpTween() {
+        var duration = state.noteUpDurationSec;
         var conf = { sign: -1.0, angleMin: 0, angleMax: 120, rMin: 5, rMax: 10, rotAngleMin: -360, rotAngleMax: 360 };
         return createNoteTween(duration, config.noteUpSymId, conf, onNoteUpComplete);
     }
@@ -554,11 +572,12 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     }
     function onNoteUpComplete() {
         runNoteCompleteTween(config.noteUpSymId);
-        state.noteUpTween = createNoteUpTween(getNoteDuration());
+        initNoteUp();
+        showNote(config.noteUpSymId);
     }
     function onNoteDownComplete() {
         runNoteCompleteTween(config.noteDownSymId);
-        state.noteDownTween = createNoteDownTween(getNoteDuration());
+        state.noteDownTween = createNoteDownTween(getWholeNoteDuration());
     }
     function runNoteCompleteTween(symbolId) {
         gsap.set(u.toCssIdQuery(symbolId), {
@@ -568,6 +587,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             x: 0,
             y: 0,
         });
+    }
+    function showNote(symbolId) {
         gsap.to(u.toCssIdQuery(symbolId), {
             duration: 1,
             autoAlpha: 1,
