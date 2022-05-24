@@ -1,4 +1,4 @@
-var zscore = (function (u, n, s, a, m, win, doc) {
+var zscore = (function (u, n, s, a, m, syn, win, doc) {
     "use strict";
 
     // TODO set for prod when ready - gets rid of console logs
@@ -17,7 +17,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     const SINGLE_QUOTE_HTML = "&#39;";
     const SINGLE_QUOTE = "'";
 
-    var _audioFiles = ["/audio/DialogsRhythm7-1.wav",];
+    var _audioFiles = ["/audio/DialogsRhythm7-1.wav"];
     var _audioFileIndexMap = [[0]];
     var _granulatorAudioIndex = 0;
     var _isTouch = null;
@@ -46,6 +46,10 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         isThumbEnabled: false,
         isNoteEnabled: true,
         granulatorIndex: 0,
+        filterFreq: 1.0,
+        filterQ: 0.0,
+        noteUpFreq: [523.25, 631.62, 739.99],
+        noteDownFreq: [261.63, 315.81, 369.99],
     }
     var config = {
         connectionPreference: "ws,sse,poll",
@@ -70,7 +74,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         textSpanFadeTimeSec: 1.0,
         textSpanFadeStaggerTimeSec: 0.5,
         voteTimeoutMs: 5000,
-        noteDurationMultipler: 4,
+        noteDurationMultipler: 8,
         loadingIconId: "loadingIcon",
         elementGroupSuffix: "Grp",
         meterGroupId: "meterGrp",
@@ -103,7 +107,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         negativeMaxCol: { r: 255, g: 0, b: 0 },
         positiveMinCol: { r: 255, g: 255, b: 0 },
         positiveMaxCol: { r: 0, g: 125, b: 0 },
-        maxNoiseLevel: 0.5,
+        maxNoiseLevel: 1.0,
         audioFadeInMs: 1000,
         filterGreenAttrib: { "filter": "url(#dropshadowgreen)" },
         filterRedAttrib: { "filter": "url(#dropshadowred)" },
@@ -349,8 +353,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         init();
     }
     function init() {
-        if (!u || !n || !s || !a || !m) {
-            throw new ZScoreException("Invalid libraries. Required: zsUtil, zsNet, zsSvg, zsAudio and zsMusic");
+        if (!u || !n || !s || !a || !m || !syn) {
+            throw new ZScoreException("Invalid libraries. Required: zsUtil, zsNet, zsSvg, zsAudio, zsSynth and zsMusic");
         }
 
         u.setRunMode(RUN_MODE);
@@ -395,8 +399,9 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     function onAudioLoaded() {
         a.initNoise();
         a.initPlayer();
+        a.initSynth();
         a.initGranulator(state.granulatorIndex);
-        u.makeInVisible(config.loadingIconId);
+        u.makeInVisible(config.loadingIconId);        
         log("onAudioLoaded: completed");
     }
     function initAudio() {
@@ -471,7 +476,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     }
     function initNotes() {
         initNoteUp();
-        // state.noteDownTween = createNoteDownTween(noteDurationSec);
+        initNoteDown();
     }
     function initNoteUp() {
         var noteIdx = u.getRandomIntFromRange(0, config.noteDurations.length-1);
@@ -484,24 +489,55 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         state.noteUpDurationSec = noteDuration * noteDurationSec;
         state.noteUpTween = createNoteUpTween();
     }
-    function playNoteUp(noteDuration) {
+    function initNoteDown() {
+        var noteIdx = u.getRandomIntFromRange(0, config.noteDurations.length-1);
+        var noteDuration = config.noteDurations[noteIdx];
+        var symRef = u.toCssIdQuery(config.noteSymbolsDown[noteIdx]);
+        var symbol = u.getElement(config.noteDownSymId);
+        symbol.setAttribute("href", symRef);
+        symbol.setAttribute("xlink:href", symRef);
+        var noteDurationSec = getWholeNoteDuration() * config.noteDurationMultipler;
+        state.noteDownDurationSec = noteDuration * noteDurationSec;
+        state.noteDownTween = createNoteDownTween();
+    }
+    function playNoteUp() {      
+        playSynthNoteUp();  
+        // playGranulatorNoteUp();
+    }
+    function playNoteDown() {
+        playSynthNoteDown();
+        // plaGranulatoryNoteDown();
+    }
+    function playSynthNoteUp() {
+        var freqIdx = u.getRandomIntFromRange(0, state.noteUpFreq.length - 1);
+        var freq = state.noteUpFreq[freqIdx];
+        log("playing freq: " + freq);
+        a.playSynth(freq, state.noteUpDurationSec);
+    }
+    function playSynthNoteDown() {
+        var freqIdx = u.getRandomIntFromRange(0, state.noteDownFreq.length - 1);
+        var freq = state.noteDownFreq[freqIdx];
+        log("playing freq: " + freq);
+        a.playSynth(freq, state.noteDownDurationSec);
+    }
+    function playGranulatorNoteUp() {
         a.stopGranulator();
         a.initGranulator(state.granulatorIndex);
         var duration = state.noteUpDurationSec;
-        playNote(duration, duration, -0.7, 1.5);
+        playGranulatorNote(duration, duration, -0.7, 1.5);
     }
-    function playNoteDown() {
+    function plaGranulatoryNoteDown() {
         a.stopGranulator();
         a.initGranulator(1);
-        playNote(0.2, 5, 0.1, 2);
+        var duration = state.noteDownDurationSec;
+        playGranulatorNote(duration, duration, 0.1, 2);
     }
-    function playNote(durMin, durMax, pRateMin, pRateMax) {
+    function playGranulatorNote(durMin, durMax, pRateMin, pRateMax) {
         // var bufferIndex = 0; // u.randomArrayElement(_audioFiles);
         // var noteDurationSec = getNoteDuration();
         // a.playAudio(bufferIndex, 0, 0, noteDurationSec);        
         // var noteDurationSec = getNoteDuration()*1000;
         // a.stopGranulator();
-        state.noteUpDurationSec;
         var noteDurationSec = u.randomFloatFromInterval(durMin, durMax);
         var noteDurationMs = noteDurationSec * 1000;
         var pRate = u.randomFloatFromInterval(pRateMin, pRateMax);
@@ -529,11 +565,12 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     }
     function createNoteUpTween() {
         var duration = state.noteUpDurationSec;
-        var conf = { sign: -1.0, angleMin: 0, angleMax: 120, rMin: 5, rMax: 10, rotAngleMin: -360, rotAngleMax: 360 };
+        var conf = { sign: -1.0, angleMin: 0, angleMax: 120, rMin: 10, rMax: 30, rotAngleMin: -360, rotAngleMax: 360, xmod: 20, ymod: 30};
         return createNoteTween(duration, config.noteUpSymId, conf, onNoteUpComplete);
     }
-    function createNoteDownTween(duration) {
-        var conf = { sign: 1.0, angleMin: 0, angleMax: 120, rMin: 30, rMax: 50, rotAngleMin: -360, rotAngleMax: 360 };
+    function createNoteDownTween() {
+        var duration = state.noteDownDurationSec;
+        var conf = { sign: 1.0, angleMin: 0, angleMax: 120, rMin: 20, rMax: 40, rotAngleMin: -360, rotAngleMax: 360, xmod: 0, ymod: 0 };
         return createNoteTween(duration, config.noteDownSymId, conf, onNoteDownComplete);
     }
     function createNoteTween(duration, symbolId, conf, callback) {
@@ -551,6 +588,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             dx =  -1.0 * s * r * Math.cos(rad);
             dy =  s * r * Math.sin(rad);
         }
+        dx += conf.xmod;
+        dy += conf.ymod;
         var rotAngle =  u.randomIntFromInterval(conf.rotAngleMin, conf.rotAngleMax);        
         return gsap.to(u.toCssIdQuery(symbolId), {
             duration: duration,
@@ -574,10 +613,13 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         runNoteCompleteTween(config.noteUpSymId);
         initNoteUp();
         showNote(config.noteUpSymId);
+        showNote(config.noteDownSymId);
     }
     function onNoteDownComplete() {
         runNoteCompleteTween(config.noteDownSymId);
-        state.noteDownTween = createNoteDownTween(getWholeNoteDuration());
+        initNoteDown();
+        showNote(config.noteDownSymId);
+        showNote(config.noteUpSymId);
     }
     function runNoteCompleteTween(symbolId) {
         gsap.set(u.toCssIdQuery(symbolId), {
@@ -592,6 +634,12 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         gsap.to(u.toCssIdQuery(symbolId), {
             duration: 1,
             autoAlpha: 1,
+        });
+    }
+    function hideNote(symbolId) {
+        gsap.to(u.toCssIdQuery(symbolId), {
+            duration: 1,
+            autoAlpha: 0,
         });
     }
     function onVote(value) {
@@ -1495,9 +1543,10 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             u.playOrRestartTween(getThumbUpTween());
         }
         if (state.isNoteEnabled) {
-            if(isNoteUpActive()) {
+            if(isNoteUpActive() || isNoteDownActive()) {
                 return;
             }
+            hideNote(config.noteDownSymId);
             u.playOrRestartTween(getNoteUpTween());
             playNoteUp();
         }
@@ -1515,9 +1564,10 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             u.playOrRestartTween(getThumbDownTween());
         }
         if (state.isNoteEnabled) {
-            if(isNoteDownActive()) {
+            if(isNoteUpActive() || isNoteDownActive()) {
                 return;
             }
+            hideNote(config.noteUpSymId);
             u.playOrRestartTween(getNoteDownTween());
             playNoteDown();
         }
@@ -1584,4 +1634,4 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             onThumbsUp();
         }
     }
-}(zsUtil, zsNet, zsSvg, zsAudio, zsMusic, window, document));
+}(zsUtil, zsNet, zsSvg, zsAudio, zsMusic, zsSynth, window, document));

@@ -425,7 +425,7 @@ var zsGranulator = (function (u) {
         if (position < 0.0) {
             position = 0.0;
         }
-        _log("Current position: " + positionMs);
+        // _log("Current position: " + positionMs);
         return position;
     }
     function _calculateSize(now) {
