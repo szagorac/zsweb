@@ -612,14 +612,14 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
     function onNoteUpComplete() {
         runNoteCompleteTween(config.noteUpSymId);
         initNoteUp();
-        showNote(config.noteUpSymId);
-        showNote(config.noteDownSymId);
+        showSymbol(config.noteUpSymId);
+        showSymbol(config.noteDownSymId);
     }
     function onNoteDownComplete() {
         runNoteCompleteTween(config.noteDownSymId);
         initNoteDown();
-        showNote(config.noteDownSymId);
-        showNote(config.noteUpSymId);
+        showSymbol(config.noteDownSymId);
+        showSymbol(config.noteUpSymId);
     }
     function runNoteCompleteTween(symbolId) {
         gsap.set(u.toCssIdQuery(symbolId), {
@@ -630,13 +630,19 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
             y: 0,
         });
     }
-    function showNote(symbolId) {
+    function showSymbol(symbolId) {
+        if(isNull(symbolId)) {
+            return;
+        }
         gsap.to(u.toCssIdQuery(symbolId), {
             duration: 1,
             autoAlpha: 1,
         });
     }
-    function hideNote(symbolId) {
+    function hideSymbol(symbolId) {
+        if(isNull(symbolId)) {
+            return;
+        }
         gsap.to(u.toCssIdQuery(symbolId), {
             duration: 1,
             autoAlpha: 0,
@@ -760,23 +766,80 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         }
         displayInstructions();
     }
-    function zoom(targets) {
+    function activate(actionId, targets, params) {
         if (u.isArray(targets)) {
             for (var i = 0; i < targets.length; i++) {
-                zoomTarget(targets[i]);
+                runActivate(actionId, targets[i], params);
             }
         } else {
-            zoomTarget(targets);
+            runActivate(actionId, targets, params);
         }
     }
-    function timeline(actionId, targets, params) {
-        if (u.isArray(targets)) {
-            for (var i = 0; i < targets.length; i++) {
-                runTimeline(actionId, targets[i], params);
-            }
-        } else {
-            runTimeline(actionId, targets, params);
+    function runActivate(actionId, target, params) {
+        if (isNull(target)) {
+            return;
         }
+        log("runActivate: " + actionId + SPACE + target);
+        switch (target) {
+            case 'view':
+                activateView(actionId, params);
+                break;
+        }
+    }
+    function activateView(actionId, params) {
+        if (!u.isString(actionId)) {
+            return;
+        }
+        switch (actionId) {
+            case 'section':
+                activateSectionView(params);
+                break;
+            default:
+                logError("activateView: Unknown actionId: " + actionId);
+                return;
+        }
+    }
+    function activateSectionView(params) {
+        if (!u.isObject(params)) {
+            return;
+        }
+        var id = null;
+        if (!isNull(params.id)) {
+            id = params.id;
+        }
+        activateSection(id);
+    }
+    function activateSection(id) {
+        deactivateNotes();
+        activateThumbs();
+    }
+    function activateNotes() {
+        showSymbol(config.noteUpSymId);
+        showSymbol(config.noteDownSymId);
+        u.makeVisible(config.noteUpGroupId);
+        u.makeVisible(config.noteDownGroupId);
+        state.isNoteEnabled = true;
+    }
+    function activateThumbs() {
+        showSymbol(config.thumbUpSymId);
+        showSymbol(config.thumbDownSymId);
+        u.makeVisible(config.thumbUpGroupId);
+        u.makeVisible(config.thumbDownGroupId);
+        state.isThumbEnabled = true;
+    }
+    function deactivateNotes() {
+        hideSymbol(config.noteUpSymId);
+        hideSymbol(config.noteDownSymId);
+        u.makeInVisible(config.noteUpGroupId);
+        u.makeInVisible(config.noteDownGroupId);
+        state.isNoteEnabled = false;
+    }
+    function deactivateThumbs() {
+        hideSymbol(config.thumbUpSymId);
+        hideSymbol(config.thumbDownSymId);
+        u.makeInVisible(config.thumbUpGroupId);
+        u.makeInVisible(config.thumbDownGroupId);
+        state.isThumbEnabled = false;
     }
     function audio(actionId, targets, params) {
         if (u.isArray(targets)) {
@@ -1330,6 +1393,9 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
             case "AUDIO":
                 audio(id, elementIds, params);
                 break;
+            case "ACTIVATE":
+                activate(id, elementIds, params);
+                break;
             case "STOP":
                 stop(id, elementIds, params);
                 break;
@@ -1546,7 +1612,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
             if(isNoteUpActive() || isNoteDownActive()) {
                 return;
             }
-            hideNote(config.noteDownSymId);
+            hideSymbol(config.noteDownSymId);
             u.playOrRestartTween(getNoteUpTween());
             playNoteUp();
         }
@@ -1567,7 +1633,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
             if(isNoteUpActive() || isNoteDownActive()) {
                 return;
             }
-            hideNote(config.noteUpSymId);
+            hideSymbol(config.noteUpSymId);
             u.playOrRestartTween(getNoteDownTween());
             playNoteDown();
         }
