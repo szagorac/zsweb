@@ -388,7 +388,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
     function initView() {
         enableVoting();
         disableThumbs();
-        enableNotes();
+        disableNotes();
     }
     function initNet() {
         n.init(config.connectionPreference, config.appUrlSse, config.appUrlWebsockets, config.appUrlHttp, processSeverState);
