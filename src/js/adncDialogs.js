@@ -16,6 +16,11 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
     const VOTE_DOWN = -1;
     const SINGLE_QUOTE_HTML = "&#39;";
     const SINGLE_QUOTE = "'";
+    const VIEW_THUMBS = "thumbs";
+    const VIEW_NOTES = "notes";
+    const VIEW_METER = "meter";
+    const VIEW_VOTE = "vote";
+    const VIEW_AUDIO = "audio";
 
     var _audioFiles = ["/audio/DialogsRhythm7-1.wav"];
     var _audioFileIndexMap = [[0]];
@@ -50,6 +55,13 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         filterQ: 0.0,
         noteUpFreq: [523.25, 631.62, 739.99],
         noteDownFreq: [261.63, 315.81, 369.99],
+        isAudioEnabled: true,
+        currentSection: null,
+        isSectionActive: false,
+        filterMod: null,
+        meterAudioValue: 0,
+        noiseFreq: 1000,
+        noiseQ: 100,
     }
     var config = {
         connectionPreference: "ws,sse,poll",
@@ -92,7 +104,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         noteDownSymId: "noteDownSym",
         meterBoxIdPrefix: "meterBox",
         meterBoxNo: 20,
-        meterMaxVotes: 5,
+        meterMaxVotes: 10,
         meterInactiveStyle: { "fill": "none", "stroke": "black", "stroke-width": "4px" },
         meterZeroStyle: { "fill": "yellow" },
         thumbsUpActiveStyle: { "fill": "green" },
@@ -116,6 +128,11 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         noteDurations: [m.DURATION.MINIM, m.DURATION.CROTCHET, m.DURATION.QUAVER, m.DURATION.SEMI_QUAVER],
         noteSymbolsUp: ["minimUp", "crotchetUp", "quaverUp", "semiquaverUp"],
         noteSymbolsDown: ["minimDown", "crotchetDown", "quaverDown", "semiquaverDown"],
+        availableViews: [VIEW_THUMBS, VIEW_NOTES, VIEW_METER, VIEW_VOTE, VIEW_AUDIO],
+        maxNoiseFreq: 10000,
+        minNoiseFreq: 1000,
+        maxNoiseQ: 3000,
+        minNoiseQ: 30,
     }
 
     function ZScoreException(message) {
@@ -215,6 +232,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
     }
     ZScoreMeter.prototype.setPlayAudio = function (value) {
         this.isPlayAudio = value;
+        this.playAudio(this.currentValue, this.currentMaxVal);
     }
     ZScoreMeter.prototype.set = function (value, maxValAbs) {
         if (!u.isNumeric(value) || !u.isNumeric(maxValAbs)) {
@@ -282,19 +300,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         if (!this.isPlayAudio) {
             return;
         }
-        if (value === 0) {
-            a.playNoise(0.0);
-            a.setPlayerVolume(0.0, 500);
-            return;
-        } else if (value > 0) {
-            a.playNoise(0.0);
-            var vol = u.mapRange(Math.abs(value), 0.0, Math.abs(maxVal), 0.0, 1.0);
-            a.setPlayerVolume(vol, config.audioFadeInMs);
-        } else {
-            a.setPlayerVolume(0.0, config.audioFadeInMs);
-            var vol = u.mapRange(Math.abs(value), 0.0, Math.abs(maxVal), 0.0, config.maxNoiseLevel);
-            a.playNoise(vol);
-        }
+        playMeterAudio(value, maxVal);    
     }
     // ---- ZScoreMeter END
     // ---- ZScoreMeterConfig 
@@ -387,8 +393,8 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
     }
     function initView() {
         enableVoting();
-        disableThumbs();
-        disableNotes();
+        hideThumbs();
+        hideNotes();
     }
     function initNet() {
         n.init(config.connectionPreference, config.appUrlSse, config.appUrlWebsockets, config.appUrlHttp, processSeverState);
@@ -500,7 +506,58 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         state.noteDownDurationSec = noteDuration * noteDurationSec;
         state.noteDownTween = createNoteDownTween();
     }
-    function playNoteUp() {      
+    function playMeterAudio(value, maxVal) {
+        var previousValue = state.meterAudioValue;
+        state.meterAudioValue = value;
+        if(!state.isAudioEnabled) {
+            return;
+        }
+        if (value === 0) {
+            a.stopNoise();
+            a.setPlayerVolume(0.0, 500);
+            return;
+        } else if (value > 0) {
+            a.stopNoise();
+            var vol = u.mapRange(Math.abs(value), 0.0, Math.abs(maxVal), 0.0, 1.0);
+            a.setPlayerVolume(vol, config.audioFadeInMs);
+        } else {
+            a.setPlayerVolume(0.0, config.audioFadeInMs);
+            var vol = u.mapRange(Math.abs(value), 0.0, Math.abs(maxVal), 0.0, config.maxNoiseLevel);
+            var prevFreq = state.noiseFreq;            
+            var maxFreq = config.maxNoiseFreq;
+            var freqStep = (maxFreq - prevFreq)/10.0;
+            var newFreq = prevFreq + freqStep;
+            if(previousValue < value) {
+                newFreq = prevFreq - freqStep;
+            }
+            if(newFreq > config.maxNoiseFreq) {
+                newFreq = config.maxNoiseFreq;
+            } else if (newFreq < config.minNoiseFreq) {
+                newFreq = config.minNoiseFreq;
+            }
+            a.setNoiseFilterFreq(newFreq);
+            state.noiseFreq = newFreq;
+
+            var prevQ = state.noiseQ;
+            var maxQ = config.maxNoiseQ;
+            var qStep = (maxQ - prevQ)/10.0;
+            var newQ = prevQ + qStep;
+            if(previousValue > value) {
+                newQ = prevQ - qStep;
+            }
+            if(newQ > config.maxNoiseQ) {
+                newQ = config.maxNoiseQ;
+            } else if (newQ < config.minNoiseQ) {
+                newQ = config.minNoiseQ;
+            }
+            state.noiseQ = newQ;
+            a.setNoiseFilterQ(newQ);
+
+            log("playMeterAudio: newFreq: " + newFreq + " prevFreq: " + prevFreq  +  " newQ: " + newQ + " prevQ: " + prevQ + " ");
+            a.playNoise(vol);
+        }
+    }
+    function playNoteUp() {
         playSynthNoteUp();  
         // playGranulatorNoteUp();
     }
@@ -612,14 +669,14 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
     function onNoteUpComplete() {
         runNoteCompleteTween(config.noteUpSymId);
         initNoteUp();
-        showSymbol(config.noteUpSymId);
-        showSymbol(config.noteDownSymId);
+        showSymbolTween(config.noteUpSymId);
+        showSymbolTween(config.noteDownSymId);
     }
     function onNoteDownComplete() {
         runNoteCompleteTween(config.noteDownSymId);
         initNoteDown();
-        showSymbol(config.noteDownSymId);
-        showSymbol(config.noteUpSymId);
+        showSymbolTween(config.noteDownSymId);
+        showSymbolTween(config.noteUpSymId);
     }
     function runNoteCompleteTween(symbolId) {
         gsap.set(u.toCssIdQuery(symbolId), {
@@ -630,7 +687,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
             y: 0,
         });
     }
-    function showSymbol(symbolId) {
+    function showSymbolTween(symbolId) {
         if(isNull(symbolId)) {
             return;
         }
@@ -639,12 +696,25 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
             autoAlpha: 1,
         });
     }
-    function hideSymbol(symbolId) {
+    function hideSymbolTween(symbolId) {
         if(isNull(symbolId)) {
             return;
         }
         gsap.to(u.toCssIdQuery(symbolId), {
             duration: 1,
+            autoAlpha: 0,
+            onComplete: onHideSymbolComplete,
+            onCompleteParams: [symbolId],
+        });
+    }
+    function onHideSymbolComplete(symbolId) {
+        u.makeInVisible(symbolId);
+    }
+    function hideSymbolNow(symbolId) {
+        if(isNull(symbolId)) {
+            return;
+        }
+        gsap.set(u.toCssIdQuery(symbolId), {
             autoAlpha: 0,
         });
     }
@@ -665,35 +735,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
     }
     function isNoteDownActive() {
         return isNotNull(state.noteDownTween) && state.noteDownTween.isActive();
-    }
-    function enableVoting() {
-        u.makeVisible(config.meterGroupId);
-        state.isVotingEnabled = true;
-    }
-    function disableVoting() {
-        u.makeInVisible(config.meterGroupId);
-        state.isVotingEnabled = false;
-    }
-    function enableThumbs() {
-        u.makeVisible(config.thumbUpGroupId);
-        u.makeVisible(config.thumbDownGroupId);
-        state.isThumbEnabled = true;
-    }
-    function disableThumbs() {
-        u.makeInVisible(config.thumbUpGroupId);
-        u.makeInVisible(config.thumbDownGroupId);
-        state.isThumbEnabled = false;
-    }
-    function enableNotes() {
-        u.makeVisible(config.noteUpGroupId);
-        u.makeVisible(config.noteDownGroupId);
-        state.isNoteEnabled = true;
-    }
-    function disableNotes() {
-        u.makeInVisible(config.noteUpGroupId);
-        u.makeInVisible(config.noteDownGroupId);
-        state.isNoteEnabled = false;
-    }
+    }    
     function setInstructions(l1, l2, l3, colour, isVisible) {
         if (isNull(_instructionsElement)) {
             return;
@@ -809,37 +851,168 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         }
         activateSection(id);
     }
+    function updateViewState(viewState) {
+        if(isNull(viewState)) {
+            return;
+        }
+        var sectionName = null;
+        var isSectionActive = false;        
+        if(isNotNull(viewState.isSectionActive)) {
+            isSectionActive = viewState.isSectionActive;
+        }
+        if(isNotNull(viewState.sectionName)) {
+            sectionName = viewState.sectionName;
+        }
+        setSection(sectionName, isSectionActive);
+
+        if(isNotNull(viewState.activeViews)) {
+            var inactiveViews = [];
+            for (var i = 0; i < config.availableViews.length; i++) {
+                if(!u.arrContains(viewState.activeViews, config.availableViews[i])) {
+                    inactiveViews.push(config.availableViews[i])
+                }
+            }    
+            deactivateViews(inactiveViews);
+            activateViews(viewState.activeViews);
+        }        
+
+    }
+    function setSection(id, isActive) {
+        state.currentSection = id;
+        state.isSectionActive = isActive;
+    }
+    function deactivateViews(views) {
+        for (var i = 0; i < views.length; i++) {
+            deactivateView(views[i]);
+        }
+    }
+    function activateViews(views) {
+        for (var i = 0; i < views.length; i++) {
+            activateView(views[i]);
+        }              
+    }
+    function deactivateView(view) {
+        switch (view) {
+            case VIEW_THUMBS:
+                deactivateThumbs();
+                break;
+            case VIEW_NOTES:
+                deactivateNotes();
+                break;
+            case VIEW_METER:
+                deactivateMeter();
+                break;
+            case VIEW_VOTE:
+                deactivateVote();
+                break;
+            case VIEW_AUDIO:
+                deactivateAudio();
+                break;
+            default:
+                log("deactivateView: unknown view: " + view);
+        }
+    }
+    function activateView(view) {
+        switch (view) {
+            case VIEW_THUMBS:
+                activateThumbs();
+                break;
+            case VIEW_NOTES:
+                activateNotes();
+                break;
+            case VIEW_METER:
+                activateMeter();
+                break;
+            case VIEW_VOTE:
+                activateVote();
+                break;
+            case VIEW_AUDIO:
+                activateAudio();
+                break;
+            default:
+                log("activateView: unknown view: " + view);
+        }
+    }
     function activateSection(id) {
-        deactivateNotes();
-        activateThumbs();
+        // deactivateNotes();
+        // activateThumbs();
     }
     function activateNotes() {
-        showSymbol(config.noteUpSymId);
-        showSymbol(config.noteDownSymId);
-        u.makeVisible(config.noteUpGroupId);
-        u.makeVisible(config.noteDownGroupId);
-        state.isNoteEnabled = true;
+        showNotes();
     }
     function activateThumbs() {
-        showSymbol(config.thumbUpSymId);
-        showSymbol(config.thumbDownSymId);
-        u.makeVisible(config.thumbUpGroupId);
-        u.makeVisible(config.thumbDownGroupId);
-        state.isThumbEnabled = true;
+        showThumbs();        
+    }
+    function activateMeter() {
+        showMeter();
+    }
+    function activateVote() {
+        enableVoting();
+    }
+    function activateAudio() {
+        state.isAudioEnabled = true;
+        if(isNotNull(state.meter)) {
+            state.meter.setPlayAudio(true);
+        }
     }
     function deactivateNotes() {
-        hideSymbol(config.noteUpSymId);
-        hideSymbol(config.noteDownSymId);
-        u.makeInVisible(config.noteUpGroupId);
-        u.makeInVisible(config.noteDownGroupId);
-        state.isNoteEnabled = false;
+        hideNotes();
     }
     function deactivateThumbs() {
-        hideSymbol(config.thumbUpSymId);
-        hideSymbol(config.thumbDownSymId);
-        u.makeInVisible(config.thumbUpGroupId);
-        u.makeInVisible(config.thumbDownGroupId);
+        hideThumbs();        
+    }
+    function deactivateMeter() {
+        hideMeter();
+    }
+    function deactivateVote() {
+        disableVoting();
+    }
+    function deactivateAudio() {
+        state.isAudioEnabled = false;
+        if(isNotNull(state.meter)) {
+            state.meter.setPlayAudio(false);
+        }
+    }
+    function enableVoting() {
+        state.isVotingEnabled = true;
+    }
+    function disableVoting() {
+        state.isVotingEnabled = false;
+    }
+    function showThumbs() {
+        u.makeVisible(config.thumbUpGroupId);
+        u.makeVisible(config.thumbDownGroupId);
+        showSymbolTween(config.thumbUpSymId);
+        showSymbolTween(config.thumbDownSymId);
+        state.isThumbEnabled = true;
+    }
+    function hideThumbs() {
+        hideSymbolTween(config.thumbUpSymId);
+        hideSymbolTween(config.thumbDownSymId);
+        // u.makeInVisible(config.thumbUpGroupId);
+        // u.makeInVisible(config.thumbDownGroupId);
         state.isThumbEnabled = false;
+    }
+    function showNotes() {
+        u.makeVisible(config.noteUpGroupId);
+        u.makeVisible(config.noteDownGroupId);
+        showSymbolTween(config.noteUpSymId);
+        showSymbolTween(config.noteDownSymId);
+        state.isNoteEnabled = true;
+    }
+    function hideNotes() {
+        hideSymbolTween(config.noteUpSymId);
+        hideSymbolTween(config.noteDownSymId);
+        // u.makeInVisible(config.noteUpGroupId);
+        // u.makeInVisible(config.noteDownGroupId);
+        state.isNoteEnabled = false;
+    }
+    function showMeter() {
+        u.makeVisible(config.meterGroupId);
+        showSymbolTween(config.meterGroupId);
+    }
+    function hideMeter() {
+        hideSymbolTween(config.meterGroupId);
     }
     function audio(actionId, targets, params) {
         if (u.isArray(targets)) {
@@ -1198,6 +1371,9 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
     function processGranulatorConfig(granulatorConfig) {
         updateGranulatorConfig(granulatorConfig);
     }
+    function processViewState(viewState) {
+        updateViewState(viewState);
+    }
     function setMeter() {
         if (isNull(state.meter)) {
             return;
@@ -1350,6 +1526,9 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         if (isNotNull(serverState.granulatorConfig)) {
             processGranulatorConfig(serverState.granulatorConfig);
         }
+        if (isNotNull(serverState.viewState)) {
+            processViewState(serverState.viewState);
+        }
     }
     function getInstructionsTextStyle(textState) {
         if (!textState.isVisible) {
@@ -1448,6 +1627,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         log("runStopAll: ");
         if (!isNull(a) && a.isReady()) {
             runAudioStopPlayer(params);
+            runAudioStopNoise(params);
         }
     }
     function runAudioStopPlayer(params) {
@@ -1456,6 +1636,13 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
             return;
         }
         a.stopPlayer();
+    }
+    function runAudioStopNoise(params) {
+        if (isNull(a)) {
+            logError("runAudioStopNoise: Invalid zsAudio lib");
+            return;
+        }
+        a.stopNoise();
     }
     function playOrRestartTween(tween) {
         if (isNull(tween)) {
@@ -1612,7 +1799,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
             if(isNoteUpActive() || isNoteDownActive()) {
                 return;
             }
-            hideSymbol(config.noteDownSymId);
+            hideSymbolTween(config.noteDownSymId);
             u.playOrRestartTween(getNoteUpTween());
             playNoteUp();
         }
@@ -1633,7 +1820,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
             if(isNoteUpActive() || isNoteDownActive()) {
                 return;
             }
-            hideSymbol(config.noteUpSymId);
+            hideSymbolTween(config.noteUpSymId);
             u.playOrRestartTween(getNoteDownTween());
             playNoteDown();
         }

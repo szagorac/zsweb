@@ -7,11 +7,21 @@ var zsNoise = (function (u) {
     var _masterGain = null;
     var _isRunning = false;
     var _noiseSource = null;
+    var _filter = null;
 
     var config = {
         masterGainVal: 0.0,
+        isUseFilter: true,
+        filterQMultiplier: 30,
+        filterMinValue: 100,
+        filterMaxValue: 1000,
+        filterNumberOfOctaves: 1,
+        filterFreq: 1000,
+        filterType: 'bandpass',
+        filterQ: 100,
         fadeInMs: 500,
         fadeOutMs: 500,
+        rampSec: 2.0,
     }
 
     function ZsNoiseException(msg) {
@@ -29,6 +39,9 @@ var zsNoise = (function (u) {
         }
 
         _log("Init Noise");
+        if(_isRunning) {
+            _stop();
+        }
 
         if (!audioContext) {
             _logError("_initNoise: invalid context");
@@ -45,15 +58,49 @@ var zsNoise = (function (u) {
         _masterGain.gain.value = 0;
         // _setMasterGain(config.masterGainVal, 0);
 
+        //oscillator filter
+        if (config.isUseFilter) {
+            config.filterMaxValue = _audioCtx.sampleRate / 2;
+            config.filterNumberOfOctaves = Math.log(config.filterMaxValue / config.filterMinValue) / Math.LN2;
+            _filter = _audioCtx.createBiquadFilter();
+            _filter.type = config.filterType;
+            _filter.frequency.value = config.filterFreq;
+            _filter.Q.value = config.filterQ;
+            _filter.connect(_masterGain);
+        } 
+
         _masterGain.connect(destination);
         _setReady(true);
     }
+    function _setFilterFreq(freq) {
+        if (!_isReady || _isNull(_filter)) {
+            return;
+        }
+        _filter.frequency.linearRampToValueAtTime(freq, _audioCtx.currentTime + config.rampSec);
+    };
+    function _setFilterQ(quality) {
+        if (!_isReady || _isNull(_filter)) {
+            return;
+        }
+        _filter.Q.linearRampToValueAtTime(quality, _audioCtx.currentTime + config.rampSec);
+    };
+    function _setFilterType(type) {
+        if (!_isReady || _isNull(_filter)) {
+            return;
+        }
+        _filter.type = type;
+    };
     function _getOrCreateNoiseSource() {
         if (!_isNull(_noiseSource)) {
             return _noiseSource;
         }
         _noiseSource = _createNoiseSource();
-        _noiseSource.connect(_masterGain);
+        if(_isNull(_filter)) {
+            _noiseSource.connect(_masterGain);
+        } else {
+            _noiseSource.connect(_filter);
+        }
+        
         return _noiseSource;
     }
     function _createNoiseSource() {
@@ -165,7 +212,7 @@ var zsNoise = (function (u) {
         } else {
             v1 = currentValue + v1;
         }
-        _log("setMasterGain: v1: " + v1 + " v2: " + v2 + " t1: " + t1 + " t2: " + t2 + " g: " + g + " currentValue: " + currentValue);
+        // _log("setMasterGain: v1: " + v1 + " v2: " + v2 + " t1: " + t1 + " t2: " + t2 + " g: " + g + " currentValue: " + currentValue);
         _masterGain.gain.linearRampToValueAtTime(v1, t1);
         _masterGain.gain.linearRampToValueAtTime(v2, t2);
     }
@@ -206,11 +253,23 @@ var zsNoise = (function (u) {
         isReady: function () {
             return _getReady();
         },
+        isRunning: function () {
+            return _isRunning;
+        },
         play: function (volume) {
             return _play(volume);
         },
         stop: function (isOn) {
             return _stop(isOn);
+        },
+        setFilterFreq: function (freq) {
+            _setFilterFreq(freq);
+        },
+        setFilterQ: function (quality) {
+            _setFilterQ(quality);
+        },
+        setFilterType: function (type) {
+            _setFilterType(type);
         },
     }
 }(zsUtil));

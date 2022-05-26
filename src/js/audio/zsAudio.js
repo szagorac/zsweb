@@ -470,7 +470,9 @@ var zsAudio = (function (u, gr, sp, pl, nz, syn, win) {
             nz = null;
             return;
         }
-
+        if(nz.isReady() || nz.isRunning()) {
+            return;
+        }
         nz.init(_ctx, destination);
     }
     function _playNoise(volume) {
@@ -478,6 +480,15 @@ var zsAudio = (function (u, gr, sp, pl, nz, syn, win) {
     }
     function _stopNoise() {
         nz.stop();
+    }
+    function _setNoiseFilterFreq(freq) {
+        nz.setFilterFreq(freq);
+    }
+    function _setNoiseFilterQ(quality) {
+        nz.setFilterQ(quality);
+    }
+    function _setNoiseFilterType(type) {
+        nz.setFilterType(type);
     }
     //noise END
 
@@ -603,6 +614,15 @@ var zsAudio = (function (u, gr, sp, pl, nz, syn, win) {
         },
         stopNoise: function () {
             _stopNoise();
+        },
+        setNoiseFilterFreq: function (freq) {
+            _setNoiseFilterFreq(freq);
+        },
+        setNoiseFilterQ: function (quality) {
+            _setNoiseFilterQ(quality);
+        },
+        setNoiseFilterType: function (type) {
+            _setNoiseFilterType(type);
         },
         playSynth: function (freq, durationSec) {
             _playSynth(freq, durationSec);

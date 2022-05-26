@@ -28,7 +28,7 @@ var zsPlayer = (function (u, win) {
     }
     ZsBuffer.prototype.init = function () {
         if (this.index < 0 || this.index > _audioBuffers.length) {
-            _logError("initBuffer: Invalid buffer index: " + bufferIndex);
+            _logError("initBuffer: Invalid buffer index: " + this.index);
             return;
         }
 
