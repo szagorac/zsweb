@@ -531,7 +531,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
                 votes = 1;
             }
             a.setPlayerVolume(0.0, config.audioFadeInMs);
-            var vol = u.mapRange(Math.abs(value), 1.0, Math.abs(maxVal), 0.2, config.maxNoiseLevel);  
+            var vol = u.mapRange(Math.abs(value), 0.0, Math.abs(maxVal), 0.5, config.maxNoiseLevel);  
         
             var minIdx = 0;
             var maxIdx = state.noiseFreqs.length -1;
@@ -601,7 +601,9 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         a.playGranulator();
         var sinStart = noteDurationMs * 0.2;
         var sinDur = noteDurationMs * 0.5;
-        setTimeout(a.setGranulatorRampSin("grain.pitchRate", 0.2, 0.2, sinDur), sinStart);
+        setTimeout(function() {
+            a.setGranulatorRampSin("grain.pitchRate", 0.2, 0.2, sinDur);
+        }, sinStart);
         setTimeout(stopNote, noteDurationMs);
     }
     function stopNote() {

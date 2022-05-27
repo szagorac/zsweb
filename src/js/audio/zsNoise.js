@@ -123,12 +123,14 @@ var zsNoise = (function (u) {
         if (!_isReady || _isNull(_filter)) {
             return;
         }
+        config.filterFreq = freq;
         _filter.frequency.linearRampToValueAtTime(freq, _getNow() + config.rampSec);
     };
     function _setFilterQ(quality) {
         if (!_isReady || _isNull(_filter)) {
             return;
         }
+        config.filterQ = quality;
         _filter.Q.linearRampToValueAtTime(quality, _getNow() + config.rampSec);
     };    
     function _setFilterDetune(detune) {
@@ -141,6 +143,7 @@ var zsNoise = (function (u) {
         if (!_isReady || _isNull(_filter)) {
             return;
         }
+        config.filterType = type;
         _filter.type = type;
     };
 
@@ -149,19 +152,26 @@ var zsNoise = (function (u) {
             return;
         }
         if(!_isNull(_masterGain)) {
-            _masterGain.gain.setValueAtTime(0.0, _getNow());
+            _masterGain.gain.linearRampToValueAtTime(0.001, _getNow() + 0.1);
         }
-        _stopNode(_noiseSource);
+        var nodes = [_noiseSource, _lfoDetune, _lfoDetuneGain, _filter, _masterGain];
+        setTimeout(function() {
+            _stopNodes(nodes);
+        }, 200);
         _noiseSource = null;
-        _stopNode(_lfoDetune);
         _lfoDetune = null;
-        _stopNode(_lfoDetuneGain);
         _lfoDetuneGain = null;
-        _stopNode(_filter);
         _filter = null;
-        _stopNode(_masterGain);
         _masterGain = null;        
         _isRunning = false;
+    }
+    function _stopNodes(nodes) {
+        if(!u.isArray(nodes)) {
+            return;
+        }
+        for (var i = 0; i < nodes.length; i++) {
+            _stopNode(nodes[i]);
+        }
     }
     function _stopNode(node) {
         if(_isNull(node)) {
@@ -207,6 +217,9 @@ var zsNoise = (function (u) {
     }
     function _getReady() {
         return _isReady;
+    }
+    function _getRunning() {
+        return _isRunning;
     }
     function _setMasterGain(level, timeMs) {
         if (!_audioCtx || !_masterGain) {
@@ -303,7 +316,7 @@ var zsNoise = (function (u) {
             return _getReady();
         },
         isRunning: function () {
-            return _isRunning;
+            return _getRunning();
         },
         play: function (volume) {
             return _play(volume);
