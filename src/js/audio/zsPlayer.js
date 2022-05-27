@@ -27,6 +27,10 @@ var zsPlayer = (function (u, win) {
         this.gainNode = null;
     }
     ZsBuffer.prototype.init = function () {
+        if(_isNull(_audioBuffers)) {
+            _logError("initBuffer: Invalid audio buffers");
+            return;
+        }
         if (this.index < 0 || this.index > _audioBuffers.length) {
             _logError("initBuffer: Invalid buffer index: " + this.index);
             return;
@@ -149,6 +153,10 @@ var zsPlayer = (function (u, win) {
     function _playAudioBuffer(bufferIndex, startTime, offset, duration) {
         if(_isNull(_audioCtx)) {
             _logError("playAudioBuffer: Invalid audio context");
+            return;
+        }
+        if(_isNull(_audioBuffers)) {
+            _logError("playAudioBuffer: Invalid audio buffers");
             return;
         }
         if(_isNull(bufferIndex)) {

@@ -262,6 +262,9 @@ var zsAudio = (function (u, gr, sp, pl, nz, syn, win) {
         _setSpeechMaxVolume(maxLevel, timeMs);
         _setSpeechVolume(maxLevel, timeMs);
     }
+    function _calcBandpassFilterQ( octaves ){
+        return Math.sqrt( Math.pow(2, octaves) ) / ( Math.pow(2, octaves) - 1 )
+    }
 
     //speech
     function _initSpeech() {
@@ -324,6 +327,9 @@ var zsAudio = (function (u, gr, sp, pl, nz, syn, win) {
         if (isNull(gr)) {
             logError("initGranulator: Can not initialise zsGranulator");
             gr = null;
+            return;
+        }
+        if(isNull(_audioBuffers)) {
             return;
         }
 
@@ -487,6 +493,9 @@ var zsAudio = (function (u, gr, sp, pl, nz, syn, win) {
     function _setNoiseFilterQ(quality) {
         nz.setFilterQ(quality);
     }
+    function _setNoiseFilterDetune(detune) {
+        nz.setFilterDetune(detune);
+    }    
     function _setNoiseFilterType(type) {
         nz.setFilterType(type);
     }
@@ -621,6 +630,9 @@ var zsAudio = (function (u, gr, sp, pl, nz, syn, win) {
         setNoiseFilterQ: function (quality) {
             _setNoiseFilterQ(quality);
         },
+        setNoiseFilterDetune: function (detune) {
+            _setNoiseFilterDetune(detune);
+        },
         setNoiseFilterType: function (type) {
             _setNoiseFilterType(type);
         },
@@ -660,6 +672,10 @@ var zsAudio = (function (u, gr, sp, pl, nz, syn, win) {
         applyGranulatorGainEvelope: function (envelope, durationSec) {
             return _applyGranulatorGainEvelope(envelope, durationSec);
         },
+        calcBandpassFilterQ: function (octaves) {
+            return _calcBandpassFilterQ(octaves);
+        },
+        
     }
 
 }(zsUtil, zsGranulator, zsSpeech, zsPlayer, zsNoise, zsSynth, window));

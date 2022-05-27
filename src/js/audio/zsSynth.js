@@ -24,7 +24,12 @@ var zsSynth = (function (u) {
         fadeInMs: 500,
         fadeOutMs: 500,
         isUseFilter: true,
-        ampEnvelope: { attackTime: 0.1, decayTime: 0.0, sustainLevel: 1.0, sustainTime: 0.5, releaseTime: 0.4 }
+        ampEnvelope: { attackTime: 0.1, decayTime: 0.0, sustainLevel: 1.0, sustainTime: 0.5, releaseTime: 0.4 },
+        detuneFreq: 0.1,
+        detuneMax: 50,
+        freqModFreq: 0.05,
+        freqModMax: 50,
+        freqModOscType: 'triangle',
     }
 
     function ZsSynthException(msg) {
@@ -66,18 +71,18 @@ var zsSynth = (function (u) {
 
         //oscillator LFO Detune Modulator
         _lfoDetune = _audioCtx.createOscillator();
-        _lfoDetune.frequency.value = 0.1;
+        _lfoDetune.frequency.value = config.detuneFreq;
         _lfoDetuneGain = _audioCtx.createGain();
-        _lfoDetuneGain.gain.value = 50;
+        _lfoDetuneGain.gain.value = config.detuneMax;
         _lfoDetune.connect(_lfoDetuneGain);
         _lfoDetune.start();
 
         //oscillator LFO Freq Modulator
         _lfoFreq = _audioCtx.createOscillator();
-        _lfoFreq.type = 'triangle';
-        _lfoFreq.frequency.value = 0.05;
+        _lfoFreq.type = config.freqModOscType;
+        _lfoFreq.frequency.value = config.freqModFreq;
         _lfoFreqGain = _audioCtx.createGain();
-        _lfoFreqGain.gain.value = 50;
+        _lfoFreqGain.gain.value = config.freqModMax;
         _lfoFreq.connect(_lfoFreqGain);
         _lfoFreq.start();
 

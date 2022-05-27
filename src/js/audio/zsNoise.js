@@ -8,6 +8,8 @@ var zsNoise = (function (u) {
     var _isRunning = false;
     var _noiseSource = null;
     var _filter = null;
+    var _lfoDetune = null;
+    var _lfoDetuneGain = null;
 
     var config = {
         masterGainVal: 0.0,
@@ -22,6 +24,8 @@ var zsNoise = (function (u) {
         fadeInMs: 500,
         fadeOutMs: 500,
         rampSec: 2.0,
+        detuneFreq: 0.05,
+        detuneMax: 50,
     }
 
     function ZsNoiseException(msg) {
@@ -53,47 +57,14 @@ var zsNoise = (function (u) {
         if (_isNull(destination)) {
             destination = _audioCtx.destination;
         }
-
-        _masterGain = _createGainNode();
-        _masterGain.gain.value = 0;
-        // _setMasterGain(config.masterGainVal, 0);
-
-        //oscillator filter
-        if (config.isUseFilter) {
-            config.filterMaxValue = _audioCtx.sampleRate / 2;
-            config.filterNumberOfOctaves = Math.log(config.filterMaxValue / config.filterMinValue) / Math.LN2;
-            _filter = _audioCtx.createBiquadFilter();
-            _filter.type = config.filterType;
-            _filter.frequency.value = config.filterFreq;
-            _filter.Q.value = config.filterQ;
-            _filter.connect(_masterGain);
-        } 
-
-        _masterGain.connect(destination);
+        
         _setReady(true);
     }
-    function _setFilterFreq(freq) {
-        if (!_isReady || _isNull(_filter)) {
-            return;
-        }
-        _filter.frequency.linearRampToValueAtTime(freq, _audioCtx.currentTime + config.rampSec);
-    };
-    function _setFilterQ(quality) {
-        if (!_isReady || _isNull(_filter)) {
-            return;
-        }
-        _filter.Q.linearRampToValueAtTime(quality, _audioCtx.currentTime + config.rampSec);
-    };
-    function _setFilterType(type) {
-        if (!_isReady || _isNull(_filter)) {
-            return;
-        }
-        _filter.type = type;
-    };
     function _getOrCreateNoiseSource() {
-        if (!_isNull(_noiseSource)) {
+        if (_isRunning && !_isNull(_noiseSource)) {
             return _noiseSource;
         }
+        _buildCommonNodes();
         _noiseSource = _createNoiseSource();
         if(_isNull(_filter)) {
             _noiseSource.connect(_masterGain);
@@ -116,17 +87,95 @@ var zsNoise = (function (u) {
         noiseSource.buffer = noiseBuffer;
         return noiseSource;
     }
-    function _stop() {
-        if (!_isRunning || _isNull(_noiseSource)) {
+    function _buildCommonNodes() {
+        if (!_isReady || !_audioCtx) {
+            _logError("_buildCommonNodes: invalid context");
             return;
         }
-        _noiseSource.stop();
-        _noiseSource.disconnect();
+        _stop();
+        //Master gain
+        _masterGain = _createGainNode();
+        _masterGain.gain.value = 0;
+
+         //oscillator LFO Detune Modulator
+         _lfoDetune = _audioCtx.createOscillator();
+         _lfoDetune.frequency.value = config.detuneFreq;
+         _lfoDetuneGain = _audioCtx.createGain();
+         _lfoDetuneGain.gain.value = config.detuneMax;
+         _lfoDetune.connect(_lfoDetuneGain);
+         _lfoDetune.start();
+ 
+         //filter
+         if (config.isUseFilter) {
+             config.filterMaxValue = _audioCtx.sampleRate / 2;
+             config.filterNumberOfOctaves = Math.log(config.filterMaxValue / config.filterMinValue) / Math.LN2;
+             _filter = _audioCtx.createBiquadFilter();
+             _filter.type = config.filterType;
+             _filter.frequency.value = config.filterFreq;
+             _filter.Q.value = config.filterQ;
+             _lfoDetuneGain.connect(_filter.detune);
+             _filter.connect(_masterGain);
+         } 
+
+         _masterGain.connect(_audioCtx.destination);
+    }
+    function _setFilterFreq(freq) {
+        if (!_isReady || _isNull(_filter)) {
+            return;
+        }
+        _filter.frequency.linearRampToValueAtTime(freq, _getNow() + config.rampSec);
+    };
+    function _setFilterQ(quality) {
+        if (!_isReady || _isNull(_filter)) {
+            return;
+        }
+        _filter.Q.linearRampToValueAtTime(quality, _getNow() + config.rampSec);
+    };    
+    function _setFilterDetune(detune) {
+        if (!_isReady || _isNull(_filter)) {
+            return;
+        }
+        _filter.detune.setValueAtTime(detune, _getNow());
+    };
+    function _setFilterType(type) {
+        if (!_isReady || _isNull(_filter)) {
+            return;
+        }
+        _filter.type = type;
+    };
+
+    function _stop() {
+        if (!_isRunning) {
+            return;
+        }
+        if(!_isNull(_masterGain)) {
+            _masterGain.gain.setValueAtTime(0.0, _getNow());
+        }
+        _stopNode(_noiseSource);
         _noiseSource = null;
+        _stopNode(_lfoDetune);
+        _lfoDetune = null;
+        _stopNode(_lfoDetuneGain);
+        _lfoDetuneGain = null;
+        _stopNode(_filter);
+        _filter = null;
+        _stopNode(_masterGain);
+        _masterGain = null;        
         _isRunning = false;
     }
+    function _stopNode(node) {
+        if(_isNull(node)) {
+            return;
+        }
+        if(typeof node.stop === 'function') {
+            node.stop();
+        }
+        if(typeof node.disconnect === 'function') {
+            node.disconnect();
+        }       
+    }
     function _play(volume) {
-        if (!_isReady || _isNull(_masterGain)) {
+        if (!_isReady) {
             return;
         }
         if (_isNull(volume)) {
@@ -267,6 +316,9 @@ var zsNoise = (function (u) {
         },
         setFilterQ: function (quality) {
             _setFilterQ(quality);
+        },
+        setFilterDetune: function (detune) {
+            _setFilterDetune(detune);
         },
         setFilterType: function (type) {
             _setFilterType(type);

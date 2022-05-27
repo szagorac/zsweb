@@ -55,6 +55,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         filterQ: 0.0,
         noteUpFreq: [523.25, 631.62, 739.99],
         noteDownFreq: [261.63, 315.81, 369.99],
+        noiseFreqs: [261.63, 369.99, 523.25, 739.99, 1046.5, 1479.98, 2093, 2959.96, 4186.01, 5919.91],
         isAudioEnabled: true,
         currentSection: null,
         isSectionActive: false,
@@ -62,6 +63,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         meterAudioValue: 0,
         noiseFreq: 1000,
         noiseQ: 100,
+        filterDetuneTween: null,
     }
     var config = {
         connectionPreference: "ws,sse,poll",
@@ -129,10 +131,11 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         noteSymbolsUp: ["minimUp", "crotchetUp", "quaverUp", "semiquaverUp"],
         noteSymbolsDown: ["minimDown", "crotchetDown", "quaverDown", "semiquaverDown"],
         availableViews: [VIEW_THUMBS, VIEW_NOTES, VIEW_METER, VIEW_VOTE, VIEW_AUDIO],
-        maxNoiseFreq: 10000,
-        minNoiseFreq: 1000,
-        maxNoiseQ: 3000,
-        minNoiseQ: 30,
+        maxNoiseFreq: 5000,
+        minNoiseFreq: 300,
+        maxNoiseQ: 10,
+        minNoiseQ: 1,
+        noiseFilterQSteps: [300, 100, 70, 50, 30, 20, 15, 10, 5, 3],
     }
 
     function ZScoreException(message) {
@@ -300,7 +303,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         if (!this.isPlayAudio) {
             return;
         }
-        playMeterAudio(value, maxVal);    
+        playMeterAudio(value, maxVal);
     }
     // ---- ZScoreMeter END
     // ---- ZScoreMeterConfig 
@@ -407,7 +410,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         a.initPlayer();
         a.initSynth();
         a.initGranulator(state.granulatorIndex);
-        u.makeInVisible(config.loadingIconId);        
+        u.makeInVisible(config.loadingIconId);
         log("onAudioLoaded: completed");
     }
     function initAudio() {
@@ -485,7 +488,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         initNoteDown();
     }
     function initNoteUp() {
-        var noteIdx = u.getRandomIntFromRange(0, config.noteDurations.length-1);
+        var noteIdx = u.getRandomIntFromRange(0, config.noteDurations.length - 1);
         var noteDuration = config.noteDurations[noteIdx];
         var symRef = u.toCssIdQuery(config.noteSymbolsUp[noteIdx]);
         var symbol = u.getElement(config.noteUpSymId);
@@ -496,7 +499,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         state.noteUpTween = createNoteUpTween();
     }
     function initNoteDown() {
-        var noteIdx = u.getRandomIntFromRange(0, config.noteDurations.length-1);
+        var noteIdx = u.getRandomIntFromRange(0, config.noteDurations.length - 1);
         var noteDuration = config.noteDurations[noteIdx];
         var symRef = u.toCssIdQuery(config.noteSymbolsDown[noteIdx]);
         var symbol = u.getElement(config.noteDownSymId);
@@ -509,7 +512,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
     function playMeterAudio(value, maxVal) {
         var previousValue = state.meterAudioValue;
         state.meterAudioValue = value;
-        if(!state.isAudioEnabled) {
+        if (!state.isAudioEnabled) {
             return;
         }
         if (value === 0) {
@@ -521,44 +524,39 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
             var vol = u.mapRange(Math.abs(value), 0.0, Math.abs(maxVal), 0.0, 1.0);
             a.setPlayerVolume(vol, config.audioFadeInMs);
         } else {
+            var votes = Math.abs(value);
+            if(votes > 10) {
+                votes = 10;
+            } else if (votes < 1) {
+                votes = 1;
+            }
             a.setPlayerVolume(0.0, config.audioFadeInMs);
-            var vol = u.mapRange(Math.abs(value), 0.0, Math.abs(maxVal), 0.0, config.maxNoiseLevel);
-            var prevFreq = state.noiseFreq;            
-            var maxFreq = config.maxNoiseFreq;
-            var freqStep = (maxFreq - prevFreq)/10.0;
-            var newFreq = prevFreq + freqStep;
-            if(previousValue < value) {
-                newFreq = prevFreq - freqStep;
+            var vol = u.mapRange(Math.abs(value), 0.0, Math.abs(maxVal), 0.0, config.maxNoiseLevel);  
+        
+            var minIdx = 0;
+            var maxIdx = state.noiseFreqs.length -1;
+            if(votes < 4) {
+                maxIdx =  Math.floor( maxIdx/3.0 );
+            } else if(votes > 3 && votes < 7) {
+                minIdx = Math.floor( maxIdx/3.0 );
+                maxIdx =  Math.floor( 2 * maxIdx/3.0 );
+            } else if (votes > 6) {
+                minIdx = Math.floor( maxIdx/2.0 );
             }
-            if(newFreq > config.maxNoiseFreq) {
-                newFreq = config.maxNoiseFreq;
-            } else if (newFreq < config.minNoiseFreq) {
-                newFreq = config.minNoiseFreq;
-            }
+            var freqIdx = u.getRandomIntFromRange(minIdx, maxIdx);
+            var newFreq = state.noiseFreqs[freqIdx];
+
             a.setNoiseFilterFreq(newFreq);
             state.noiseFreq = newFreq;
-
-            var prevQ = state.noiseQ;
-            var maxQ = config.maxNoiseQ;
-            var qStep = (maxQ - prevQ)/10.0;
-            var newQ = prevQ + qStep;
-            if(previousValue > value) {
-                newQ = prevQ - qStep;
-            }
-            if(newQ > config.maxNoiseQ) {
-                newQ = config.maxNoiseQ;
-            } else if (newQ < config.minNoiseQ) {
-                newQ = config.minNoiseQ;
-            }
+            
+            var newQ = config.noiseFilterQSteps[votes - 1];
             state.noiseQ = newQ;
             a.setNoiseFilterQ(newQ);
-
-            log("playMeterAudio: newFreq: " + newFreq + " prevFreq: " + prevFreq  +  " newQ: " + newQ + " prevQ: " + prevQ + " ");
             a.playNoise(vol);
         }
     }
     function playNoteUp() {
-        playSynthNoteUp();  
+        playSynthNoteUp();
         // playGranulatorNoteUp();
     }
     function playNoteDown() {
@@ -598,13 +596,13 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         var noteDurationSec = u.randomFloatFromInterval(durMin, durMax);
         var noteDurationMs = noteDurationSec * 1000;
         var pRate = u.randomFloatFromInterval(pRateMin, pRateMax);
-        var conf = {pitchRate: pRate};
+        var conf = { pitchRate: pRate };
         a.setGranulatorGrainConfig(conf);
         a.playGranulator();
-        var sinStart = noteDurationMs*0.2;
-        var sinDur = noteDurationMs*0.5;
-        setTimeout(a.setGranulatorRampSin("grain.pitchRate", 0.2, 0.2, sinDur), sinStart);        
-        setTimeout(stopNote, noteDurationMs);        
+        var sinStart = noteDurationMs * 0.2;
+        var sinDur = noteDurationMs * 0.5;
+        setTimeout(a.setGranulatorRampSin("grain.pitchRate", 0.2, 0.2, sinDur), sinStart);
+        setTimeout(stopNote, noteDurationMs);
     }
     function stopNote() {
         a.stopGranulator();
@@ -622,7 +620,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
     }
     function createNoteUpTween() {
         var duration = state.noteUpDurationSec;
-        var conf = { sign: -1.0, angleMin: 0, angleMax: 120, rMin: 10, rMax: 30, rotAngleMin: -360, rotAngleMax: 360, xmod: 20, ymod: 30};
+        var conf = { sign: -1.0, angleMin: 0, angleMax: 120, rMin: 10, rMax: 30, rotAngleMin: -360, rotAngleMax: 360, xmod: 20, ymod: 30 };
         return createNoteTween(duration, config.noteUpSymId, conf, onNoteUpComplete);
     }
     function createNoteDownTween() {
@@ -631,23 +629,23 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         return createNoteTween(duration, config.noteDownSymId, conf, onNoteDownComplete);
     }
     function createNoteTween(duration, symbolId, conf, callback) {
-        var angle =  u.randomIntFromInterval(conf.angleMin, conf.angleMax);
+        var angle = u.randomIntFromInterval(conf.angleMin, conf.angleMax);
         var r = u.randomIntFromInterval(conf.rMin, conf.rMax);
         var dx = 0;
         var s = conf.sign;
-        var dy = s * r;        
-        if(angle < 90) {
+        var dy = s * r;
+        if (angle < 90) {
             var rad = u.toRadians(angle);
-            dx =  s * r * Math.cos(rad);
-            dy =  s * r * Math.sin(rad);
+            dx = s * r * Math.cos(rad);
+            dy = s * r * Math.sin(rad);
         } else if (angle > 90) {
             var rad = u.toRadians(180 - angle);
-            dx =  -1.0 * s * r * Math.cos(rad);
-            dy =  s * r * Math.sin(rad);
+            dx = -1.0 * s * r * Math.cos(rad);
+            dy = s * r * Math.sin(rad);
         }
         dx += conf.xmod;
         dy += conf.ymod;
-        var rotAngle =  u.randomIntFromInterval(conf.rotAngleMin, conf.rotAngleMax);        
+        var rotAngle = u.randomIntFromInterval(conf.rotAngleMin, conf.rotAngleMax);
         return gsap.to(u.toCssIdQuery(symbolId), {
             duration: duration,
             scale: 0.1,
@@ -659,7 +657,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
             paused: true,
             onComplete: callback,
         });
-    }    
+    }
     function onThumbUpComplete() {
         u.setElementAttributes(getThumbUpGroup(), config.filterGreenAttrib);
     }
@@ -688,7 +686,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         });
     }
     function showSymbolTween(symbolId) {
-        if(isNull(symbolId)) {
+        if (isNull(symbolId)) {
             return;
         }
         gsap.to(u.toCssIdQuery(symbolId), {
@@ -697,7 +695,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         });
     }
     function hideSymbolTween(symbolId) {
-        if(isNull(symbolId)) {
+        if (isNull(symbolId)) {
             return;
         }
         gsap.to(u.toCssIdQuery(symbolId), {
@@ -711,7 +709,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         u.makeInVisible(symbolId);
     }
     function hideSymbolNow(symbolId) {
-        if(isNull(symbolId)) {
+        if (isNull(symbolId)) {
             return;
         }
         gsap.set(u.toCssIdQuery(symbolId), {
@@ -735,7 +733,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
     }
     function isNoteDownActive() {
         return isNotNull(state.noteDownTween) && state.noteDownTween.isActive();
-    }    
+    }
     function setInstructions(l1, l2, l3, colour, isVisible) {
         if (isNull(_instructionsElement)) {
             return;
@@ -852,29 +850,29 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         activateSection(id);
     }
     function updateViewState(viewState) {
-        if(isNull(viewState)) {
+        if (isNull(viewState)) {
             return;
         }
         var sectionName = null;
-        var isSectionActive = false;        
-        if(isNotNull(viewState.isSectionActive)) {
+        var isSectionActive = false;
+        if (isNotNull(viewState.isSectionActive)) {
             isSectionActive = viewState.isSectionActive;
         }
-        if(isNotNull(viewState.sectionName)) {
+        if (isNotNull(viewState.sectionName)) {
             sectionName = viewState.sectionName;
         }
         setSection(sectionName, isSectionActive);
 
-        if(isNotNull(viewState.activeViews)) {
+        if (isNotNull(viewState.activeViews)) {
             var inactiveViews = [];
             for (var i = 0; i < config.availableViews.length; i++) {
-                if(!u.arrContains(viewState.activeViews, config.availableViews[i])) {
+                if (!u.arrContains(viewState.activeViews, config.availableViews[i])) {
                     inactiveViews.push(config.availableViews[i])
                 }
-            }    
+            }
             deactivateViews(inactiveViews);
             activateViews(viewState.activeViews);
-        }        
+        }
 
     }
     function setSection(id, isActive) {
@@ -889,7 +887,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
     function activateViews(views) {
         for (var i = 0; i < views.length; i++) {
             activateView(views[i]);
-        }              
+        }
     }
     function deactivateView(view) {
         switch (view) {
@@ -941,7 +939,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         showNotes();
     }
     function activateThumbs() {
-        showThumbs();        
+        showThumbs();
     }
     function activateMeter() {
         showMeter();
@@ -951,7 +949,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
     }
     function activateAudio() {
         state.isAudioEnabled = true;
-        if(isNotNull(state.meter)) {
+        if (isNotNull(state.meter)) {
             state.meter.setPlayAudio(true);
         }
     }
@@ -959,7 +957,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         hideNotes();
     }
     function deactivateThumbs() {
-        hideThumbs();        
+        hideThumbs();
     }
     function deactivateMeter() {
         hideMeter();
@@ -969,9 +967,10 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
     }
     function deactivateAudio() {
         state.isAudioEnabled = false;
-        if(isNotNull(state.meter)) {
+        if (isNotNull(state.meter)) {
             state.meter.setPlayAudio(false);
         }
+        runStopAll();
     }
     function enableVoting() {
         state.isVotingEnabled = true;
@@ -1626,18 +1625,18 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
     function runStopAll(params) {
         log("runStopAll: ");
         if (!isNull(a) && a.isReady()) {
-            runAudioStopPlayer(params);
-            runAudioStopNoise(params);
+            runAudioStopPlayer();
+            runAudioStopNoise();
         }
     }
-    function runAudioStopPlayer(params) {
+    function runAudioStopPlayer() {
         if (isNull(a)) {
             logError("runAudioStopPlayer: Invalid zsAudio lib");
             return;
         }
         a.stopPlayer();
     }
-    function runAudioStopNoise(params) {
+    function runAudioStopNoise() {
         if (isNull(a)) {
             logError("runAudioStopNoise: Invalid zsAudio lib");
             return;
@@ -1655,6 +1654,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
             tween.play();
         }
     }
+
     function getInstructionsElement() {
         return u.getElement(config.instructionTxtElementId);
     }
@@ -1796,7 +1796,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
             u.playOrRestartTween(getThumbUpTween());
         }
         if (state.isNoteEnabled) {
-            if(isNoteUpActive() || isNoteDownActive()) {
+            if (isNoteUpActive() || isNoteDownActive()) {
                 return;
             }
             hideSymbolTween(config.noteDownSymId);
@@ -1817,7 +1817,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
             u.playOrRestartTween(getThumbDownTween());
         }
         if (state.isNoteEnabled) {
-            if(isNoteUpActive() || isNoteDownActive()) {
+            if (isNoteUpActive() || isNoteDownActive()) {
                 return;
             }
             hideSymbolTween(config.noteUpSymId);
