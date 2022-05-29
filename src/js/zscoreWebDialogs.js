@@ -74,6 +74,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     const EVENT_PARAM_TEXT_L1 = "l1";
     const EVENT_PARAM_TEXT_L2 = "l2";
     const EVENT_PARAM_TEXT_L3 = "l3";
+    const EVENT_PARAM_VOTE_COUNT = "voteCount";
+    const EVENT_PARAM_VOTER_NO = "voterNo";
 
 
     const DEFAULT_PAGE_IMG_URL = "img/blankStave.png";
@@ -99,6 +101,10 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         instToken: "@Inst@",
         slotNoToken: "@SlotNo@",
         pageIdPrefix: "p",
+        meterBoxDefaultWidth: 1,
+        meterBoxSizeDimension: "height",
+        meterMaxVotes: 10,
+        meterBoxMaxSize: 35,
         tsBaseBeatDenom: 8,
         tsY: 0,
         textSpanFadeTimeSec: 1.0,
@@ -139,6 +145,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         idTranspoMod: "transpoMod",
         idTranspoInfo: "transpoInfo",
         blankPageUrl: "img/blankStave.png",
+        audienceMeterUpBoxId: "audienceMeterUpBox",
+        audienceMeterDownBoxId: "audienceMeterDownBox",
         filterOutParts: [AV, FULL_SCORE],
         connectedRectStyle: { "fill": FILL_CONNECTED, "stroke": STROKE_CONNECTED, "stroke-width": "0px", "visibility": VISIBLE, "opacity": 1 },
         disconnectedRectStyle: { "fill": FILL_DISCONNECTED, "stroke": STROKE_DISCONNECTED, "stroke-width": "1px", "visibility": VISIBLE, "opacity": 1 },
@@ -191,6 +199,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         isClientIdVisible: false,
         transpo: m.TRANSPOSITION.C,
         counter: 0,
+        voteCount: 0,
     }
 
     function ZScoreException(message) {
@@ -1570,7 +1579,10 @@ var zscore = (function (u, n, s, a, m, win, doc) {
                 break;
             case "OVERLAY_TEXT":
                 callForTargets(setOverlayTextInfo, targets, params);
-                break;                
+                break;
+            case "VOTE":
+                onVote(params);
+                break;
             default:
                 logError("doAction: Unknown actionType: " + actionType);
         }
@@ -2083,6 +2095,47 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         }
         if (isPlay) {
             playTimeline(stave.timeline);
+        }
+    }
+    
+    function onVote(params) {
+        if (isNull(params)) {
+            return;
+        }
+        var voteCount = params[EVENT_PARAM_VOTE_COUNT];
+        var voterNo = params[EVENT_PARAM_VOTER_NO];
+        updateAudienceMeter(voteCount, voterNo);
+    }
+    function updateAudienceMeter(voteCount, voterNo) {
+        var maxVotes = voterNo;
+        if (maxVotes < config.meterMaxVotes) {
+            maxVotes = config.meterMaxVotes;
+        }
+        var defaultWidth = config.meterBoxDefaultWidth;
+        var attr = {};
+        if(voteCount === 0) {
+            attr[config.meterBoxSizeDimension] = defaultWidth;
+            u.setElementIdAttributes(config.audienceMeterUpBoxId, attr);
+            u.setElementIdAttributes(config.audienceMeterDownBoxId, attr);
+        } else if (voteCount > 0) {
+            if (voteCount > maxVotes) {
+                voteCount = maxVotes;
+            }
+            var boxSize = Math.floor(u.mapRange(voteCount, 0, maxVotes, 1, config.meterBoxMaxSize));
+            attr[config.meterBoxSizeDimension] = boxSize;
+            u.setElementIdAttributes(config.audienceMeterUpBoxId, attr);
+            attr[config.meterBoxSizeDimension] = 0;
+            u.setElementIdAttributes(config.audienceMeterDownBoxId, attr);
+        } else if (voteCount < 0) {
+            var absCount = Math.abs(voteCount);
+            if (absCount > maxVotes) {
+                absCount = maxVotes;
+            }   
+            var boxSize = Math.floor(u.mapRange(absCount, 0, maxVotes, 1, config.meterBoxMaxSize));
+            attr[config.meterBoxSizeDimension] = 0;
+            u.setElementIdAttributes(config.audienceMeterUpBoxId, attr);
+            attr[config.meterBoxSizeDimension] = boxSize;
+            u.setElementIdAttributes(config.audienceMeterDownBoxId, attr);
         }
     }
     function onSemaphoreOn(params) {
