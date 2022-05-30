@@ -3,7 +3,7 @@ rndStrategy:
   isActive: false
 builderStrategy:
   isActive: true
-  sections: [ pitch, rhythm, melody ]
+  sections: [ pitch, rhythm, melody, timbre ]
   assignmentType: USER_ANY_FCFS
   isStopOnSectionEnd: true
   pageRanges:
@@ -15,6 +15,9 @@ builderStrategy:
       instruments: [ all ]
     - range: { start: 25, end: 36 }
       name: melody
+      instruments: [ all ]
+    - range: { start: 37, end: 48 }
+      name: timbre
       instruments: [ all ]
 transpositionStrategy:
   isActive: true
@@ -33,78 +36,78 @@ transpositionStrategy:
   minYdistance: 10
   minXdistance: 7
   pages:
-    - { pageNo: 1, part: Present, textElements: [ { dx: 0, dy: 104, txt: C }, { dx: 0, dy: 114, txt: G } ] }
-    - { pageNo: 2, part: Present, textElements: [ { dx: 0, dy: 104, txt: C }, { dx: 0, dy: 114, txt: G } ] }
-    - { pageNo: 3, part: Present, textElements: [ { dx: 0, dy: 91.5, txt: G }, { dx: 0, dy: 104, txt: C } ] }
-    - { pageNo: 4, part: Present, textElements: [ { dx: 0, dy: 104, txt: C }, { dx: 0, dy: 114, txt: G }, { dx: 579, dy: 91.5, txt: G } ] }
-    - { pageNo: 5, part: Present, textElements: [ { dx: 0, dy: 104, txt: C }, { dx: 0, dy: 114, txt: G }, { dx: 0, dy: 126.5, txt: C }, { dx: 320, dy: 91.5, txt: G } ] }
-    - { pageNo: 6, part: Present, textElements: [ { dx: 0, dy: 81, txt: C }, { dx: 0, dy: 91, txt: G }, { dx: 0, dy: 103.5, txt: C } ] }
-    - { pageNo: 7, part: Present, textElements: [ { dx: 0, dy: 104, txt: C }, { dx: 0, dy: 114, txt: G } ] }
-    - { pageNo: 8, part: Present, textElements: [ { dx: 0, dy: 91.5, txt: G }, { dx: 0, dy: 104, txt: C } ] }
-    - { pageNo: 9, part: Present, textElements: [ { dx: 0, dy: 56, txt: D }, { dx: 0, dy: 68.5, txt: G }, { dx: 0, dy: 78.5, txt: D } ] }
-    - { pageNo: 10, part: Present, textElements: [ { dx: 0, dy: 46, txt: G }, { dx: 0, dy: 56, txt: D }, { dx: 0, dy: 68.5, txt: G }, { dx: 0, dy: 78.5, txt: D } ] }
-    - { pageNo: 11, part: Present, textElements: [ { dx: 0, dy: 104, txt: C }, { dx: 0, dy: 114, txt: G } ] }
-    - { pageNo: 12, part: Present, textElements: [ { dx: 0, dy: 104, txt: C }, { dx: 0, dy: 114, txt: G } ] }
-    - { pageNo: 13, part: Present, textElements: [ { dx: 0, dy: 83.5, txt: C }, { dx: 303.5, dy: 71, txt: G } ] }
-    - { pageNo: 14, part: Present, textElements: [ { dx: 0, dy: 83.5, txt: C } ] }
-    - { pageNo: 15, part: Present, textElements: [ { dx: 0, dy: 83.5, txt: C } ] }
-    - { pageNo: 16, part: Present, textElements: [ { dx: 0, dy: 83.5, txt: C } ] }
-    - { pageNo: 17, part: Present, textElements: [ { dx: 0, dy: 83.5, txt: C } ] }
-    - { pageNo: 18, part: Present, textElements: [ { dx: 0, dy: 83.5, txt: C } ] }
-    - { pageNo: 19, part: Present, textElements: [ { dx: 0, dy: 83.5, txt: C } ] }
-    - { pageNo: 20, part: Present, textElements: [ { dx: 0, dy: 83.5, txt: C } ] }
-    - { pageNo: 21, part: Present, textElements: [ { dx: 0, dy: 83.5, txt: C } ] }
-    - { pageNo: 22, part: Present, textElements: [ { dx: 0, dy: 83.5, txt: C } ] }
-    - { pageNo: 23, part: Present, textElements: [ { dx: 0, dy: 83.5, txt: C } ] }
-    - { pageNo: 24, part: Present, textElements: [ { dx: 0, dy: 83.5, txt: C }, { dx: 145.5, dy: 71, txt: G }, { dx: 420, dy: 71, txt: G } ] }
-    - { pageNo: 1, part: Concur, textElements: [] }
-    - { pageNo: 2, part: Concur, textElements: [ { dx: 0, dy: 113, txt: C }, { dx: 0, dy: 123, txt: G } ] }
-    - { pageNo: 3, part: Concur, textElements: [ { dx: 0, dy: 113, txt: C }, { dx: 0, dy: 123, txt: G } ] }
-    - { pageNo: 4, part: Concur, textElements: [ { dx: 0, dy: 102.5, txt: G }, { dx: 0, dy: 115, txt: C } ] }
-    - { pageNo: 5, part: Concur, textElements: [ { dx: 0, dy: 100.5, txt: G }, { dx: 0, dy: 113, txt: C }, { dx: 0, dy: 123, txt: G } ] }
-    - { pageNo: 6, part: Concur, textElements: [ { dx: 0, dy: 77.5, txt: G }, { dx: 0, dy: 90, txt: C }, { dx: 0, dy: 100, txt: G }, { dx: 362, dy: 67.5, txt: C }, { dx: 533, dy: 122.5, txt: G } ] }
-    - { pageNo: 7, part: Concur, textElements: [ { dx: 0, dy: 113, txt: C }, { dx: 0, dy: 123, txt: G } ] }
-    - { pageNo: 8, part: Concur, textElements: [ { dx: 0, dy: 90.5, txt: C }, { dx: 0, dy: 100.5, txt: G } ] }
-    - { pageNo: 9, part: Concur, textElements: [ { dx: 0, dy: 67.5, txt: C }, { dx: 0, dy: 77.5, txt: G }, { dx: 0, dy: 90, txt: C }, { dx: 0, dy: 100, txt: G }, { dx: 417, dy: 45, txt: C }, { dx: 417, dy: 55, txt: G } ] }
-    - { pageNo: 10, part: Concur, textElements: [ { dx: 0, dy: 67.5, txt: C }, { dx: 0, dy: 77.5, txt: G }, { dx: 356.5, dy: 45, txt: C }, { dx: 356.5, dy: 55, txt: G } ] }
-    - { pageNo: 11, part: Concur, textElements: [ { dx: 0, dy: 68, txt: C }, { dx: 0, dy: 78, txt: G } ] }
-    - { pageNo: 12, part: Concur, textElements: [ { dx: 0, dy: 113, txt: C }, { dx: 0, dy: 123, txt: G } ] }
-    - { pageNo: 13, part: Concur, textElements: [] }
-    - { pageNo: 14, part: Concur, textElements: [ { dx: 0, dy: 83.5, txt: C }, { dx: 303, dy: 71, txt: G }  ] }
-    - { pageNo: 15, part: Concur, textElements: [ { dx: 0, dy: 83.5, txt: C } ] }
-    - { pageNo: 16, part: Concur, textElements: [ { dx: 0, dy: 83.5, txt: C } ] }
-    - { pageNo: 17, part: Concur, textElements: [ { dx: 0, dy: 83.5, txt: C } ] }
-    - { pageNo: 18, part: Concur, textElements: [ { dx: 0, dy: 83.5, txt: C } ] }
-    - { pageNo: 19, part: Concur, textElements: [ { dx: 0, dy: 83.5, txt: C } ] }
-    - { pageNo: 20, part: Concur, textElements: [ { dx: 0, dy: 83.5, txt: C } ] }
-    - { pageNo: 21, part: Concur, textElements: [ { dx: 0, dy: 83.5, txt: C } ] }
-    - { pageNo: 22, part: Concur, textElements: [ { dx: 0, dy: 83.5, txt: C } ] }
-    - { pageNo: 23, part: Concur, textElements: [ { dx: 0, dy: 83.5, txt: C } ] }
-    - { pageNo: 24, part: Concur, textElements: [ { dx: 0, dy: 83.5, txt: C }, { dx: 31.5, dy: 71, txt: G } ] }
-    - { pageNo: 1, part: Dissent, textElements: [] }
-    - { pageNo: 2, part: Dissent, textElements: [ { dx: 0, dy: 113, txt: DF }, { dx: 0, dy: 123, txt: AF } ] }
-    - { pageNo: 3, part: Dissent, textElements: [ { dx: 0, dy: 105, txt: GF }, { dx: 0, dy: 120, txt: B } ] }
-    - { pageNo: 4, part: Dissent, textElements: [ { dx: 0, dy: 105, txt: GF }, { dx: 0, dy: 115, txt: DF } ] }
-    - { pageNo: 5, part: Dissent, textElements: [ { dx: 0, dy: 98, txt: A }, { dx: 0, dy: 110.5, txt: DF}, { dx: 0, dy: 123, txt: G } ] }
-    - { pageNo: 6, part: Dissent, textElements: [ { dx: 0, dy: 76, txt: A }, { dx: 0, dy: 88.5, txt: DF }, { dx: 0, dy: 101, txt: G }, { dx: 357.5, dy: 66, txt: DF }, { dx: 511, dy: 123.5, txt: G } ] }
-    - { pageNo: 7, part: Dissent, textElements: [ { dx: 0, dy: 110.5, txt: DF }, { dx: 0, dy: 123, txt: G } ] }
-    - { pageNo: 8, part: Dissent, textElements: [ { dx: 0, dy: 88.5, txt: D }, { dx: 0, dy: 98.5, txt: AF } ] }
-    - { pageNo: 9, part: Dissent, textElements: [ { dx: 0, dy: 66, txt: DF }, { dx: 0, dy: 76, txt: AF }, { dx: 0, dy: 88.5, txt: DF }, { dx: 0, dy: 98.5, txt: AF }, { dx: 425, dy: 43.5, txt: DF }, { dx: 425, dy: 53.5, txt: AF } ] }
-    - { pageNo: 10, part: Dissent, textElements: [ { dx: 0, dy: 66, txt: DF }, { dx: 0, dy: 76, txt: AF }, { dx: 0, dy: 88.5, txt: DF }, { dx: 335.5, dy: 43.5, txt: DF }, { dx: 335.5, dy: 53.5, txt: AF } ] }
-    - { pageNo: 11, part: Dissent, textElements: [ { dx: 0, dy: 87.5, txt: DF }, { dx: 0, dy: 97.5, txt: AF } ] }
-    - { pageNo: 12, part: Dissent, textElements: [ { dx: 0, dy: 110, txt: DF }, { dx: 0, dy: 122.5, txt: GF } ] }
-    - { pageNo: 13, part: Dissent, textElements: [] }
-    - { pageNo: 14, part: Dissent, textElements: [ { dx: 0, dy: 106, txt: C }, { dx: 0, dy: 118.5, txt: F } ] }
-    - { pageNo: 15, part: Dissent, textElements: [ { dx: 0, dy: 106, txt: C }, { dx: 0, dy: 118.5, txt: F } ] }
-    - { pageNo: 16, part: Dissent, textElements: [ { dx: 0, dy: 106, txt: C } ] }
-    - { pageNo: 17, part: Dissent, textElements: [ { dx: 0, dy: 106, txt: C } ] }
-    - { pageNo: 18, part: Dissent, textElements: [ { dx: 0, dy: 106, txt: C } ] }
-    - { pageNo: 19, part: Dissent, textElements: [ { dx: 0, dy: 106, txt: C } ] }
-    - { pageNo: 20, part: Dissent, textElements: [ { dx: 0, dy: 106, txt: C } ] }
-    - { pageNo: 21, part: Dissent, textElements: [ { dx: 0, dy: 106, txt: C } ] }
-    - { pageNo: 22, part: Dissent, textElements: [ { dx: 0, dy: 106, txt: C } ] }
-    - { pageNo: 23, part: Dissent, textElements: [ { dx: 0, dy: 106, txt: C } ] }
-    - { pageNo: 24, part: Dissent, textElements: [ { dx: 0, dy: 106, txt: C }, { dx: 209.5, dy: 118.5, txt: F }, { dx: 454, dy: 118.5, txt: F } ] }
+    - { pageNo: 1, part: Present, textElements: [ { dx: 0, dy: 114.83, txt: G }, { dx: 0, dy: 104.32, txt: C } ] }
+    - { pageNo: 1, part: Concur, textElements: [ ] }
+    - { pageNo: 1, part: Dissent, textElements: [ ] }
+    - { pageNo: 2, part: Present, textElements: [ { dx: 0, dy: 114.83, txt: G }, { dx: 0, dy: 104.58, txt: C } ] }
+    - { pageNo: 2, part: Concur, textElements: [ { dx: 0, dy: 123.98, txt: G }, { dx: 0, dy: 113.69, txt: C } ] }
+    - { pageNo: 2, part: Dissent, textElements: [ { dx: 0, dy: 123.29, txt: AF }, { dx: 0, dy: 113.32, txt: DF } ] }
+    - { pageNo: 3, part: Present, textElements: [ { dx: 0, dy: 92.88, txt: G }, { dx: 0, dy: 104.36, txt: C } ] }
+    - { pageNo: 3, part: Concur, textElements: [ { dx: 0, dy: 123.98, txt: G }, { dx: 0, dy: 113.29, txt: C } ] }
+    - { pageNo: 3, part: Dissent, textElements: [ { dx: 0, dy: 120.48, txt: B }, { dx: 0, dy: 106.13, txt: GF } ] }
+    - { pageNo: 4, part: Present, textElements: [ { dx: 0, dy: 114.61, txt: G }, { dx: 0, dy: 104.58, txt: C }, { dx: 580.12, dy: 92.12, txt: G } ] }
+    - { pageNo: 4, part: Concur, textElements: [ { dx: 0, dy: 102.99, txt: G }, { dx: 0, dy: 114.96, txt: C } ] }
+    - { pageNo: 4, part: Dissent, textElements: [ { dx: 0, dy: 105.4, txt: GF }, { dx: 0, dy: 115.42, txt: DF } ] }
+    - { pageNo: 5, part: Present, textElements: [ { dx: 0, dy: 104.25, txt: C }, { dx: 0, dy: 114.61, txt: G }, { dx: 0, dy: 126.53, txt: C }, { dx: 320.93, dy: 91.9, txt: G } ] }
+    - { pageNo: 5, part: Concur, textElements: [ { dx: 0, dy: 123.61, txt: G }, { dx: 0, dy: 100.83, txt: G }, { dx: 0, dy: 113.29, txt: C } ] }
+    - { pageNo: 5, part: Dissent, textElements: [ { dx: 0, dy: 111.44, txt: DF }, { dx: 0, dy: 98.72, txt: A }, { dx: 0, dy: 123.29, txt: G } ] }
+    - { pageNo: 6, part: Present, textElements: [ { dx: 0, dy: 81.25, txt: C }, { dx: 0, dy: 91.61, txt: G }, { dx: 0, dy: 103.53, txt: C } ] }
+    - { pageNo: 6, part: Concur, textElements: [ { dx: 0, dy: 90.29, txt: C }, { dx: 0, dy: 100.61, txt: G }, { dx: 0, dy: 78.37, txt: G }, { dx: 362.88, dy: 68, txt: C }, { dx: 534.09, dy: 122.81, txt: G } ] }
+    - { pageNo: 6, part: Dissent, textElements: [ { dx: 0, dy: 101.29, txt: G }, { dx: 0, dy: 89.51, txt: DF }, { dx: 0, dy: 76.45, txt: A }, { dx: 358.07, dy: 66.23, txt: DF }, { dx: 512.01, dy: 123.94, txt: G } ] }
+    - { pageNo: 7, part: Present, textElements: [ { dx: 0, dy: 114.06, txt: G }, { dx: 0, dy: 103.87, txt: C } ] }
+    - { pageNo: 7, part: Concur, textElements: [ { dx: 0, dy: 123.98, txt: G }, { dx: 0, dy: 113.29, txt: C } ] }
+    - { pageNo: 7, part: Dissent, textElements: [ { dx: 0, dy: 123.29, txt: G }, { dx: 0, dy: 111.63, txt: DF } ] }
+    - { pageNo: 8, part: Present, textElements: [ { dx: 0, dy: 91.61, txt: G }, { dx: 0, dy: 103.87, txt: C } ] }
+    - { pageNo: 8, part: Concur, textElements: [ { dx: 0, dy: 101.48, txt: G }, { dx: 0, dy: 90.79, txt: C } ] }
+    - { pageNo: 8, part: Dissent, textElements: [ { dx: 0, dy: 98.72, txt: AF }, { dx: 0, dy: 88.56, txt: D } ] }
+    - { pageNo: 9, part: Present, textElements: [ { dx: 0, dy: 78.82, txt: D }, { dx: 0, dy: 69.1, txt: G }, { dx: 0, dy: 56.94, txt: D } ] }
+    - { pageNo: 9, part: Concur, textElements: [ { dx: 0, dy: 90.29, txt: C }, { dx: 0, dy: 68, txt: C }, { dx: 0, dy: 100.61, txt: G }, { dx: 0, dy: 78.37, txt: G }, { dx: 417.46, dy: 56.15, txt: G }, { dx: 417.75, dy: 46.18, txt: C } ] }
+    - { pageNo: 9, part: Dissent, textElements: [ { dx: 0, dy: 77.11, txt: AF }, { dx: 0, dy: 89.51, txt: DF }, { dx: 0, dy: 99.11, txt: AF }, { dx: 0, dy: 66.95, txt: DF }, { dx: 426.51, dy: 44.2, txt: DF }, { dx: 426.51, dy: 53.7, txt: AF } ] }
+    - { pageNo: 10, part: Present, textElements: [ { dx: 0, dy: 78.82, txt: D }, { dx: 0, dy: 46.16, txt: G }, { dx: 0, dy: 68.43, txt: G }, { dx: 0, dy: 56.5, txt: D } ] }
+    - { pageNo: 10, part: Concur, textElements: [ { dx: 0, dy: 67.79, txt: C }, { dx: 0, dy: 78.11, txt: G }, { dx: 357.46, dy: 55.87, txt: G }, { dx: 357.75, dy: 45.5, txt: C } ] }
+    - { pageNo: 10, part: Dissent, textElements: [ { dx: 0, dy: 77.11, txt: AF }, { dx: 0, dy: 89.51, txt: DF }, { dx: 0, dy: 66.95, txt: DF }, { dx: 337.51, dy: 53.7, txt: AF }, { dx: 338.51, dy: 44.2, txt: DF } ] }
+    - { pageNo: 11, part: Present, textElements: [ { dx: 0, dy: 114.83, txt: G }, { dx: 0, dy: 104.58, txt: C } ] }
+    - { pageNo: 11, part: Concur, textElements: [ { dx: 0, dy: 78.98, txt: G }, { dx: 0, dy: 68.69, txt: C } ] }
+    - { pageNo: 11, part: Dissent, textElements: [ { dx: 0, dy: 97.79, txt: AF }, { dx: 0, dy: 87.82, txt: DF } ] }
+    - { pageNo: 12, part: Present, textElements: [ { dx: 0, dy: 114.83, txt: G }, { dx: 0, dy: 104.58, txt: C } ] }
+    - { pageNo: 12, part: Concur, textElements: [ { dx: 0, dy: 123.98, txt: G }, { dx: 0, dy: 113.69, txt: C } ] }
+    - { pageNo: 12, part: Dissent, textElements: [ { dx: 0, dy: 123.7, txt: GF }, { dx: 0, dy: 110.5, txt: DF } ] }
+    - { pageNo: 13, part: Present, textElements: [ { dx: 0, dy: 83.99, txt: C }, { dx: 304.36, dy: 71.01, txt: G } ] }
+    - { pageNo: 13, part: Concur, textElements: [ ] }
+    - { pageNo: 13, part: Dissent, textElements: [ ] }
+    - { pageNo: 14, part: Present, textElements: [ { dx: 0, dy: 83.98, txt: C } ] }
+    - { pageNo: 14, part: Concur, textElements: [ { dx: 0, dy: 83.98, txt: C }, { dx: 304.06, dy: 71.25, txt: G } ] }
+    - { pageNo: 14, part: Dissent, textElements: [ { dx: 0, dy: 118.48, txt: F }, { dx: 0, dy: 106.48, txt: C } ] }
+    - { pageNo: 15, part: Present, textElements: [ { dx: 0, dy: 83.98, txt: C } ] }
+    - { pageNo: 15, part: Concur, textElements: [ { dx: 0, dy: 83.98, txt: C } ] }
+    - { pageNo: 15, part: Dissent, textElements: [ { dx: 0, dy: 119.91, txt: F }, { dx: 0, dy: 106.48, txt: C } ] }
+    - { pageNo: 16, part: Present, textElements: [ { dx: 0, dy: 83.98, txt: C } ] }
+    - { pageNo: 16, part: Concur, textElements: [ { dx: 0, dy: 83.98, txt: C } ] }
+    - { pageNo: 16, part: Dissent, textElements: [ { dx: 0, dy: 106.48, txt: C } ] }
+    - { pageNo: 17, part: Present, textElements: [ { dx: 0, dy: 83.98, txt: C } ] }
+    - { pageNo: 17, part: Concur, textElements: [ { dx: 0, dy: 83.98, txt: C } ] }
+    - { pageNo: 17, part: Dissent, textElements: [ { dx: 0, dy: 106.48, txt: C } ] }
+    - { pageNo: 18, part: Present, textElements: [ { dx: 0, dy: 83.98, txt: C } ] }
+    - { pageNo: 18, part: Concur, textElements: [ { dx: 0, dy: 83.98, txt: C } ] }
+    - { pageNo: 18, part: Dissent, textElements: [ { dx: 0, dy: 106.48, txt: C } ] }
+    - { pageNo: 19, part: Present, textElements: [ { dx: 0, dy: 83.98, txt: C } ] }
+    - { pageNo: 19, part: Concur, textElements: [ { dx: 0, dy: 83.98, txt: C } ] }
+    - { pageNo: 19, part: Dissent, textElements: [ { dx: 0, dy: 106.48, txt: C } ] }
+    - { pageNo: 20, part: Present, textElements: [ { dx: 0, dy: 83.98, txt: C } ] }
+    - { pageNo: 20, part: Concur, textElements: [ { dx: 0, dy: 83.98, txt: C } ] }
+    - { pageNo: 20, part: Dissent, textElements: [ { dx: 0, dy: 106.48, txt: C } ] }
+    - { pageNo: 21, part: Present, textElements: [ { dx: 0, dy: 83.98, txt: C } ] }
+    - { pageNo: 21, part: Concur, textElements: [ { dx: 0, dy: 83.98, txt: C } ] }
+    - { pageNo: 21, part: Dissent, textElements: [ { dx: 0, dy: 106.48, txt: C } ] }
+    - { pageNo: 22, part: Present, textElements: [ { dx: 0, dy: 83.98, txt: C } ] }
+    - { pageNo: 22, part: Concur, textElements: [ { dx: 0, dy: 83.98, txt: C } ] }
+    - { pageNo: 22, part: Dissent, textElements: [ { dx: 0, dy: 106.48, txt: C } ] }
+    - { pageNo: 23, part: Present, textElements: [ { dx: 0, dy: 83.98, txt: C } ] }
+    - { pageNo: 23, part: Concur, textElements: [ { dx: 0, dy: 83.98, txt: C } ] }
+    - { pageNo: 23, part: Dissent, textElements: [ { dx: 0, dy: 106.48, txt: C } ] }
+    - { pageNo: 24, part: Present, textElements: [ { dx: 0, dy: 83.98, txt: C }, { dx: 146.33, dy: 71.01, txt: G }, { dx: 420.86, dy: 71.17, txt: G } ] }
+    - { pageNo: 24, part: Concur, textElements: [ { dx: 0, dy: 83.98, txt: C }, { dx: 32.43, dy: 70.93, txt: G } ] }
+    - { pageNo: 24, part: Dissent, textElements: [ { dx: 0, dy: 106.48, txt: C }, { dx: 209.84, dy: 119.39, txt: F }, { dx: 455.18, dy: 119.39, txt: F } ] }
     - { pageNo: 25, part: Present, textElements: [ { dx: 31.52, dy: 70.9, txt: BF }, { dx: 31.76, dy: 84.41, txt: EF }, { dx: 205.81, dy: 81.73, txt: F }, { dx: 235.3, dy: 72.11, txt: A }, { dx: 336.76, dy: 79.02, txt: G }, { dx: 417.71, dy: 61.18, txt: E }, { dx: 502.75, dy: 71.93, txt: B }, { dx: 536.16, dy: 63.21, txt: D } ] }
     - { pageNo: 25, part: Concur, textElements: [ ] }
     - { pageNo: 25, part: Dissent, textElements: [ ] }
@@ -140,4 +143,40 @@ transpositionStrategy:
     - { pageNo: 35, part: Dissent, textElements: [ ] }
     - { pageNo: 36, part: Present, textElements: [ { dx: 30.65, dy: 75.3, txt: GF }, { dx: 31.41, dy: 61.79, txt: DF }, { dx: 200.93, dy: 63, txt: C }, { dx: 226.39, dy: 71.78, txt: A }, { dx: 336.65, dy: 67.91, txt: B }, { dx: 416.73, dy: 85.82, txt: D }, { dx: 505.56, dy: 74.3, txt: G }, { dx: 533.02, dy: 84.3, txt: E } ] }
     - { pageNo: 36, part: Concur, textElements: [ { dx: 83.44, dy: 75.45, txt: GF }, { dx: 84.2, dy: 61.95, txt: DF }, { dx: 281.71, dy: 63.16, txt: C }, { dx: 308.17, dy: 71.94, txt: A }, { dx: 420.44, dy: 68.06, txt: B }, { dx: 499.11, dy: 84.03, txt: E }, { dx: 537.29, dy: 96.96, txt: BF } ] }
-    - { pageNo: 36, part: Dissent, textElements: [ { dx: 84.91, dy: 70.9, txt: BF }, { dx: 85.16, dy: 84.4, txt: EF }, { dx: 287.21, dy: 81.73, txt: F }, { dx: 316.7, dy: 72.11, txt: A }, { dx: 419.16, dy: 79.01, txt: G }, { dx: 499.11, dy: 95.18, txt: C }, { dx: 533.34, dy: 72.77, txt: AF } ] }
+    - { pageNo: 36, part: Dissent, textElements: [ { dx: 84.91, dy: 70.9, txt: BF }, { dx: 85.16, dy: 84.4, txt: EF }, { dx: 287.21, dy: 81.73, txt: F }, { dx: 316.7, dy: 72.11, txt: A }, { dx: 419.16, dy: 79.01, txt: G }, { dx: 499.11, dy: 95.18, txt: C } ] }
+    - { pageNo: 37, part: Present, textElements: [  ] }
+    - { pageNo: 37, part: Concur, textElements: [  ] }
+    - { pageNo: 37, part: Dissent, textElements: [  ] }
+    - { pageNo: 38, part: Present, textElements: [ { dx: 0, dy: 126.36, txt: GF } ] }
+    - { pageNo: 38, part: Concur, textElements: [  ] }
+    - { pageNo: 38, part: Dissent, textElements: [  ] }
+    - { pageNo: 39, part: Present, textElements: [ { dx: 0, dy: 83.35, txt: GF } ] }
+    - { pageNo: 39, part: Concur, textElements: [ { dx: 0, dy: 126.03, txt: GF } ] }
+    - { pageNo: 39, part: Dissent, textElements: [ { dx: 36.45, dy: 83.44, txt: GF } ] }
+    - { pageNo: 40, part: Present, textElements: [  ] }
+    - { pageNo: 40, part: Concur, textElements: [ { dx: 0, dy: 84.1, txt: GF } ] }
+    - { pageNo: 40, part: Dissent, textElements: [ { dx: 36.12, dy: 121.59, txt: GF } ] }
+    - { pageNo: 41, part: Present, textElements: [ { dx: 145.6, dy: 83.22, txt: GF } ] }
+    - { pageNo: 41, part: Concur, textElements: [  ] }
+    - { pageNo: 41, part: Dissent, textElements: [  ] }
+    - { pageNo: 42, part: Present, textElements: [ { dx: 34.92, dy: 82.75, txt: GF } ] }
+    - { pageNo: 42, part: Concur, textElements: [ { dx: 145.36, dy: 82.55, txt: GF } ] }
+    - { pageNo: 42, part: Dissent, textElements: [ { dx: 37.39, dy: 123.85, txt: C } ] }
+    - { pageNo: 43, part: Present, textElements: [  ] }
+    - { pageNo: 43, part: Concur, textElements: [  ] }
+    - { pageNo: 43, part: Dissent, textElements: [ { dx: 145.82, dy: 82.48, txt: GF } ] }
+    - { pageNo: 44, part: Present, textElements: [ { dx: 35.99, dy: 122, txt: GF } ] }
+    - { pageNo: 44, part: Concur, textElements: [  ] }
+    - { pageNo: 44, part: Dissent, textElements: [  ] }
+    - { pageNo: 45, part: Present, textElements: [ { dx: 36.21, dy: 82.82, txt: GF } ] }
+    - { pageNo: 45, part: Concur, textElements: [ { dx: 36.34, dy: 121.59, txt: GF } ] }
+    - { pageNo: 45, part: Dissent, textElements: [ { dx: 0, dy: 83.42, txt: GF } ] }
+    - { pageNo: 46, part: Present, textElements: [  ] }
+    - { pageNo: 46, part: Concur, textElements: [ { dx: 35.83, dy: 82.44, txt: GF } ] }
+    - { pageNo: 46, part: Dissent, textElements: [ { dx: 91.31, dy: 126.39, txt: GF } ] }
+    - { pageNo: 47, part: Present, textElements: [ { dx: 37.4, dy: 83.38, txt: GF } ] }
+    - { pageNo: 47, part: Concur, textElements: [ { dx: 305.39, dy: 84.02, txt: GF } ] }
+    - { pageNo: 47, part: Dissent, textElements: [  ] }
+    - { pageNo: 48, part: Present, textElements: [  ] }
+    - { pageNo: 48, part: Concur, textElements: [ { dx: 36.15, dy: 84.57, txt: GF } ] }
+    - { pageNo: 48, part: Dissent, textElements: [  ] }
