@@ -3076,6 +3076,7 @@ Dialogs,AV,page44,44,bar44,44,12,4,60,4,517,387400,1000,388400,1035,2,1037,68,12
 Dialogs,AV,page44,44,bar44,44,12,4,60,4,517,387400,1000,388400,1035,2,1037,68,123,100,100,0,max:beat=1:play|b2,1035
 Dialogs,AV,page44,44,bar44,44,12,4,60,4,517,387400,1000,388400,1035,2,1037,68,123,100,100,0,max:beat=6:stop|b1,1035
 Dialogs,AV,page44,44,bar44,44,12,4,60,4,517,387400,1000,388400,1035,2,1037,68,123,100,100,0,max:beat=8:setFile|b1|DialogsTimbre_b9.wav,1035
+Dialogs,AV,page44,44,bar44,44,12,4,60,4,517,387400,1000,388400,1035,2,1037,68,123,100,100,0,web:beat=1:webScore.setAction('play'| 'AUDIO'| ['player']| {'index': 7});,1035
 Dialogs,Concur,page44,44,bar43,43,12,4,60,4,516,386400,1000,387400,1033,2,1035,30,68,100,100,1,/Users/slavko/MyHome/Music/scoreExport/Dialogs/merged/Dialogs_Concur_page44,1033
 Dialogs,Concur,page44,44,bar44,44,12,4,60,4,517,387400,1000,388400,1035,2,1037,68,123,100,100,0,/Users/slavko/MyHome/Music/scoreExport/Dialogs/merged/Dialogs_Concur_page44,1035
 Dialogs,Concur,page44,44,bar44,44,12,4,60,4,518,388400,1000,389400,1037,2,1039,123,178,100,100,0,/Users/slavko/MyHome/Music/scoreExport/Dialogs/merged/Dialogs_Concur_page44,1037
@@ -3217,6 +3218,7 @@ Dialogs,AV,page46,46,bar46,46,12,4,60,4,541,411400,1000,412400,1083,2,1085,68,12
 Dialogs,AV,page46,46,bar46,46,12,4,60,4,541,411400,1000,412400,1083,2,1085,68,123,100,100,0,max:beat=1:play|b2,1083
 Dialogs,AV,page46,46,bar46,46,12,4,60,4,541,411400,1000,412400,1083,2,1085,68,123,100,100,0,max:beat=6:stop|b1,1083
 Dialogs,AV,page46,46,bar46,46,12,4,60,4,541,411400,1000,412400,1083,2,1085,68,123,100,100,0,max:beat=8:setFile|b1|DialogsTimbre_b11.wav,1083
+Dialogs,AV,page46,46,bar46,46,12,4,60,4,541,411400,1000,412400,1083,2,1085,68,123,100,100,0,web:beat=1:webScore.setAction('play'| 'AUDIO'| ['player']| {'index': 9});,1083
 Dialogs,Concur,page46,46,bar45,45,12,4,60,4,540,410400,1000,411400,1081,2,1083,30,68,100,100,1,/Users/slavko/MyHome/Music/scoreExport/Dialogs/merged/Dialogs_Concur_page46,1081
 Dialogs,Concur,page46,46,bar46,46,12,4,60,4,541,411400,1000,412400,1083,2,1085,68,123,100,100,0,/Users/slavko/MyHome/Music/scoreExport/Dialogs/merged/Dialogs_Concur_page46,1083
 Dialogs,Concur,page46,46,bar46,46,12,4,60,4,542,412400,1000,413400,1085,2,1087,123,178,100,100,0,/Users/slavko/MyHome/Music/scoreExport/Dialogs/merged/Dialogs_Concur_page46,1085

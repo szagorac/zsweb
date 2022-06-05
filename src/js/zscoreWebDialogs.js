@@ -17,8 +17,11 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     const HIDDEN = "hidden";
     const NONE = "none";
     const X = "x";
+    const Y = "y";
     const X1 = "x1";
     const X2 = "x2";
+    const DX = "dx";
+    const DY = "dy";
     const WIDTH = "width";
     const TL_START_OF_PREVIOUS = "<";
     const TL_END_OF_PREVIOUS = ">";
@@ -110,6 +113,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         textSpanFadeTimeSec: 1.0,
         textSpanFadeStaggerTimeSec: 0.5,
         textSpanIsFadeIn: true,
+        transpoLetterDy: "0.35em",
         beatIdPrefix: "b",
         tweenIdPrefix: "tw",
         beatTweenIdPrefix: "btw",
@@ -165,7 +169,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         instSlotInActiveAttrib: { "filter": "none" },
         connectedBtnAttrib: { "filter": "" },
         disconnectedBtnAttrib: { "filter": "url(#dropshadow)" },
-        transpoInfoAttrib: { "dominant-baseline": "central", "font-family": "sans-serif", "font-weight": "bold", "font-size": "0.75em" },
+        transpoInfoAttrib: { "font-family": "sans-serif", "font-weight": "bold", "font-size": "0.75em" },
         transpoPitchModAttrib: {"dy": -1, "dx": -1.5, "font-family": "sans-serif", "font-weight": "bold", "font-size": "0.75em"},
         transpoExtRectAttrib: { "fill": CLR_WHITE, "stroke": NONE, "visibility": VISIBLE, "opacity": 1.0 },
         errorBtnAttrib: { "filter": "url(#dropshadow)" },
@@ -998,8 +1002,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
 
         var txtElementId = config.idTranspoInfo + getNextElementIdNo();
         var txtElement = s.createTextElement(txtElementId);
-        txtElement.setAttribute("x", x);
-        txtElement.setAttribute("y", y);
+        txtElement.setAttribute(X, x);
+        txtElement.setAttribute(Y, y);
         u.setElementAttributes(txtElement, config.transpoInfoAttrib);
 
         var letterTspanElementId = config.idTranspoInfo + getNextElementIdNo();
@@ -1011,12 +1015,13 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             var modTspanElementId = config.idTranspoInfo + getNextElementIdNo();
             var modTspanElement = s.createTspanElement(modTspanElementId);
             u.setElementAttributes(modTspanElement, config.transpoPitchModAttrib);            
-            letterTspanElement.setAttribute("dx", -2);
+            letterTspanElement.setAttribute(DX, -2);
             s.setElementText(modTspanElement, pitch.modUnicode);
             u.addChildToParent(letterTspanElement, modTspanElement);
         } else {
-            letterTspanElement.setAttribute("dx", 2);
+            letterTspanElement.setAttribute(DX, 2);
         }
+        letterTspanElement.setAttribute(DY, config.transpoLetterDy);
 
         u.addChildToParent(ovrlStave, txtElement);
     }

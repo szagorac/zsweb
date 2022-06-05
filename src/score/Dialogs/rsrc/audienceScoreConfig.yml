@@ -70,7 +70,7 @@ presets:
         "webScore.activateViews('meter');",
         "webScore.deactivateViews('notes','audio','thumbs','vote');",
     ]
-  - id: 4
+  - id: 5
     scripts: [
         "webScore.reset(1);",
         "webScore.reset(1005);",
@@ -178,13 +178,42 @@ presets:
         [16,17],
       ],
     }
-  - id: 1004
+  - id: 1005
     config:
       - player: {
       audioFiles: [
           "/audio/DialogsTimbre2-1.wav",
+          "/audio/DialogsTimbre2-2.wav",
+          "/audio/DialogsTimbre3-1.wav",
+          "/audio/DialogsTimbre3-2.wav",
+          "/audio/DialogsTimbre4-1.wav",
+          "/audio/DialogsTimbre4-2.wav",
+          "/audio/DialogsTimbre5-1.wav",
+          "/audio/DialogsTimbre5-2.wav",
+          "/audio/DialogsTimbre6-1.wav",
+          "/audio/DialogsTimbre6-2.wav",
+          "/audio/DialogsTimbre7-1.wav",
+          "/audio/DialogsTimbre7-2.wav",
+          "/audio/DialogsTimbre9-1.wav",
+          "/audio/DialogsTimbre9-2.wav",
+          "/audio/DialogsTimbre10-1.wav",
+          "/audio/DialogsTimbre10-2.wav",
+          "/audio/DialogsTimbre11-1.wav",
+          "/audio/DialogsTimbre12-1.wav",
+          "/audio/DialogsTimbre12-2.wav",
       ],
       audioFilesIndexMap:  [
         [],
+        [ 0,1 ],
+        [ 2,3 ],
+        [ 4,5 ],
+        [ 6,7 ],
+        [ 8,9 ],
+        [ 10,11 ],
+        [ 6,7 ],
+        [ 12,13 ],
+        [ 14,15 ],
+        [ 16,1 ],
+        [ 17,18 ],
       ],
     }
