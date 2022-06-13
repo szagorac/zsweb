@@ -1,4 +1,5 @@
 scoreName: "Dialogs"
+scoreTitle: "Socket Dialogues"
 rndStrategy:
   isActive: false
 builderStrategy:
@@ -175,8 +176,8 @@ transpositionStrategy:
     - { pageNo: 46, part: Concur, textElements: [ { dx: 35.83, dy: 82.44, txt: GF } ] }
     - { pageNo: 46, part: Dissent, textElements: [ { dx: 91.31, dy: 126.39, txt: GF } ] }
     - { pageNo: 47, part: Present, textElements: [ { dx: 37.4, dy: 83.38, txt: GF } ] }
-    - { pageNo: 47, part: Concur, textElements: [ { dx: 305.39, dy: 84.02, txt: GF } ] }
+    - { pageNo: 47, part: Concur, textElements: [ { dx: 312.39, dy: 84.02, txt: GF } ] }
     - { pageNo: 47, part: Dissent, textElements: [  ] }
     - { pageNo: 48, part: Present, textElements: [  ] }
-    - { pageNo: 48, part: Concur, textElements: [ { dx: 36.15, dy: 84.57, txt: GF } ] }
+    - { pageNo: 48, part: Concur, textElements: [ { dx: 37.15, dy: 84.57, txt: GF } ] }
     - { pageNo: 48, part: Dissent, textElements: [  ] }
