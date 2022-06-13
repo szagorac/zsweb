@@ -181,7 +181,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         clientId: null,
         isPlaying: false,
         isReady: false,
-        score: { title: "ZScore", noSpaceTitle: "ZScore", htmlFile: null, instrument: "Part View", parts: ["Part View"], firstPageNo: 1, lastPageNo: 2, sections: [], ownedSections: [], mySections: [], assignmentType: null },
+        score: { title: "ZScore", noSpaceName: "ZScore", htmlFile: null, instrument: "Part View", parts: ["Part View"], firstPageNo: 1, lastPageNo: 2, sections: [], ownedSections: [], mySections: [], assignmentType: null },
         part: { name: "Part View", imgDir: null, imgPageNameToken: null, imgContPageName: null, blankPageNo: 0, contPageNo: PAGE_NO_CONTINUOUS, currentSection: null, transpo: "C", pageRanges: [{ start: 1, end: 1 }], pages: {} },
         topStave: { id: "topStave", config: config.topStave, pageId: DEFAULT_PAGE_ID, rndPageId: null, filename: DEFAULT_PAGE_IMG_URL, beatMap: null, timeline: null, isActive: true, isPlaying: false, currentBeat: null, transpos: [] },
         bottomStave: { id: "bottomStave", config: config.bottomStave, pageId: DEFAULT_PAGE_ID, rndPageId: null, filename: DEFAULT_PAGE_IMG_URL, beatMap: null, timeline: null, isActive: false, isPlaying: false, currentBeat: null, transpos: [] },
@@ -631,13 +631,15 @@ var zscore = (function (u, n, s, a, m, win, doc) {
                 u.loadPage(scoreInfo.partHtmlPage);
             }
         }
+        if (isNotNull(scoreInfo.name)) {
+            setName(scoreInfo.name);            
+        }
         if (isNotNull(scoreInfo.title)) {
             var isNew = setTitle(scoreInfo.title);
             if (isNew) {
                 resetOnNewScore();
             }
         }
-
         if (isNotNull(scoreInfo.instruments)) {
             processInstruments(scoreInfo.instruments);
         }
@@ -658,9 +660,11 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             return false;
         }
         state.score.title = title;
-        state.score.noSpaceTitle = u.replaceEmptySpaces(title, UNDERSCORE);
         s.setElementIdText(config.idTitle, title);
         return true;
+    }
+    function setName(name) {
+        state.score.noSpaceName = u.replaceEmptySpaces(name, UNDERSCORE);
     }
     function setPartHtmlPage(partFile) {
         var previous = state.score.htmlFile;
@@ -1095,7 +1099,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         imgElement.setAttribute("href", imgSrc);
     }
     function createStaveImgUrl(fileName) {
-        return state.scoreDir + state.score.noSpaceTitle + SLASH + fileName;
+        return state.scoreDir + state.score.noSpaceName + SLASH + fileName;
     }
     function getPageImage(pageId) {
         var page = state.part.pages[pageId];
@@ -1286,7 +1290,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         return page;
     }
     function createDefaultPageImgFileName(pageNo) {
-        return state.score.noSpaceTitle + UNDERSCORE + instrumentName + "_page" + pageNo + ".png";
+        return state.score.noSpaceName + UNDERSCORE + instrumentName + "_page" + pageNo + ".png";
     }
     function createPageId(pageNo) {
         return config.pageIdPrefix + pageNo;
