@@ -18,7 +18,7 @@ Dialogs,AV,page1,1,bar1,1,12,4,80,4,1,750,750,1500,3,2,5,68,123,100,100,0,max:be
 Dialogs,AV,page1,1,bar1,1,12,4,80,4,1,750,750,1500,3,2,5,68,123,100,100,0,max:beat=-1:reset=only:setFile|b3|DialogsPitch_b3.wav,3
 Dialogs,AV,page1,1,bar1,1,12,4,80,4,1,750,750,1500,3,2,5,68,123,100,100,0,max:beat=-1:reset=only:setFile|b4|DialogsPitch_b2.wav,3
 Dialogs,AV,page1,1,bar1,1,12,4,80,4,1,750,750,1500,3,2,5,68,123,100,100,0,web:beat=-1:reset=only:webScore.reset(2);,3
-Dialogs,AV,page1,1,bar1,1,12,4,80,4,1,750,750,1500,3,2,5,68,123,100,100,0,web:beat=1:webScore.setInstructions('<span style=@Q@color:blueviolet;@Q@>Dialogs:</span>'|'Pitch'| '');,3
+Dialogs,AV,page1,1,bar1,1,12,4,80,4,1,750,750,1500,3,2,5,68,123,100,100,0,web:beat=1:webScore.setInstructions('<span style=@Q@color:blueviolet;@Q@>Dialogue:</span>'|'Pitch'| '');,3
 Dialogs,AV,page1,1,bar1,1,12,4,80,4,1,750,750,1500,3,2,5,68,123,100,100,0,web:beat=8:webScore.setInstructions(false);,3
 Dialogs,Concur,page1,1,bar0,0,12,4,80,4,0,0,750,750,1,2,3,30,68,100,100,1,/Users/slavko/MyHome/Music/scoreExport/Dialogs/merged/Dialogs_Concur_page1,1
 Dialogs,Concur,page1,1,bar1,1,12,4,80,4,1,750,750,1500,3,2,5,68,123,100,100,0,/Users/slavko/MyHome/Music/scoreExport/Dialogs/merged/Dialogs_Concur_page1,3
@@ -871,7 +871,7 @@ Dialogs,AV,page13,13,bar13,13,12,4,100,4,145,108600,600,109200,291,2,293,68,123,
 Dialogs,AV,page13,13,bar13,13,12,4,100,4,145,108600,600,109200,291,2,293,68,123,100,100,0,max:beat=1:play|b1,291
 Dialogs,AV,page13,13,bar13,13,12,4,100,4,145,108600,600,109200,291,2,293,68,123,100,100,0,max:beat=8:setFile|b2|DialogsRhythm_b2.wav,291
 Dialogs,AV,page13,13,bar13,13,12,4,100,4,145,108600,600,109200,291,2,293,68,123,100,100,0,web:beat=-1:reset=only:webScore.reset(3);,291
-Dialogs,AV,page13,13,bar13,13,12,4,100,4,145,108600,600,109200,291,2,293,68,123,100,100,0,web:beat=2:webScore.setInstructions('<span style=@Q@color:blueviolet;@Q@>Dialogs:</span>'|'Rhythm'| '');,291
+Dialogs,AV,page13,13,bar13,13,12,4,100,4,145,108600,600,109200,291,2,293,68,123,100,100,0,web:beat=2:webScore.setInstructions('<span style=@Q@color:blueviolet;@Q@>Dialogue:</span>'|'Rhythm'| '');,291
 Dialogs,AV,page13,13,bar13,13,12,4,100,4,145,108600,600,109200,291,2,293,68,123,100,100,0,web:beat=8:webScore.setInstructions(false);,291
 Dialogs,Concur,page13,13,bar12,12,12,4,100,4,144,108000,600,108600,289,2,291,30,68,100,100,1,/Users/slavko/MyHome/Music/scoreExport/Dialogs/merged/Dialogs_Concur_page13,289
 Dialogs,Concur,page13,13,bar13,13,12,4,100,4,145,108600,600,109200,291,2,293,68,123,100,100,0,/Users/slavko/MyHome/Music/scoreExport/Dialogs/merged/Dialogs_Concur_page13,291
@@ -1725,7 +1725,7 @@ Dialogs,AV,page25,25,bar25,25,12,4,80,4,289,195150,750,195900,579,2,581,68,123,1
 Dialogs,AV,page25,25,bar25,25,12,4,80,4,289,195150,750,195900,579,2,581,68,123,100,100,0,max:beat=1:play|b1,579
 Dialogs,AV,page25,25,bar25,25,12,4,80,4,289,195150,750,195900,579,2,581,68,123,100,100,0,max:beat=8:setFile|b2|DialogsMelody_b2.wav,579
 Dialogs,AV,page25,25,bar25,25,12,4,80,4,289,195150,750,195900,579,2,581,68,123,100,100,0,web:beat=-1:reset=only:webScore.reset(4);,579
-Dialogs,AV,page25,25,bar25,25,12,4,80,4,289,195150,750,195900,579,2,581,68,123,100,100,0,web:beat=2:webScore.setInstructions('<span style=@Q@color:blueviolet;@Q@>Dialogs:</span>'|'Melody'| '');,579
+Dialogs,AV,page25,25,bar25,25,12,4,80,4,289,195150,750,195900,579,2,581,68,123,100,100,0,web:beat=2:webScore.setInstructions('<span style=@Q@color:blueviolet;@Q@>Dialogue:</span>'|'Melody'| '');,579
 Dialogs,AV,page25,25,bar25,25,12,4,80,4,289,195150,750,195900,579,2,581,68,123,100,100,0,web:beat=8:webScore.setInstructions(false);,579
 Dialogs,Concur,page25,25,bar24,24,12,4,80,4,288,194400,750,195150,577,2,579,30,68,100,100,1,/Users/slavko/MyHome/Music/scoreExport/Dialogs/merged/Dialogs_Concur_page25,577
 Dialogs,Concur,page25,25,bar25,25,12,4,80,4,289,195150,750,195900,579,2,581,68,123,100,100,0,/Users/slavko/MyHome/Music/scoreExport/Dialogs/merged/Dialogs_Concur_page25,579
@@ -2578,7 +2578,7 @@ Dialogs,AV,page37,37,bar37,37,12,4,60,4,433,303400,1000,304400,867,2,869,68,123,
 Dialogs,AV,page37,37,bar37,37,12,4,60,4,433,303400,1000,304400,867,2,869,68,123,100,100,0,max:beat=1:play|b1,867
 Dialogs,AV,page37,37,bar37,37,12,4,60,4,433,303400,1000,304400,867,2,869,68,123,100,100,0,max:beat=8:setFile|b2|DialogsTimbre_b2.wav,867
 Dialogs,AV,page37,37,bar37,37,12,4,60,4,433,303400,1000,304400,867,2,869,68,123,100,100,0,web:beat=-1:reset=only:webScore.reset(5);,867
-Dialogs,AV,page37,37,bar37,37,12,4,60,4,433,303400,1000,304400,867,2,869,68,123,100,100,0,web:beat=2:webScore.setInstructions('<span style=@Q@color:blueviolet;@Q@>Dialogs:</span>'|'Timbre'| '');,867
+Dialogs,AV,page37,37,bar37,37,12,4,60,4,433,303400,1000,304400,867,2,869,68,123,100,100,0,web:beat=2:webScore.setInstructions('<span style=@Q@color:blueviolet;@Q@>Dialogue:</span>'|'Timbre'| '');,867
 Dialogs,AV,page37,37,bar37,37,12,4,60,4,433,303400,1000,304400,867,2,869,68,123,100,100,0,web:beat=8:webScore.setInstructions(false);,867
 Dialogs,Concur,page37,37,bar36,36,12,4,60,4,432,302400,1000,303400,865,2,867,30,68,100,100,1,/Users/slavko/MyHome/Music/scoreExport/Dialogs/merged/Dialogs_Concur_page37,865
 Dialogs,Concur,page37,37,bar37,37,12,4,60,4,433,303400,1000,304400,867,2,869,68,123,100,100,0,/Users/slavko/MyHome/Music/scoreExport/Dialogs/merged/Dialogs_Concur_page37,867
