@@ -44,7 +44,7 @@ presets:
   - id: 1
     scripts: [
         "webScore.resetState();",
-        "webScore.setInstructions('Preparing for the next','<span style=\\'color:blueviolet;\\'>Dialog</span>', '');"
+        "webScore.setInstructions('Preparing for the next','<span style=\\'color:blueviolet;\\'>Dialogue</span>', '');"
     ]
   - id: 2
     scripts: [
@@ -75,6 +75,14 @@ presets:
         "webScore.reset(1);",
         "webScore.reset(1005);",
         "webScore.setSection('timbre');",
+        "webScore.activateViews('meter');",
+        "webScore.deactivateViews('notes','audio','thumbs','vote');",
+    ]
+  - id: 5
+    scripts: [
+        "webScore.reset(1);",
+        "webScore.reset(1006);",
+        "webScore.setSection('impro');",
         "webScore.activateViews('meter');",
         "webScore.deactivateViews('notes','audio','thumbs','vote');",
     ]
@@ -217,3 +225,13 @@ presets:
         [ 17,18 ],
       ],
     }
+  - id: 1006
+    config:
+      - player: {
+        audioFiles: [
+            "/audio/DialogsTimbre2-1.wav",
+        ],
+        audioFilesIndexMap:  [
+          [],
+        ],
+      }

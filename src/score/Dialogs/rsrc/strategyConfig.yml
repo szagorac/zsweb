@@ -4,7 +4,7 @@ rndStrategy:
   isActive: false
 builderStrategy:
   isActive: true
-  sections: [ pitch, rhythm, melody, timbre ]
+  sections: [ pitch, rhythm, melody, timbre, impro ]
   assignmentType: USER_ANY_FCFS
   isStopOnSectionEnd: true
   pageRanges:
@@ -19,6 +19,9 @@ builderStrategy:
       instruments: [ all ]
     - range: { start: 37, end: 48 }
       name: timbre
+      instruments: [ all ]
+    - range: { start: 49, end: 60 }
+      name: impro
       instruments: [ all ]
 transpositionStrategy:
   isActive: true
@@ -38,8 +41,8 @@ transpositionStrategy:
   minXdistance: 7
   pages:
     - { pageNo: 1, part: Present, textElements: [ { dx: 0, dy: 114.83, txt: G }, { dx: 0, dy: 104.32, txt: C } ] }
-    - { pageNo: 1, part: Concur, textElements: [ ] }
-    - { pageNo: 1, part: Dissent, textElements: [ ] }
+    - { pageNo: 1, part: Concur, textElements: [  ] }
+    - { pageNo: 1, part: Dissent, textElements: [  ] }
     - { pageNo: 2, part: Present, textElements: [ { dx: 0, dy: 114.83, txt: G }, { dx: 0, dy: 104.58, txt: C } ] }
     - { pageNo: 2, part: Concur, textElements: [ { dx: 0, dy: 123.98, txt: G }, { dx: 0, dy: 113.69, txt: C } ] }
     - { pageNo: 2, part: Dissent, textElements: [ { dx: 0, dy: 123.29, txt: AF }, { dx: 0, dy: 113.32, txt: DF } ] }
@@ -74,8 +77,8 @@ transpositionStrategy:
     - { pageNo: 12, part: Concur, textElements: [ { dx: 0, dy: 123.98, txt: G }, { dx: 0, dy: 113.69, txt: C } ] }
     - { pageNo: 12, part: Dissent, textElements: [ { dx: 0, dy: 123.7, txt: GF }, { dx: 0, dy: 110.5, txt: DF } ] }
     - { pageNo: 13, part: Present, textElements: [ { dx: 0, dy: 83.99, txt: C }, { dx: 304.36, dy: 71.01, txt: G } ] }
-    - { pageNo: 13, part: Concur, textElements: [ ] }
-    - { pageNo: 13, part: Dissent, textElements: [ ] }
+    - { pageNo: 13, part: Concur, textElements: [  ] }
+    - { pageNo: 13, part: Dissent, textElements: [  ] }
     - { pageNo: 14, part: Present, textElements: [ { dx: 0, dy: 83.98, txt: C } ] }
     - { pageNo: 14, part: Concur, textElements: [ { dx: 0, dy: 83.98, txt: C }, { dx: 304.06, dy: 71.25, txt: G } ] }
     - { pageNo: 14, part: Dissent, textElements: [ { dx: 0, dy: 118.48, txt: F }, { dx: 0, dy: 106.48, txt: C } ] }
@@ -110,12 +113,12 @@ transpositionStrategy:
     - { pageNo: 24, part: Concur, textElements: [ { dx: 0, dy: 83.98, txt: C }, { dx: 32.43, dy: 70.93, txt: G } ] }
     - { pageNo: 24, part: Dissent, textElements: [ { dx: 0, dy: 106.48, txt: C }, { dx: 209.84, dy: 119.39, txt: F }, { dx: 455.18, dy: 119.39, txt: F } ] }
     - { pageNo: 25, part: Present, textElements: [ { dx: 31.52, dy: 70.9, txt: BF }, { dx: 31.76, dy: 84.41, txt: EF }, { dx: 205.81, dy: 81.73, txt: F }, { dx: 235.3, dy: 72.11, txt: A }, { dx: 336.76, dy: 79.02, txt: G }, { dx: 417.71, dy: 61.18, txt: E }, { dx: 502.75, dy: 71.93, txt: B }, { dx: 536.16, dy: 63.21, txt: D } ] }
-    - { pageNo: 25, part: Concur, textElements: [ ] }
-    - { pageNo: 25, part: Dissent, textElements: [ ] }
+    - { pageNo: 25, part: Concur, textElements: [  ] }
+    - { pageNo: 25, part: Dissent, textElements: [  ] }
     - { pageNo: 26, part: Present, textElements: [ { dx: 30.76, dy: 75.41, txt: GF }, { dx: 31.52, dy: 61.9, txt: DF }, { dx: 204.03, dy: 63.11, txt: C }, { dx: 228.49, dy: 71.89, txt: A }, { dx: 337.76, dy: 68.02, txt: B }, { dx: 419.83, dy: 85.93, txt: D }, { dx: 507.66, dy: 74.41, txt: G }, { dx: 534.12, dy: 84.41, txt: E } ] }
-    - { pageNo: 26, part: Concur, textElements: [ ] }
-    - { pageNo: 26, part: Dissent, textElements: [ ] }
-    - { pageNo: 27, part: Present, textElements: [ ] }
+    - { pageNo: 26, part: Concur, textElements: [  ] }
+    - { pageNo: 26, part: Dissent, textElements: [  ] }
+    - { pageNo: 27, part: Present, textElements: [  ] }
     - { pageNo: 27, part: Concur, textElements: [ { dx: 31.52, dy: 70.9, txt: BF }, { dx: 31.76, dy: 84.41, txt: EF }, { dx: 204.81, dy: 81.73, txt: F }, { dx: 234.3, dy: 72.11, txt: A }, { dx: 336.76, dy: 79.02, txt: G }, { dx: 415.71, dy: 61.18, txt: E }, { dx: 504.85, dy: 72.77, txt: B }, { dx: 536.68, dy: 63.23, txt: D } ] }
     - { pageNo: 27, part: Dissent, textElements: [ { dx: 94.15, dy: 95.3, txt: GF }, { dx: 94.9, dy: 81.8, txt: DF }, { dx: 290.42, dy: 83.01, txt: C }, { dx: 309.88, dy: 91.79, txt: A }, { dx: 419.15, dy: 87.91, txt: B }, { dx: 501.22, dy: 105.82, txt: D }, { dx: 591.05, dy: 94.3, txt: G }, { dx: 616.51, dy: 104.3, txt: E } ] }
     - { pageNo: 28, part: Present, textElements: [ { dx: 31.17, dy: 70.8, txt: BF }, { dx: 149.76, dy: 81.62, txt: F }, { dx: 179.25, dy: 72, txt: A } ] }
@@ -136,12 +139,12 @@ transpositionStrategy:
     - { pageNo: 33, part: Present, textElements: [ { dx: 0, dy: 79.02, txt: G }, { dx: 85.56, dy: 92.52, txt: DF }, { dx: 225.58, dy: 88.04, txt: E }, { dx: 307.59, dy: 101.54, txt: AF } ] }
     - { pageNo: 33, part: Concur, textElements: [ { dx: 85.64, dy: 111.2, txt: BF } ] }
     - { pageNo: 33, part: Dissent, textElements: [ { dx: 87.69, dy: 104.8, txt: G }, { dx: 335.11, dy: 112.57, txt: F } ] }
-    - { pageNo: 34, part: Present, textElements: [ ] }
+    - { pageNo: 34, part: Present, textElements: [  ] }
     - { pageNo: 34, part: Concur, textElements: [ { dx: 476.65, dy: 57, txt: EF } ] }
-    - { pageNo: 34, part: Dissent, textElements: [ ] }
+    - { pageNo: 34, part: Dissent, textElements: [  ] }
     - { pageNo: 35, part: Present, textElements: [ { dx: 31.21, dy: 70.74, txt: BF }, { dx: 31.45, dy: 84.25, txt: EF }, { dx: 204.51, dy: 81.57, txt: F }, { dx: 233, dy: 71.95, txt: A }, { dx: 335.45, dy: 78.86, txt: G }, { dx: 414.41, dy: 61.02, txt: E }, { dx: 500.3, dy: 72, txt: B }, { dx: 534.02, dy: 62.27, txt: D } ] }
     - { pageNo: 35, part: Concur, textElements: [ { dx: 0, dy: 57, txt: EF } ] }
-    - { pageNo: 35, part: Dissent, textElements: [ ] }
+    - { pageNo: 35, part: Dissent, textElements: [  ] }
     - { pageNo: 36, part: Present, textElements: [ { dx: 30.65, dy: 75.3, txt: GF }, { dx: 31.41, dy: 61.79, txt: DF }, { dx: 200.93, dy: 63, txt: C }, { dx: 226.39, dy: 71.78, txt: A }, { dx: 336.65, dy: 67.91, txt: B }, { dx: 416.73, dy: 85.82, txt: D }, { dx: 505.56, dy: 74.3, txt: G }, { dx: 533.02, dy: 84.3, txt: E } ] }
     - { pageNo: 36, part: Concur, textElements: [ { dx: 83.44, dy: 75.45, txt: GF }, { dx: 84.2, dy: 61.95, txt: DF }, { dx: 281.71, dy: 63.16, txt: C }, { dx: 308.17, dy: 71.94, txt: A }, { dx: 420.44, dy: 68.06, txt: B }, { dx: 499.11, dy: 84.03, txt: E }, { dx: 537.29, dy: 96.96, txt: BF } ] }
     - { pageNo: 36, part: Dissent, textElements: [ { dx: 84.91, dy: 70.9, txt: BF }, { dx: 85.16, dy: 84.4, txt: EF }, { dx: 287.21, dy: 81.73, txt: F }, { dx: 316.7, dy: 72.11, txt: A }, { dx: 419.16, dy: 79.01, txt: G }, { dx: 499.11, dy: 95.18, txt: C } ] }
@@ -181,3 +184,39 @@ transpositionStrategy:
     - { pageNo: 48, part: Present, textElements: [  ] }
     - { pageNo: 48, part: Concur, textElements: [ { dx: 37.15, dy: 84.57, txt: GF } ] }
     - { pageNo: 48, part: Dissent, textElements: [  ] }
+    - { pageNo: 49, part: Present, textElements: [ { dx: 0, dy: 83.26, txt: BF } ] }
+    - { pageNo: 49, part: Concur, textElements: [  ] }
+    - { pageNo: 49, part: Dissent, textElements: [  ] }
+    - { pageNo: 50, part: Present, textElements: [ { dx: 0, dy: 117.36, txt: BF } ] }
+    - { pageNo: 50, part: Concur, textElements: [  ] }
+    - { pageNo: 50, part: Dissent, textElements: [  ] }
+    - { pageNo: 51, part: Present, textElements: [ { dx: 0, dy: 83.35, txt: EF } ] }
+    - { pageNo: 51, part: Concur, textElements: [ { dx: 0, dy: 117.58, txt: BF } ] }
+    - { pageNo: 51, part: Dissent, textElements: [ { dx: 0, dy: 48.25, txt: F } ] }
+    - { pageNo: 52, part: Present, textElements: [ { dx: 0, dy: 119.36, txt: BF } ] }
+    - { pageNo: 52, part: Concur, textElements: [ { dx: 0, dy: 83.28, txt: EF } ] }
+    - { pageNo: 52, part: Dissent, textElements: [ { dx: 0, dy: 54.48, txt: EF } ] }
+    - { pageNo: 53, part: Present, textElements: [ { dx: 0, dy: 83.35, txt: EF } ] }
+    - { pageNo: 53, part: Concur, textElements: [ { dx: 0, dy: 118.83, txt: EF } ] }
+    - { pageNo: 53, part: Dissent, textElements: [ { dx: 0, dy: 118.65, txt: BF } ] }
+    - { pageNo: 54, part: Present, textElements: [ { dx: 0, dy: 83.35, txt: EF } ] }
+    - { pageNo: 54, part: Concur, textElements: [ { dx: 0, dy: 73.21, txt: EF } ] }
+    - { pageNo: 54, part: Dissent, textElements: [ { dx: 0, dy: 117.17, txt: BF } ] }
+    - { pageNo: 55, part: Present, textElements: [ { dx: 0, dy: 119.36, txt: BF } ] }
+    - { pageNo: 55, part: Concur, textElements: [ { dx: 0, dy: 83.43, txt: BF } ] }
+    - { pageNo: 55, part: Dissent, textElements: [ { dx: 0, dy: 83.56, txt: EF } ] }
+    - { pageNo: 56, part: Present, textElements: [ { dx: 0, dy: 83.36, txt: BF } ] }
+    - { pageNo: 56, part: Concur, textElements: [ { dx: 0, dy: 83.43, txt: BF } ] }
+    - { pageNo: 56, part: Dissent, textElements: [ { dx: 0, dy: 118.64, txt: EF } ] }
+    - { pageNo: 57, part: Present, textElements: [ { dx: 0, dy: 46.9, txt: F } ] }
+    - { pageNo: 57, part: Concur, textElements: [ { dx: 0, dy: 72.21, txt: F } ] }
+    - { pageNo: 57, part: Dissent, textElements: [ { dx: 0, dy: 82.62, txt: EF } ] }
+    - { pageNo: 58, part: Present, textElements: [ { dx: 0, dy: 54.49, txt: EF } ] }
+    - { pageNo: 58, part: Concur, textElements: [ { dx: 0, dy: 54.04, txt: EF } ] }
+    - { pageNo: 58, part: Dissent, textElements: [ { dx: 0, dy: 77.29, txt: F } ] }
+    - { pageNo: 59, part: Present, textElements: [ { dx: 0, dy: 118.4, txt: BF } ] }
+    - { pageNo: 59, part: Concur, textElements: [ { dx: 0, dy: 118.4, txt: BF } ] }
+    - { pageNo: 59, part: Dissent, textElements: [  ] }
+    - { pageNo: 60, part: Present, textElements: [ { dx: 0, dy: 118.4, txt: BF } ] }
+    - { pageNo: 60, part: Concur, textElements: [ { dx: 0, dy: 119.4, txt: BF } ] }
+    - { pageNo: 60, part: Dissent, textElements: [ { dx: 0, dy: 49.13, txt: F } ] }

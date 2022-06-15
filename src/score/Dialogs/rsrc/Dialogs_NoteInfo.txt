@@ -142,3 +142,39 @@
 - { pageNo: 48, part: Present, textElements: [  ] }
 - { pageNo: 48, part: Concur, textElements: [ { dx: 37.15, dy: 84.57, txt: GF } ] }
 - { pageNo: 48, part: Dissent, textElements: [  ] }
+- { pageNo: 49, part: Present, textElements: [ { dx: 0, dy: 83.26, txt: BF } ] }
+- { pageNo: 49, part: Concur, textElements: [  ] }
+- { pageNo: 49, part: Dissent, textElements: [  ] }
+- { pageNo: 50, part: Present, textElements: [ { dx: 0, dy: 117.36, txt: BF } ] }
+- { pageNo: 50, part: Concur, textElements: [  ] }
+- { pageNo: 50, part: Dissent, textElements: [  ] }
+- { pageNo: 51, part: Present, textElements: [ { dx: 0, dy: 83.35, txt: EF } ] }
+- { pageNo: 51, part: Concur, textElements: [ { dx: 0, dy: 117.58, txt: BF } ] }
+- { pageNo: 51, part: Dissent, textElements: [ { dx: 0, dy: 48.25, txt: F } ] }
+- { pageNo: 52, part: Present, textElements: [ { dx: 0, dy: 119.36, txt: BF } ] }
+- { pageNo: 52, part: Concur, textElements: [ { dx: 0, dy: 83.28, txt: EF } ] }
+- { pageNo: 52, part: Dissent, textElements: [ { dx: 0, dy: 54.48, txt: EF } ] }
+- { pageNo: 53, part: Present, textElements: [ { dx: 0, dy: 83.35, txt: EF } ] }
+- { pageNo: 53, part: Concur, textElements: [ { dx: 0, dy: 118.83, txt: EF } ] }
+- { pageNo: 53, part: Dissent, textElements: [ { dx: 0, dy: 118.65, txt: BF } ] }
+- { pageNo: 54, part: Present, textElements: [ { dx: 0, dy: 83.35, txt: EF } ] }
+- { pageNo: 54, part: Concur, textElements: [ { dx: 0, dy: 73.21, txt: EF } ] }
+- { pageNo: 54, part: Dissent, textElements: [ { dx: 0, dy: 117.17, txt: BF } ] }
+- { pageNo: 55, part: Present, textElements: [ { dx: 0, dy: 119.36, txt: BF } ] }
+- { pageNo: 55, part: Concur, textElements: [ { dx: 0, dy: 83.43, txt: BF } ] }
+- { pageNo: 55, part: Dissent, textElements: [ { dx: 0, dy: 83.56, txt: EF } ] }
+- { pageNo: 56, part: Present, textElements: [ { dx: 0, dy: 83.36, txt: BF } ] }
+- { pageNo: 56, part: Concur, textElements: [ { dx: 0, dy: 83.43, txt: BF } ] }
+- { pageNo: 56, part: Dissent, textElements: [ { dx: 0, dy: 118.64, txt: EF } ] }
+- { pageNo: 57, part: Present, textElements: [ { dx: 0, dy: 46.9, txt: F } ] }
+- { pageNo: 57, part: Concur, textElements: [ { dx: 0, dy: 72.21, txt: F } ] }
+- { pageNo: 57, part: Dissent, textElements: [ { dx: 0, dy: 82.62, txt: EF } ] }
+- { pageNo: 58, part: Present, textElements: [ { dx: 0, dy: 54.49, txt: EF } ] }
+- { pageNo: 58, part: Concur, textElements: [ { dx: 0, dy: 54.04, txt: EF } ] }
+- { pageNo: 58, part: Dissent, textElements: [ { dx: 0, dy: 77.29, txt: F } ] }
+- { pageNo: 59, part: Present, textElements: [ { dx: 0, dy: 118.4, txt: BF } ] }
+- { pageNo: 59, part: Concur, textElements: [ { dx: 0, dy: 118.4, txt: BF } ] }
+- { pageNo: 59, part: Dissent, textElements: [  ] }
+- { pageNo: 60, part: Present, textElements: [ { dx: 0, dy: 118.4, txt: BF } ] }
+- { pageNo: 60, part: Concur, textElements: [ { dx: 0, dy: 119.4, txt: BF } ] }
+- { pageNo: 60, part: Dissent, textElements: [ { dx: 0, dy: 49.13, txt: F } ] }
