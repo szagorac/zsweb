@@ -414,6 +414,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         log("onAudioLoaded: completed");
     }
     function initAudio() {
+        log("initAudio: #####");
         if (isNull(a)) {
             logError("initAudio: invalid zsAudio lib");
             return;
@@ -1115,6 +1116,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
                 log("updateAudioPlayerCofig: audioFiles array identical, ignoring update");
             } else {
                 _audioFiles = audioFiles;
+                log("updateAudioPlayerCofig: audioFiles array set to: " + _audioFiles);
                 isLoadBuffers = true;
             }
         }

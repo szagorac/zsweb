@@ -83,6 +83,9 @@ var zsAudio = (function (u, gr, sp, pl, nz, syn, win) {
             if (u.isNotNull(onLoadedCallback)) {
                 _onLoadedCallback = onLoadedCallback;
             }
+            if (u.isNotNull(_audioFilesToLoad)) {
+                _audioFilesToLoad = audioFilesToLoad;
+            }            
             if (_ctx.state === 'suspended') {
                 log("initAudio: Context suspended, resuming context : " + _ctx.state);
                 if (_audioCtxRetryCount >= CTX_MAX_RETRY_COUNT) {
@@ -101,10 +104,9 @@ var zsAudio = (function (u, gr, sp, pl, nz, syn, win) {
                 if (win.hasOwnProperty('speechSynthesis')) {
                     win.speechSynthesis.getVoices();
                 }
-
                 _audioCtxRetryCount++;
                 setTimeout(function () {
-                    _initAudio(audioFilesToLoad, onLoadedCallback);
+                    _initAudioRetry();
                 }, 1000);
                 return;
             }
@@ -113,6 +115,14 @@ var zsAudio = (function (u, gr, sp, pl, nz, syn, win) {
             _isAudioInitialised = false;
             logError('Web Audio API is not supported in this browser');
         }
+    }
+    function _initAudioRetry() {
+        log("_initAudioRetry: ");
+        if(_isAudioInitialised) {
+            log("_initAudioRetry: Audio has been initialised, ignnoring retry...");
+            return;
+        }
+        _initAudio(_audioFilesToLoad, _onLoadedCallback);
     }
     function _loadAudioBuffers(audioFilesToLoad) {
         log("_initAudioBuffers: AudioContext state: " + _ctx.state);
@@ -674,8 +684,7 @@ var zsAudio = (function (u, gr, sp, pl, nz, syn, win) {
         },
         calcBandpassFilterQ: function (octaves) {
             return _calcBandpassFilterQ(octaves);
-        },
-        
+        },        
     }
 
 }(zsUtil, zsGranulator, zsSpeech, zsPlayer, zsNoise, zsSynth, window));
