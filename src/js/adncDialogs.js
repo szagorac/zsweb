@@ -90,6 +90,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         textSpanFadeStaggerTimeSec: 0.5,
         voteTimeoutMs: 5000,
         noteDurationMultipler: 8,
+        noteFreqMultipler: 1.0,
         loadingIconId: "loadingIcon",
         elementGroupSuffix: "Grp",
         meterGroupId: "meterGrp",
@@ -568,12 +569,14 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
     function playSynthNoteUp() {
         var freqIdx = u.getRandomIntFromRange(0, state.noteUpFreq.length - 1);
         var freq = state.noteUpFreq[freqIdx];
+        freq *= config.noteFreqMultipler;
         log("playing freq: " + freq);
         a.playSynth(freq, state.noteUpDurationSec);
     }
     function playSynthNoteDown() {
         var freqIdx = u.getRandomIntFromRange(0, state.noteDownFreq.length - 1);
         var freq = state.noteDownFreq[freqIdx];
+        freq *= config.noteFreqMultipler;
         log("playing freq: " + freq);
         a.playSynth(freq, state.noteDownDurationSec);
     }
@@ -1045,6 +1048,9 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
                 break;
             case 'speechSynth':
                 break;
+            case 'synth':
+                runSynth(actionId, params);
+                break;
         }
     }
     function runAudioMaster(actionId, params) {
@@ -1100,6 +1106,20 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
                 return;
         }
     }
+    function runSynth(actionId, params) {
+        if (!u.isString(actionId)) {
+            return;
+        }
+
+        switch (actionId) {
+            case 'volume':
+                setSynthVolume(params);
+                break;
+            default:
+                logError("runSynth: Unknown actionId: " + actionId);
+                return;
+        }
+    }
     function updateSynthConfig(params) {
         if (isNull(a)) {
             logError("updateAudioPlayerCofig: Invalid zsAudio lib");
@@ -1123,6 +1143,9 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
                 isUpdate = true;
             }
         }
+        if (!isNull(params.freqMultiplier)) {
+            config.noteFreqMultipler = params.freqMultiplier;
+        }        
         if (!isNull(params.osc1Freq)) {
             state.noteUpFreq = params.osc1Freq;
         }
@@ -1210,6 +1233,25 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         }
 
         a.playAudio(bufferIndex, startTime, offset, duration);
+    }
+    function setSynthVolume(params) {
+        if (isNull(a)) {
+            logError("setAudioMasterVolume: Invalid zsAudio lib");
+            return;
+        }
+        if (!u.isObject(params)) {
+            return;
+        }
+        var level = null;
+        var timeMs = null;
+
+        if (!isNull(params.level)) {
+            level = params.level;
+        }
+        if (!isNull(params.timeMs)) {
+            timeMs = params.timeMs;
+        }
+        a.setSynthVolume(level, timeMs);
     }
     function setAudioPlayerVolume(params) {
         if (isNull(a)) {

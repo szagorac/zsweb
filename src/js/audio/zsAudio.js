@@ -271,6 +271,7 @@ var zsAudio = (function (u, gr, sp, pl, nz, syn, win) {
         _setGranulatorVolume(maxLevel, timeMs);
         _setSpeechMaxVolume(maxLevel, timeMs);
         _setSpeechVolume(maxLevel, timeMs);
+        _setSynthVolume(maxLevel, timeMs);
     }
     function _calcBandpassFilterQ( octaves ){
         return Math.sqrt( Math.pow(2, octaves) ) / ( Math.pow(2, octaves) - 1 )
@@ -535,6 +536,9 @@ var zsAudio = (function (u, gr, sp, pl, nz, syn, win) {
     function _setSynthFilterQ(zeroToOne) {
         syn.setFilterQ(zeroToOne);
     }
+    function _setSynthVolume(level, timeMs) {
+        syn.setGain(level, timeMs);
+    }
     //synth END
 
 
@@ -651,6 +655,9 @@ var zsAudio = (function (u, gr, sp, pl, nz, syn, win) {
         },
         stopSynth: function () {
             _stopSynth();
+        },
+        setSynthVolume: function (level, timeMs) {
+            return _setSynthVolume(level, timeMs);
         },
         rumpLinearSpeechParam: function (param, endValue, duration) {
             return sp.rampLinearConfigParam(param, endValue, duration);
