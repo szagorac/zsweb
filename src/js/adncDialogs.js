@@ -674,14 +674,18 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
     function onNoteUpComplete() {
         runNoteCompleteTween(config.noteUpSymId);
         initNoteUp();
-        showSymbolTween(config.noteUpSymId);
-        showSymbolTween(config.noteDownSymId);
+        if(state.isNoteEnabled) {
+            showSymbolTween(config.noteUpSymId);
+            showSymbolTween(config.noteDownSymId);
+        }
     }
     function onNoteDownComplete() {
         runNoteCompleteTween(config.noteDownSymId);
         initNoteDown();
-        showSymbolTween(config.noteDownSymId);
-        showSymbolTween(config.noteUpSymId);
+        if(state.isNoteEnabled) {
+            showSymbolTween(config.noteDownSymId);
+            showSymbolTween(config.noteUpSymId);
+        }
     }
     function runNoteCompleteTween(symbolId) {
         gsap.set(u.toCssIdQuery(symbolId), {

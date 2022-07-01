@@ -73,6 +73,12 @@
         <replace dir="${distDir}" token="zsPlayer.js" value="zsPlayer.min.js">
             <include name="**/*.html"/>
         </replace>
+        <replace dir="${distDir}" token="zsSynth.js" value="zsSynth.min.js">
+            <include name="**/*.html"/>
+        </replace>
+        <replace dir="${distDir}" token="zsNoise.js" value="zsNoise.min.js">
+            <include name="**/*.html"/>
+        </replace>
 
         <replace dir="${distDir}" token="zsMusic.js" value="zsMusic.min.js">
             <include name="**/*.html"/>
