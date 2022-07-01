@@ -35,6 +35,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
     // ---------  MODEL -----------
     var state = {
         bpm: 80,
+        synthBpm: 80,
         instructions: { isVisible: false, l1: EMPTY, l2: EMPTY, l3: EMPTY, bckgCol: "rgba(225, 225, 225, 0.85)" },
         voteCount: 0,
         userNo: 10,
@@ -611,7 +612,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         a.stopGranulator();
     }
     function getBeatDuration() {
-        var beatDurationSec = m.getBeatDurationSec(state.bpm);
+        var beatDurationSec = m.getBeatDurationSec(state.synthBpm);
         if (isNull(beatDurationSec)) {
             beatDurationSec = 1;
         }
@@ -1099,6 +1100,42 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
                 return;
         }
     }
+    function updateSynthConfig(params) {
+        if (isNull(a)) {
+            logError("updateAudioPlayerCofig: Invalid zsAudio lib");
+            return;
+        }
+        if (!u.isObject(params)) {
+            return;
+        }
+        var isUpdate = false;
+        if (!isNull(params.bpm)) {
+            var old = state.synthBpm;
+            state.synthBpm = params.bpm;
+            if(state.synthBpm !== old) {
+                isUpdate = true;
+            }
+        }
+        if (!isNull(params.durationMultiplier)) {
+            var old = config.noteDurationMultipler;
+            config.noteDurationMultipler = params.durationMultiplier;
+            if(config.noteDurationMultipler !== old) {
+                isUpdate = true;
+            }
+        }
+        if (!isNull(params.osc1Freq)) {
+            state.noteUpFreq = params.osc1Freq;
+        }
+        if (!isNull(params.osc2Freq)) {
+            state.noteDownFreq = params.osc2Freq;
+        }
+        if (!isNull(params.osc3Freq)) {
+            state.noiseFreqs = params.osc3Freq;
+        }
+        if(isUpdate) {
+            initNotes();
+        }
+    }
     function updateAudioPlayerCofig(params) {
         if (isNull(a)) {
             logError("updateAudioPlayerCofig: Invalid zsAudio lib");
@@ -1371,6 +1408,9 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
     function processPlayerConfig(playerConfig) {
         updateAudioPlayerCofig(playerConfig);
     }
+    function processSynthConfig(config) {
+        updateSynthConfig(config);
+    }
     function processGranulatorConfig(granulatorConfig) {
         updateGranulatorConfig(granulatorConfig);
     }
@@ -1531,6 +1571,9 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         }
         if (isNotNull(serverState.viewState)) {
             processViewState(serverState.viewState);
+        }
+        if (isNotNull(serverState.synthConfig)) {
+            processSynthConfig(serverState.synthConfig);
         }
     }
     function getInstructionsTextStyle(textState) {
