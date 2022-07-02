@@ -15,8 +15,8 @@ Dialogs,AV,page1,1,bar1,1,12,4,80,4,12,9000,750,9750,25,2,27,673,728,100,100,0,/
 Dialogs,AV,page1,1,bar1,1,12,4,80,4,1,750,750,1500,3,2,5,68,123,100,100,0,max:beat=-1:reset=only:preset|2,3
 Dialogs,AV,page1,1,bar1,1,12,4,80,4,1,750,750,1500,3,2,5,68,123,100,100,0,max:beat=-1:reset=only:setFile|b1|DialogsPitch_b3.wav,3
 Dialogs,AV,page1,1,bar1,1,12,4,80,4,1,750,750,1500,3,2,5,68,123,100,100,0,max:beat=-1:reset=only:setFile|b2|DialogsPitch_b2.wav,3
-Dialogs,AV,page1,1,bar1,1,12,4,80,4,1,750,750,1500,3,2,5,68,123,100,100,0,max:beat=-1:reset=only:setFile|b3|DialogsPitch_b3.wav,3
-Dialogs,AV,page1,1,bar1,1,12,4,80,4,1,750,750,1500,3,2,5,68,123,100,100,0,max:beat=-1:reset=only:setFile|b4|DialogsPitch_b2.wav,3
+Dialogs,AV,page1,1,bar1,1,12,4,80,4,1,750,750,1500,3,2,5,68,123,100,100,0,max:beat=-1:reset=only:setFile|granulator|DialogsPitch_b4.wav,3
+Dialogs,AV,page1,1,bar1,1,12,4,80,4,1,750,750,1500,3,2,5,68,123,100,100,0,max:beat=-1:reset=only:setFile|groove|DialogsPitch_b8.wav,3
 Dialogs,AV,page1,1,bar1,1,12,4,80,4,1,750,750,1500,3,2,5,68,123,100,100,0,web:beat=-1:reset=only:webScore.reset(2);,3
 Dialogs,AV,page1,1,bar1,1,12,4,80,4,1,750,750,1500,3,2,5,68,123,100,100,0,web:beat=1:webScore.setInstructions('<span style=@Q@color:blueviolet;@Q@>Dialogue:</span>'|'Pitch'| '');,3
 Dialogs,AV,page1,1,bar1,1,12,4,80,4,1,750,750,1500,3,2,5,68,123,100,100,0,web:beat=8:webScore.setInstructions(false);,3
@@ -866,8 +866,8 @@ Dialogs,AV,page13,13,bar13,13,12,4,100,4,156,115200,600,115800,313,2,315,673,728
 Dialogs,AV,page13,13,bar13,13,12,4,100,4,145,108600,600,109200,291,2,293,68,123,100,100,0,max:beat=-1:reset=only:preset|2,291
 Dialogs,AV,page13,13,bar13,13,12,4,100,4,145,108600,600,109200,291,2,293,68,123,100,100,0,max:beat=-1:reset=only:setFile|b1|DialogsRhythm_b1.wav,291
 Dialogs,AV,page13,13,bar13,13,12,4,100,4,145,108600,600,109200,291,2,293,68,123,100,100,0,max:beat=-1:reset=only:setFile|b2|DialogsRhythm_b2.wav,291
-Dialogs,AV,page13,13,bar13,13,12,4,100,4,145,108600,600,109200,291,2,293,68,123,100,100,0,max:beat=-1:reset=only:setFile|b3|DialogsRhythm_b1.wav,291
-Dialogs,AV,page13,13,bar13,13,12,4,100,4,145,108600,600,109200,291,2,293,68,123,100,100,0,max:beat=-1:reset=only:setFile|b4|DialogsRhythm_b2.wav,291
+Dialogs,AV,page13,13,bar13,13,12,4,100,4,145,108600,600,109200,291,2,293,68,123,100,100,0,max:beat=-1:reset=only:setFile|granulator|DialogsRhythm_b2.wav,291
+Dialogs,AV,page13,13,bar13,13,12,4,100,4,145,108600,600,109200,291,2,293,68,123,100,100,0,max:beat=-1:reset=only:setFile|groove|DialogsRhythm_b8.wav,291
 Dialogs,AV,page13,13,bar13,13,12,4,100,4,145,108600,600,109200,291,2,293,68,123,100,100,0,max:beat=1:play|b1,291
 Dialogs,AV,page13,13,bar13,13,12,4,100,4,145,108600,600,109200,291,2,293,68,123,100,100,0,max:beat=8:setFile|b2|DialogsRhythm_b2.wav,291
 Dialogs,AV,page13,13,bar13,13,12,4,100,4,145,108600,600,109200,291,2,293,68,123,100,100,0,web:beat=-1:reset=only:webScore.reset(3);,291
@@ -1720,8 +1720,8 @@ Dialogs,AV,page25,25,bar25,25,12,4,80,4,300,203400,750,204150,601,2,603,673,728,
 Dialogs,AV,page25,25,bar25,25,12,4,80,4,289,195150,750,195900,579,2,581,68,123,100,100,0,max:beat=-1:reset=only:preset|2,579
 Dialogs,AV,page25,25,bar25,25,12,4,80,4,289,195150,750,195900,579,2,581,68,123,100,100,0,max:beat=-1:reset=only:setFile|b1|DialogsMelody_b1.wav,579
 Dialogs,AV,page25,25,bar25,25,12,4,80,4,289,195150,750,195900,579,2,581,68,123,100,100,0,max:beat=-1:reset=only:setFile|b2|DialogsMelody_b2.wav,579
-Dialogs,AV,page25,25,bar25,25,12,4,80,4,289,195150,750,195900,579,2,581,68,123,100,100,0,max:beat=-1:reset=only:setFile|b3|DialogsMelody_b1.wav,579
-Dialogs,AV,page25,25,bar25,25,12,4,80,4,289,195150,750,195900,579,2,581,68,123,100,100,0,max:beat=-1:reset=only:setFile|b4|DialogsMelody_b2.wav,579
+Dialogs,AV,page25,25,bar25,25,12,4,80,4,289,195150,750,195900,579,2,581,68,123,100,100,0,max:beat=-1:reset=only:setFile|granulator|DialogsMelody_b2.wav,579
+Dialogs,AV,page25,25,bar25,25,12,4,80,4,289,195150,750,195900,579,2,581,68,123,100,100,0,max:beat=-1:reset=only:setFile|groove|DialogsMelody_b8.wav,579
 Dialogs,AV,page25,25,bar25,25,12,4,80,4,289,195150,750,195900,579,2,581,68,123,100,100,0,max:beat=1:play|b1,579
 Dialogs,AV,page25,25,bar25,25,12,4,80,4,289,195150,750,195900,579,2,581,68,123,100,100,0,max:beat=8:setFile|b2|DialogsMelody_b2.wav,579
 Dialogs,AV,page25,25,bar25,25,12,4,80,4,289,195150,750,195900,579,2,581,68,123,100,100,0,web:beat=-1:reset=only:webScore.reset(4);,579
@@ -2573,8 +2573,8 @@ Dialogs,AV,page37,37,bar37,37,12,4,60,4,444,314400,1000,315400,889,2,891,673,728
 Dialogs,AV,page37,37,bar37,37,12,4,60,4,433,303400,1000,304400,867,2,869,68,123,100,100,0,max:beat=-1:reset=only:preset|2,867
 Dialogs,AV,page37,37,bar37,37,12,4,60,4,433,303400,1000,304400,867,2,869,68,123,100,100,0,max:beat=-1:reset=only:setFile|b1|DialogsTimbre_b1.wav,867
 Dialogs,AV,page37,37,bar37,37,12,4,60,4,433,303400,1000,304400,867,2,869,68,123,100,100,0,max:beat=-1:reset=only:setFile|b2|DialogsTimbre_b2.wav,867
-Dialogs,AV,page37,37,bar37,37,12,4,60,4,433,303400,1000,304400,867,2,869,68,123,100,100,0,max:beat=-1:reset=only:setFile|b3|DialogsTimbre_b1.wav,867
-Dialogs,AV,page37,37,bar37,37,12,4,60,4,433,303400,1000,304400,867,2,869,68,123,100,100,0,max:beat=-1:reset=only:setFile|b4|DialogsTimbre_b2.wav,867
+Dialogs,AV,page37,37,bar37,37,12,4,60,4,433,303400,1000,304400,867,2,869,68,123,100,100,0,max:beat=-1:reset=only:setFile|granulator|DialogsTimbre_b4.wav,867
+Dialogs,AV,page37,37,bar37,37,12,4,60,4,433,303400,1000,304400,867,2,869,68,123,100,100,0,max:beat=-1:reset=only:setFile|groove|DialogsTimbre_b8.wav,867
 Dialogs,AV,page37,37,bar37,37,12,4,60,4,433,303400,1000,304400,867,2,869,68,123,100,100,0,max:beat=1:play|b1,867
 Dialogs,AV,page37,37,bar37,37,12,4,60,4,433,303400,1000,304400,867,2,869,68,123,100,100,0,max:beat=8:setFile|b2|DialogsTimbre_b2.wav,867
 Dialogs,AV,page37,37,bar37,37,12,4,60,4,433,303400,1000,304400,867,2,869,68,123,100,100,0,web:beat=-1:reset=only:webScore.reset(5);,867
@@ -3428,8 +3428,8 @@ Dialogs,AV,page49,49,bar49,49,12,4,60,4,588,458400,1000,459400,1177,2,1179,673,7
 Dialogs,AV,page49,49,bar49,49,12,4,60,4,577,447400,1000,448400,1155,2,1157,68,123,100,100,0,max:beat=-1:reset=only:preset|2,1155
 Dialogs,AV,page49,49,bar49,49,12,4,60,4,577,447400,1000,448400,1155,2,1157,68,123,100,100,0,max:beat=-1:reset=only:setFile|b1|DialogsImpro_b1.wav,1155
 Dialogs,AV,page49,49,bar49,49,12,4,60,4,577,447400,1000,448400,1155,2,1157,68,123,100,100,0,max:beat=-1:reset=only:setFile|b2|DialogsImpro_b2.wav,1155
-Dialogs,AV,page49,49,bar49,49,12,4,60,4,577,447400,1000,448400,1155,2,1157,68,123,100,100,0,max:beat=-1:reset=only:setFile|b3|DialogsImpro_b1.wav,1155
-Dialogs,AV,page49,49,bar49,49,12,4,60,4,577,447400,1000,448400,1155,2,1157,68,123,100,100,0,max:beat=-1:reset=only:setFile|b4|DialogsImpro_b2.wav,1155
+Dialogs,AV,page49,49,bar49,49,12,4,60,4,577,447400,1000,448400,1155,2,1157,68,123,100,100,0,max:beat=-1:reset=only:setFile|granulator|DialogsImpro_b10.wav,1155
+Dialogs,AV,page49,49,bar49,49,12,4,60,4,577,447400,1000,448400,1155,2,1157,68,123,100,100,0,max:beat=-1:reset=only:setFile|groove|DialogsImpro_b8.wav,1155
 Dialogs,AV,page49,49,bar49,49,12,4,60,4,577,447400,1000,448400,1155,2,1157,68,123,100,100,0,max:beat=1:play|b1,1155
 Dialogs,AV,page49,49,bar49,49,12,4,60,4,577,447400,1000,448400,1155,2,1157,68,123,100,100,0,max:beat=8:setFile|b2|DialogsImpro_b2.wav,1155
 Dialogs,AV,page49,49,bar49,49,12,4,60,4,577,447400,1000,448400,1155,2,1157,68,123,100,100,0,web:beat=-1:reset=only:webScore.reset(6);,1155
