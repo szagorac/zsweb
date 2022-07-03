@@ -8,6 +8,7 @@
     <property name="distDir" location="webroot"/>
 
     <fileset id="distSrcFileSet" dir="${srcDir}" casesensitive="yes">
+        <include name="audio/*.wav"/>
         <include name="audio/*.mp3"/>
         <include name = "js/**/*.min.js"/>
         <include name = "css/**/*.min.css"/>
