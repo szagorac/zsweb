@@ -6,6 +6,7 @@ var zsSvg = (function (u, doc) {
     const CIRCLE_PREFIX = "c";
     const LINE_PREFIX = "l";
     const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
+    const SVG_XLINK_NAMESPACE = "http://www.w3.org/1999/xlink";
     const BLANK = " ";
     const ZERO = "0";
     const ONE = "1";
@@ -20,6 +21,9 @@ var zsSvg = (function (u, doc) {
     const SVG_ID_TSPAN = "tspan";
     const SVG_ID_RECT = "rect";
 
+    const SVG_ATTR_XLINK_HREF = "xlink:href";
+    const SVG_ATTR_HREF = "href";
+
     const SVG_TRANSFORM = "transform";
     const SVG_TRANSFORM_ROTATE_PRE = "rotate(";
     const SVG_TRANSFORM_CLOSE = ")";
@@ -27,11 +31,15 @@ var zsSvg = (function (u, doc) {
     const SVG_PARAM_CX = "cx";
     const SVG_PARAM_CY = "cy";
     const SVG_PARAM_R = "r";
+    const SVG_PARAM_X = "x";
+    const SVG_PARAM_Y = "y";
     const SVG_PARAM_X1 = "x1";
     const SVG_PARAM_Y1 = "y1";
     const SVG_PARAM_X2 = "x2";
     const SVG_PARAM_Y2 = "y2";
     const SVG_PARAM_FILL = "fill";
+    const SVG_PARAM_WIDTH = "width";
+    const SVG_PARAM_HEIGHT = "height";
 
     const SVG_PATH_ABS_M = "M";
     const SVG_PATH_ABS_A = "A";
@@ -100,6 +108,14 @@ var zsSvg = (function (u, doc) {
     }
     function _createRectangleElement(id) {
         return _createSvgElement(id, SVG_ID_RECT);
+    }    
+    function _createSvgRectangle(x, y, width, height, id) {
+        var rectElement = _createRectangleElement(id);
+        rectElement.setAttribute(SVG_PARAM_X, x);
+        rectElement.setAttribute(SVG_PARAM_Y, y);
+        rectElement.setAttribute(SVG_PARAM_WIDTH, width);
+        rectElement.setAttribute(SVG_PARAM_HEIGHT, height);
+        return rectElement;
     }
     function _createSvgArc(startX, startY, rX, rY, xAxisRotation, largeArcFlag, sweepFlag, endX, endY) {
         return new SvgArc(startX, startY, rX, rY, xAxisRotation, largeArcFlag, sweepFlag, endX, endY);
@@ -158,15 +174,19 @@ var zsSvg = (function (u, doc) {
         line.setAttribute(SVG_PARAM_Y1, startY);        
         line.setAttribute(SVG_PARAM_Y2, endY);
     }
-    function _setElementText(elementId, txt) {
-        var element = u.getElement(elementId);
+    function _setElementIdText(elementId, txt) {
+        _setElementText(u.getElement(elementId), txt);
+    }
+    function _setElementText(element, txt) {
         if(u.isNull(element)) {
             return;
         }
         element.textContent = txt;
     }
-    function _setElementColour(elementId, colour) {
-        var element = u.getElement(elementId);
+    function _setElementIdColour(elementId, colour) {
+        _setElementColour(u.getElement(elementId), colour);
+    }    
+    function _setElementColour(element, colour) {
         if(u.isNull(element)) {
             return;
         }
@@ -174,6 +194,16 @@ var zsSvg = (function (u, doc) {
         params.fill = colour;
         u.setElementStyleProperty(element, params)
     }
+    function _setElementIdHref(elementId, href) {
+        _setElementHref(u.getElement(elementId), href);
+    } 
+    function _setElementHref(element, href) {
+        if(u.isNull(element)) {
+            return;
+        }
+        element.setAttributeNS(SVG_XLINK_NAMESPACE, SVG_ATTR_XLINK_HREF,  href);
+        element.setAttribute(SVG_ATTR_HREF, href);
+    }   
     function _createArc(x, y, radius, startAngle, endAngle) {
         var start = u.polarToCartesian(x, y, radius, endAngle);
         var end = u.polarToCartesian(x, y, radius, startAngle);
@@ -306,6 +336,9 @@ var zsSvg = (function (u, doc) {
         createRectangleElement: function (id) {
             return _createRectangleElement(id);
         },
+        createSvgRectangle: function (x, y, width, height, id) {
+            return _createSvgRectangle(x, y, width, height, id);
+        },
         createSvgCircle: function (cX, cY, r, id) {
             return _createSvgCircle(cX, cY, r, id);
         },
@@ -342,11 +375,23 @@ var zsSvg = (function (u, doc) {
         setLineY: function (line, startY, endY) {
             return  _setLineY(line, startY, endY);
         },         
-        setElementText: function (elementId, txt) {
-            return  _setElementText(elementId, txt);
+        setElementIdText: function (elementId, txt) {
+            return  _setElementIdText(elementId, txt);
         }, 
-        setElementColour: function (elementId, colour) {
-            return  _setElementColour(elementId, colour);
-        },       
+        setElementText: function (element, txt) {
+            return  _setElementText(element, txt);
+        },
+        setElementIdColour: function (elementId, colour) {
+            return  _setElementIdColour(elementId, colour);
+        },
+        setElementColour: function (element, colour) {
+            return  _setElementColour(element, colour);
+        },
+        setElementIdHref: function (elementId, href) {
+            return  _setElementIdHref(elementId, href);
+        },
+        setElementHref: function (element, href) {
+            return  _setElementHref(element, href);
+        },
     }
 }(zsUtil, document));

@@ -1,0 +1,50 @@
+scoreName: "Symphonea"
+scoreTitle: "SymPhonea"
+rndStrategy:
+  isActive: false
+builderStrategy:
+  isActive: false
+dynamicMovementStrategy:
+  isActive: true
+  isStopOnMovementEnd: true
+  parts: [ Blue, Red, Green, AV ]
+  movements:
+    - { name: Fast,
+        sections: [
+          { name: default, pageRange: { start: 1, end: 2 }, parts: [ Blue ] },
+          { name: a, pageRange: { start: 1, end: 2 }, parts: [ AV, Blue ], max: [ max1 ] },
+          { name: ap1, pageRange: { start: 1, end: 2 }, parts: [ AV, Blue ] },
+          { name: p1p2, pageRange: { start: 1, end: 2 }, parts: [ Blue, Red ] },
+          { name: ap1p2a1, pageRange: { start: 1, end: 2 }, parts: [ AV, Blue, Red ], web: [ w1 ] },
+          { name: a1p2a2, pageRange: { start: 1, end: 2 }, parts: [ AV, Blue, Red ], max: [ max2 ], web: [ w1, w2 ] },
+        ]
+      }
+    - { name: Slow }
+    - { name: Joke }
+    - { name: Finally }
+  maxConfigs:
+    - { id: max1, preset: 2, b1: file1, grn: file7, scripts: [ hello, there ] }
+    - { id: max2, preset: 3, b2: file2, grv: file4, scripts: [ hello, there ] }
+  webConfigs:
+    - { id: w1, preset: 5, scripts: [ "setValue(1,'strVal')", "setThis('another')" ] }
+    - { id: w2, preset: 8, scripts: [ "setValue(2,'strVal')", "setThis('test')" ] }
+transpositionStrategy:
+  isActive: true
+  topStaveYRef: 114
+  topStaveXRef: 80
+  topStaveStartX: 95
+  botStaveYRef: 335
+  botStaveXRef: 80
+  botStaveStartX: 95
+  extRectDx: -2
+  extRectDy: -7.5
+  extRectWidth: 13
+  extRectHeight: 13
+  extRectModWidth: 18
+  extRectModHeight: 13
+  minYdistance: 10
+  minXdistance: 7
+  pages:
+    - { pageNo: 1, part: Blue, textElements: [  ] }
+    - { pageNo: 1, part: Red, textElements: [  ] }
+    - { pageNo: 1, part: Green, textElements: [  ] }

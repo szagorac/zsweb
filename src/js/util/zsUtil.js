@@ -166,7 +166,7 @@ var zsUtil = (function (console, win, doc) {
             return;
         }
         if (!playTime) {
-            playTime = audioCtx.currentTime;
+            playTime = 0;
         }
         if (!durationSec) {
             durationSec = buffer.duration;
@@ -548,17 +548,17 @@ var zsUtil = (function (console, win, doc) {
                 break;
         }
         console.log(obj);
-    }    
+    }
     function _logDebug(val) {
-        if(_mode !== _RUN_MODE.DEBUG) {
+        if (_mode !== _RUN_MODE.DEBUG) {
             return;
         }
         _log(val);
-    }    
+    }
     function _log(val, id, isError) {
         switch (_mode) {
             case _RUN_MODE.PROD:
-                if(!isError) {
+                if (!isError) {
                     return;
                 }
                 break;
@@ -710,6 +710,12 @@ var zsUtil = (function (console, win, doc) {
             elm.removeChild(elm.firstChild);
         }
     }
+    function _hasChildrenElements(element) {
+        if (_isNull(element)) {
+            return false;
+        }
+        return _isNotNull(element.children) && element.children.length > 0;
+    }
     function _clone(elm, elmId) {
         if (_isNull(elm) || _isNull(elmId)) {
             logError("_cloneAndAddElement: invalid element");
@@ -790,7 +796,7 @@ var zsUtil = (function (console, win, doc) {
         }
     }
     function _setElementIdStyleProperty(elementId, attrAssocArr) {
-        _setElementStyleProperty(_getElement(elementId), attrAssocArr) 
+        _setElementStyleProperty(_getElement(elementId), attrAssocArr)
     }
     function _setElementStyleProperty(element, attrAssocArr) {
         if (_isNull(element) || _isNull(attrAssocArr)) {
@@ -814,6 +820,12 @@ var zsUtil = (function (console, win, doc) {
             x: centerX + (radius * Math.cos(angleInRadians)),
             y: centerY + (radius * Math.sin(angleInRadians))
         };
+    }
+    function _toRadians(angle) {
+        if(_isNull(angle)) {
+            return 0;
+        }
+        return angle * (Math.PI/180);
     }
     function _getWindowWidth() {
         return win.innerWidth
@@ -893,7 +905,7 @@ var zsUtil = (function (console, win, doc) {
             return;;
         }
         var attrs = STYLE_INVISIBLE;
-        if(isVisible) {
+        if (isVisible) {
             attrs = STYLE_VISIBLE;
         }
         _setElementStyleProperty(element, attrs);
@@ -1063,6 +1075,33 @@ var zsUtil = (function (console, win, doc) {
         g = _validateCol(g);
         return (usePound ? "#" : "") + (g | (b << 8) | (r << 16)).toString(16);
     }
+    function _interpolateRgbColours(col1, col2, factor) {
+        if (!_isObject(col1) || !_isObject(col2)) {
+            return null;
+        }
+        if (!col1.hasOwnProperty("r") || !col2.hasOwnProperty("r")) {
+            return;
+        }
+        if (_isNull(factor)) {
+            factor = 0.5;
+        }
+        var result = {};
+        result.r = Math.round(col1.r + factor * (col2.r - col1.r));
+        result.g = Math.round(col1.g + factor * (col2.g - col1.g));
+        result.b = Math.round(col1.b + factor * (col2.b - col1.b));
+        return result;
+    };
+    function _rgbToHex(r, g, b) {
+        return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+    }
+    function _hexToRgb(hex) {
+        var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : null;
+    }
     function _validateCol(col) {
         if (col > 255) {
             return 255;
@@ -1071,7 +1110,7 @@ var zsUtil = (function (console, win, doc) {
         }
         return col;
     }
-    function _arrSortedNonZeroElem(arr) {
+    function _arrSortNumNonZeroDesc(arr) {
         var out = [];
         if (!_isArray(arr)) {
             return out;
@@ -1083,6 +1122,24 @@ var zsUtil = (function (console, win, doc) {
             }
         }
         out.sort(function (a, b) { return b - a });
+        return out;
+    }
+    function _arrSortNumDesc(arr) {
+        var out = [];
+        if (!_isArray(arr)) {
+            return out;
+        }
+        out = arr.slice(0);
+        out.sort(function (a, b) { return b - a });
+        return out;
+    }
+    function _arrSortNumAsc(arr) {
+        var out = [];
+        if (!_isArray(arr)) {
+            return out;
+        }
+        out = arr.slice(0);
+        out.sort(function (a, b) { return a - b });
         return out;
     }
     function _arrShallowClone(arr) {
@@ -1135,7 +1192,7 @@ var zsUtil = (function (console, win, doc) {
         return true;
     }
     function _arrContains(arr, elm) {
-        if(!_isArray(arr)) {
+        if (!_isArray(arr)) {
             return false;
         }
         return arr.includes(elm);
@@ -1193,8 +1250,125 @@ var zsUtil = (function (console, win, doc) {
     function _csvToArr(csvStr) {
         if (!csvStr) {
             return [];
-        }    
+        }
         return csvStr.split(COMMA);
+    }
+    function _getPageName() {
+        var path = win.location.pathname;
+        return path.split("/").pop();
+    }
+    function _loadPage(url) {
+        if (_isNull(url)) {
+            return;
+        }
+        win.location.href = url;
+    }
+    function _generateRandomId() {
+        const uint32 = win.crypto.getRandomValues(new Uint32Array(1))[0];
+        return uint32.toString(16);
+    }
+    function _storeLocalParam(key, value) {
+        if (_isNull(key)) {
+            return;
+        }
+        if (!_isLocalStorageSupported()) {
+            _setCookieParam(key, value);
+            return;
+        }
+        try {
+            localStorage.setItem(key, value);
+            return;
+        } catch (err) {
+            _logException(err, "setLocalStorageParam key: " + key + " value: " + value);
+            _setCookieParam(key, value);
+        }
+    }
+    function _getLocalParam(key) {
+        if (_isNull(key)) {
+            return null;
+        }
+        if (!_isLocalStorageSupported()) {
+            return _getCookieParam(key);
+        }
+        var out = localStorage.getItem(key);
+        if (_isNull(out)) {
+            out = _getCookieParam(key);
+        }
+        return out;
+    }
+    function _removeLocalParam(key) {
+        if (_isNull(key)) {
+            return;
+        }
+        if (!_isLocalStorageSupported()) {
+            _expireCookieParam(key);
+            return;
+        }
+        localStorage.removeItem(key);
+    }
+    function _isLocalStorageSupported() {
+        try {
+            return 'localStorage' in win && win['localStorage'] !== null;
+        } catch (e) {
+            return false;
+        }
+    }
+    function _setCookieParam(key, value, days) {
+        var expires = "";
+        if (!_isNull(days)) {
+            var date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            expires = "; expires=" + date.toUTCString();
+        }
+        document.cookie = key + "=" + (value || "") + expires + "; path=/";
+    }
+    function _getCookieParam(key) {
+        if (_isNull(key)) {
+            return null;
+        }
+        var nameEQ = key + "=";
+        var ca = document.cookie.split(';');
+        for (var i = 0; i < ca.length; i++) {
+            var c = ca[i];
+            while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+        }
+        return null;
+    }
+    function _expireCookieParam(key) {
+        if (_isNull(key)) {
+            return;
+        }
+        _setCookieParam(key, "", -1);
+    }
+    function _toBoolean(val) {
+        return (val === 'true') ? true : (val === 'false' ? false : val);
+    }
+    function _capitalizeFirstLetter(value) {
+        if (!_isString(value) || value.length < 1) {
+            return value;
+        }
+        return value.charAt(0).toUpperCase() + value.slice(1);
+    }
+    function _isOddNumber(num) {
+        if (!_isNumeric(num)) {
+            return null;
+        }
+        if (num % 2 === 1) {
+            return true;
+        }
+        return false;
+    }
+    function _playOrRestartTween(tween) {
+        if (_isNull(tween)) {
+            return;
+        }
+        var progress = tween.progress();
+        if (progress > 0) {
+            tween.pause();
+            tween.progress(0.0);
+        }
+        tween.play();
     }
 
     // PUBLIC API
@@ -1207,15 +1381,50 @@ var zsUtil = (function (console, win, doc) {
         Point: Point,
         Oscillator: Oscillator,
         ParamOscillator: ParamOscillator,
-
+        toRadians: function (angle) {
+            return _toRadians(angle);
+        },
+        playOrRestartTween: function (tween) {
+            return _playOrRestartTween(tween);
+        },
+        hasChildrenElements: function (element) {
+            return _hasChildrenElements(element);
+        },
+        capitalizeFirstLetter: function (value) {
+            return _capitalizeFirstLetter(value);
+        },
+        storeLocalParam: function (key, value) {
+            _storeLocalParam(key, value);
+        },
+        getLocalParam: function (key) {
+            return _getLocalParam(key);
+        },
+        removeLocalParam: function (key) {
+            return _removeLocalParam(key);
+        },
+        generateRandomId: function () {
+            return _generateRandomId();
+        },
+        loadPage: function (url) {
+            _loadPage(url);
+        },
+        getPageName: function () {
+            return _getPageName();
+        },
         interpolateLinear: function (val1, val2, decimalMid) {
             return _interpolateLinear(val1, val2, decimalMid);
         },
         arrMinMax: function (arr) {
             return _arrMinMax(arr);
         },
-        arrSortedNonZeroElem: function (arr) {
-            return _arrSortedNonZeroElem(arr);
+        arrSortedNonZeroDesc: function (arr) {
+            return _arrSortNumNonZeroDesc(arr);
+        },
+        arrSortNumDesc: function (arr) {
+            return _arrSortNumDesc(arr);
+        },
+        arrSortNumAsc: function (arr) {
+            return _arrSortNumAsc(arr);
         },
         arrSortStrings: function (arr) {
             return _arrSortStrings(arr);
@@ -1252,6 +1461,15 @@ var zsUtil = (function (console, win, doc) {
         },
         modColour: function (col, amt) {
             return _modColour(col, amt);
+        },
+        interpolateRgbColours: function (col1, col2, factor) {
+            return _interpolateRgbColours(col1, col2, factor);
+        },
+        rgbToHex: function (r, g, b) {
+            return _rgbToHex(r, g, b);
+        },
+        hexToRgb: function (hex) {
+            return _hexToRgb(hex);
         },
         cloneObj: function (obj) {
             return _cloneObj(obj);
@@ -1306,7 +1524,7 @@ var zsUtil = (function (console, win, doc) {
         },
         replacePropValue: function (asocArr, prop, strToReplace, strReplaceWith) {
             _replacePropValue(asocArr, prop, strToReplace, strReplaceWith);
-        },       
+        },
         replaceEmptySpaces: function (strVal, strReplaceWith) {
             _replaceEmptySpaces(strVal, strReplaceWith);
         },
@@ -1421,6 +1639,9 @@ var zsUtil = (function (console, win, doc) {
             return Math.random() * (max - min) + min;
         },
         randomArrayElement: function (arr) {
+            if (!_isArray(arr)) {
+                return null;
+            }
             return arr[Math.floor(Math.random() * arr.length)];
         },
         round: function (val, decimalPlaces) {
@@ -1443,7 +1664,7 @@ var zsUtil = (function (console, win, doc) {
         },
         csvToArr: function (csvStr) {
             return _csvToArr(csvStr);
-        },        
+        },
         toStr: function (val) {
             return String(val);
         },
@@ -1459,8 +1680,14 @@ var zsUtil = (function (console, win, doc) {
             }
             return parseInt(val, 10);
         },
+        toBoolean: function (val) {
+            return _toBoolean(val);
+        },
         isNumeric: function (num) {
             return _isNumeric(num);
+        },
+        isOddNumber: function (num) {
+            return _isOddNumber(num);
         },
         isString: function (val) {
             return _isString(val);
@@ -1500,7 +1727,7 @@ var zsUtil = (function (console, win, doc) {
         },
         logDebug: function (val) {
             _logDebug(val);
-        },        
+        },
         log: function (val, id) {
             _log(val, id);
         },

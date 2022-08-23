@@ -16,6 +16,10 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     const VISIBLE = "visible";
     const HIDDEN = "hidden";
     const NONE = "none";
+    const X = "x";
+    const X1 = "x1";
+    const X2 = "x2";
+    const WIDTH = "width";
     const TL_START_OF_PREVIOUS = "<";
     const TL_END_OF_PREVIOUS = ">";
     const CLR_GREEN = "green";
@@ -42,7 +46,6 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     const TXT_FILL_DISCONNECTED = CLR_WHITE;
     const TXT_FILL_ERROR = CLR_BLACK;
     const PAGE_NO_CONTINUOUS = 6666;
-    const PAGE_ID_CONTINUOUS = "p" + PAGE_NO_CONTINUOUS;
 
     const EVENT_ID_PART_REG = "PART_REG";
     const EVENT_ID_PART_READY = "PART_READY";
@@ -65,10 +68,6 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     
     const DEFAULT_PAGE_IMG_URL = "img/blankStave.png";
     const DEFAULT_PAGE_ID = "p0";
-
-    var AUDIO_FLIES = [
-        '/audio/violin-tuning.mp3',
-    ];
 
     var isTouch = null;
     var isSafari = null;
@@ -132,12 +131,13 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         errorBtnAttrib: { "filter": "url(#dropshadow)" },
         topStave: { gId: "stvTop", imgId: "stvTopImg", startLineId: "stvTopStartLine", positionLineId: "stvTopPosLine", beatBallId: "stvTopBeatBall", maskId: "stvTopMask", ovrlPosId: "ovrlTopPos", ovrlPitchId: "ovrlTopPitch", ovrlSpeedId: "ovrlTopSpeed", ovrlPressId: "ovrlTopPres", ovrlDynId: "ovrlTopDyn", ballYmax: 84, xLeftMargin: 31.5, posLineConf: {x1: "95", y1: "80", x2: "95", y2: "281"}, posBallConf: {cx: "95", cy: "110", r: "4"} },
         bottomStave: { gId: "stvBot", imgId: "stvBotImg", startLineId: "stvBotStartLine", positionLineId: "stvBotPosLine", beatBallId: "stvBotBeatBall", maskId: "stvBotMask", ovrlPosId: "ovrlBotPos", ovrlPitchId: "ovrlBotPitch", ovrlSpeedId: "ovrlBotSpeed", ovrlPressId: "ovrlBotPres", ovrlDynId: "ovrlBotDyn", ballYmax: 305, xLeftMargin: 31.5, posLineConf: {x1: "95", y1: "301", x2: "95", y2: "502"}, posBallConf: {cx: "95", cy: "331", r: "4"} },
+        metro: { idMetronomeRect: "metroRect", idMetronome: "metro", idMetroSlider: "metroFreqSlider", idMetroFreqRect: "metroFreq", idMetroFreqLine: "metroFreqLine", ifSymbolMetroOff: "#metronome", ifSymbolMetroOn: "#metronomeOn", ifMetroFreqSlider: "#metroFreq", minFreq: 220, maxFreq: 2200},
     }
     var state = {
         isPlaying: false,
         isReady: false,
-        score: { title: "ZScore", noSpaceTitle: "ZScore", instrument: "Part View", parts: ["Part View"], firstPageNo: 1, lastPageNo: 2 },
-        part: { name: "Part View", imgDir: null, imgPageNameToken: null, imgContPageName: null, blankPageNo: 0, contPageNo: 6666, pageRanges: [{ start: 1, end: 1 }], pages: {} },
+        score: { title: "ZScore", noSpaceTitle: "ZScore", htmlFile: null, instrument: "Part View", parts: ["Part View"], firstPageNo: 1, lastPageNo: 2 },
+        part: { name: "Part View", imgDir: null, imgPageNameToken: null, imgContPageName: null, blankPageNo: 0, contPageNo: PAGE_NO_CONTINUOUS, pageRanges: [{ start: 1, end: 1 }], pages: {} },
         topStave: { id: "topStave", config: config.topStave, pageId: DEFAULT_PAGE_ID, rndPageId: null, filename: DEFAULT_PAGE_IMG_URL, beatMap: null, timeline: null, isActive: true, isPlaying: false, currentBeat: null},
         bottomStave: { id: "bottomStave", config: config.bottomStave, pageId: DEFAULT_PAGE_ID, rndPageId: null, filename: DEFAULT_PAGE_IMG_URL, beatMap: null, timeline: null, isActive: false, isPlaying: false, currentBeat: null },
         startTimeTl: 0,
@@ -153,7 +153,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         isConnected: false,
         isInitialised: false,
         connectionType: null,
-        pageNoToLoad: 0,
+        pageNoToLoad: 0,        
+        metro: {isMetroOn: false, slider: {xMax: 60, xMin: 40, xMid: 50, range: 20,}},
     }
 
     function ZScoreException(message) {
@@ -226,8 +227,12 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         initNet();
         initSvg();
         initAudio();
+        initMetro();
 
         state.isInitialised = true;
+    }
+    function resetOnNewScore() {
+        state.part.pages = {};
     }
     function resetStateOnStop() {
         resetStaveOnStop(state.topStave);
@@ -275,12 +280,75 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     function initNet() {
         n.init(config.connectionPreference, config.appUrlSse, config.appUrlWebsockets, config.appUrlHttp, processServerState, onConnectionEvent);
     }
+    function initMetro() {
+        var metro = u.getElement(config.metro.idMetronomeRect);
+        if(isNull(metro)) {
+            return;
+        }
+        u.listen('click', metro, onMetro);        
+        initMetroFreqSlider();
+    }
+    function initMetroFreqSlider() {
+        var freqLine = u.getElement(config.metro.idMetroFreqLine);
+        var freqRect = u.getElement(config.metro.idMetroFreqRect);
+        if(isNotNull(freqLine) && isNotNull(freqRect)) {
+            var x2 = u.toInt(freqLine.getAttribute(X2));
+            var sliderWidth = u.toInt(freqRect.getAttribute(WIDTH));
+            var sliderWidthHalf = Math.round(sliderWidth/2);
+            var xMax = x2 - sliderWidthHalf;
+            state.metro.slider.xMax = xMax;
+            var x1 = u.toInt(freqLine.getAttribute(X1));
+            var xMin = x1 + sliderWidthHalf;
+            state.metro.slider.xMin = xMin;
+            var range = xMax - xMin;
+            state.metro.slider.range = range;
+            var xMid = Math.round((xMax + xMin)/2);
+            state.metro.slider.xMid = xMid;
+        }
+        
+        Draggable.create(config.metro.ifMetroFreqSlider, {
+            type: X,
+            bounds: document.getElementById(config.metro.idMetroFreqLine),
+            onDrag: onFreqSliderMove,
+        });
+    }
+    function onFreqSliderMove(event) {
+        var midDiffX = gsap.getProperty(config.metro.ifMetroFreqSlider, X);
+        var ballPosX = state.metro.slider.xMid + midDiffX;
+        var val = ballPosX - state.metro.slider.xMin;
+        var percent = Math.round(val*100/state.metro.slider.range);
+        var freq = u.mapRange(percent, 0, 100, config.metro.minFreq,  config.metro.maxFreq);
+        if(freq < 200) {
+            freq = 200;
+        }
+        a.setBeepFreqenecy(freq);
+        log("onFreqSliderMove: freq: " + freq);
+    }
+    function onMetro(event) {
+        if(state.metro.isMetroOn) {
+            switchMetroOff();
+        } else {
+            switchMetroOn();
+        }
+    }
+    function switchMetroOff() {
+        a.switchMetro(false);
+        s.setElementIdHref(config.metro.idMetronome, config.metro.ifSymbolMetroOff);
+        u.makeInVisible(config.metro.idMetroSlider);
+        state.metro.isMetroOn = false;
+    }
+    function switchMetroOn() {
+        a.switchMetro(true);
+        s.setElementIdHref(config.metro.idMetronome, config.metro.ifSymbolMetroOn);
+        u.makeVisible(config.metro.idMetroSlider);
+        state.metro.isMetroOn = true;
+    }
     function initAudio() {
         if (isNull(a)) {
             logError("initAudio: invalid zsAudio lib");
             return;
         }
-        a.init(AUDIO_FLIES, 0);
+        a.init();
     }
     function resetAudio() {
         if (isNull(a)) {
@@ -401,8 +469,18 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         if (!u.isObject(scoreInfo)) {
             return;
         }
+        if (isNotNull(scoreInfo.partHtmlPage)) {
+            var isLoad = setPartHtmlPage(scoreInfo.partHtmlPage);
+            var currentPage = u.getPageName();
+            if(isLoad && scoreInfo.partHtmlPage !== currentPage) {
+                u.loadPage(scoreInfo.partHtmlPage);
+            }
+        }
         if (isNotNull(scoreInfo.title)) {
-            setTitle(scoreInfo.title);
+            var isNew = setTitle(scoreInfo.title);
+            if(isNew) {
+                resetOnNewScore();
+            }
         }
         if (isNotNull(scoreInfo.instruments)) {
             processinstruments(scoreInfo.instruments);
@@ -416,11 +494,24 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     }
     function setTitle(title) {
         if (state.score.title === title) {
-            return;
+            return false;
         }
         state.score.title = title;
         state.score.noSpaceTitle = u.replaceEmptySpaces(title, UNDERSCORE);
-        s.setElementText(config.idTitle, title);
+        s.setElementIdText(config.idTitle, title);
+        return true;
+    }
+    function setPartHtmlPage(partFile) {
+        var previous = state.score.htmlFile;
+        if(isNull(previous)) {
+            state.score.htmlFile = partFile;
+            return false;
+        }
+        if (previous === partFile) {
+            return false;
+        }
+        state.score.htmlFile = partFile;
+        return true;
     }
     function setScoreDir(scoreDir) {
         if (state.scoreDir === scoreDir) {
@@ -433,7 +524,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             return;
         }
         state.tempo = bpm;
-        s.setElementText(config.idTempoBpm, bpm);
+        s.setElementIdText(config.idTempoBpm, bpm);
     }
     function processTempoChange(tempo) {
         var bpm = u.toInt(tempo);
@@ -734,7 +825,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     function processPartInfo(partInfo) {
         if (isNotNull(partInfo.name)) {
             state.part.name = partInfo.name;
-            s.setElementText(config.idInstrument, partInfo.name);
+            s.setElementIdText(config.idInstrument, partInfo.name);
         }
         if (isNotNull(partInfo.pageRanges)) {
             var pgRanges = partInfo.pageRanges;
@@ -1362,7 +1453,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         u.makeVisible(btnId);
         u.makeVisible(slotId);
         u.setElementIdAttributes(slotId, config.instSlotActiveAttrib);
-        s.setElementText(txtId, instrument.trim());
+        s.setElementIdText(txtId, instrument.trim());
         u.setElementIdStyleProperty(txtId, config.instSlotTxtActiveStyle);
         if(isThisInst) {
             u.setElementIdStyleProperty(btnId, config.instSlotBtnActiveInstStyle);
@@ -1380,7 +1471,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         u.makeVisible(btnId);
         u.makeVisible(slotId);
         u.setElementIdAttributes(slotId, config.instSlotInActiveAttrib);
-        s.setElementText(txtId, EMPTY);
+        s.setElementIdText(txtId, EMPTY);
         u.setElementIdStyleProperty(txtId, config.instSlotTxtInActiveStyle);
         u.setElementIdStyleProperty(btnId, config.instSlotBtnInActiveStyle);
         var attrs = new InstSlotInActiveAttrs();
@@ -1452,6 +1543,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         var beatLabel = config.tweenIdPrefix + config.beatIdPrefix + beatNo;
         var labels = timeline.labels;
         if(beatLabel in labels) {
+            a.beep();
             timeline.seek(beatLabel);     
         } else {
            logDebug("setTimelineBeat: Invalid beat " + beatLabel);
@@ -1508,7 +1600,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         var c = u.toInt(lightNo);
         for (var i = 1; i <= c; i++) {
             var lightId = config.idSemaphorePrefix + i;
-            s.setElementColour(lightId, colour);
+            s.setElementIdColour(lightId, colour);
         }
     }
     function getColour(colourId) {
@@ -1620,4 +1712,4 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             onInstrumentSelection(slotNo, instrument);
         },
     }
-}(zsUtil, zsNet, zsSvg, zsAudio, zsMusic, window, document));
+}(zsUtil, zsNet, zsSvg, zsWsAudio, zsMusic, window, document));

@@ -11,7 +11,7 @@ var zsSpeech = (function (u, win) {
     var config = {
         volume: 1.0, //0 (lowest) and 1 (highest) 
         pitch: 1.0,  //0 (lowest) and 2 (highest)
-        rate: 0.7,   //0.1 (lowest) and 10 (highest)     
+        rate: 0.5,   //0.1 (lowest) and 10 (highest)     
         lang: "en-GB",
         maxVoiceLoadAttempts: 10,
         maxUtterances: 5,
@@ -26,6 +26,7 @@ var zsSpeech = (function (u, win) {
     var _isInitialised = false;
     var _isSupported = false;
     var _loadVoiceAttempts = 0;
+    var _maxVolume = 1.0;
 
     function ZsSpeechException(msg) {
         this.message = msg;
@@ -185,6 +186,9 @@ var zsSpeech = (function (u, win) {
         }
         if(_isNull(rate)) {
             rate = 1.0;
+        }
+        if(volume > _maxVolume) {
+            volume = _maxVolume;
         }
         var utterance = new SpeechSynthesisUtterance(text);
         utterance.voice = voice;
@@ -356,6 +360,9 @@ var zsSpeech = (function (u, win) {
         },
         setVolume: function (volume) {
             config.volume = volume;
+        },
+        setMaxVolume: function (volume) {
+            _maxVolume = volume;
         },
         setPitch: function (pitch) {
             config.pitch = pitch;

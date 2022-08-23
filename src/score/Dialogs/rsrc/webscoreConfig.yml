@@ -1,0 +1,6 @@
+scoreName: "Dialogs"
+presets:
+  - id: 1
+    scripts: [
+        "webScore.resetState();",
+    ]

@@ -1,0 +1,12 @@
+- { pageNo: 1, part: Blue, textElements: [ { dx: 0, dy: 83.26, txt: BF } ] }
+- { pageNo: 1, part: Red, textElements: [ { dx: 0, dy: 83.26, txt: BF } ] }
+- { pageNo: 1, part: Green, textElements: [  ] }
+- { pageNo: 2, part: Blue, textElements: [ { dx: 0, dy: 67.26, txt: BF } ] }
+- { pageNo: 2, part: Red, textElements: [ { dx: 0, dy: 66.26, txt: BF } ] }
+- { pageNo: 2, part: Green, textElements: [  ] }
+- { pageNo: 3, part: Blue, textElements: [  ] }
+- { pageNo: 3, part: Red, textElements: [  ] }
+- { pageNo: 3, part: Green, textElements: [  ] }
+- { pageNo: 4, part: Blue, textElements: [  ] }
+- { pageNo: 4, part: Red, textElements: [  ] }
+- { pageNo: 4, part: Green, textElements: [  ] }

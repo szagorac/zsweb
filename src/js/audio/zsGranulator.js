@@ -8,7 +8,7 @@ var zsGranulator = (function (u) {
     const SIZE_OSCILLATOR_ID = "ZsGranulator_SizeOscillator";
 
     var config = {
-        masterGainVal: 0.1,
+        masterGainVal: 1.0,
         playDurationSec: 30,
         playStartOffsetSec: 0.0,
         maxGrains: 16,
@@ -16,16 +16,18 @@ var zsGranulator = (function (u) {
         audioStopToleranceMs: 5,
         isUsePositionOscillator: true,
         isUseSizeOscillator: true,
-        isUsePositionFrequencyMod: true, 
-        isUsePositionRangeMod: true, 
+        isUsePositionFrequencyMod: true,
+        isUsePositionRangeMod: true,
         panner: { isUsePanner: false, panningModel: "equalpower", distanceModel: "linear", maxPanAngle: 45 },
         envelope: { attackTime: 0.5, decayTime: 0.0, sustainTime: 0.0, releaseTime: 0.5, sustainLevel: 1.0 },
         grain: { sizeMs: 100, pitchRate: 1.0, maxPositionOffsetRangeMs: 100, maxPitchRateRange: 0.03, timeOffsetStepMs: 10 },
-        positionOscillator: {minValue: 500, maxValue: 4500, type: "TRIANGLE", frequency: 0.2, 
-                            frequencyLFO: {minValue: -0.1, maxValue: 0.0, type: "TRIANGLE", frequency: 0.02},
-                            startLFO: {minValue: -500, maxValue: 500, type: "TRIANGLE", frequency: 0.1},
-                            endLFO: {minValue: -500, maxValue: 500, type: "TRIANGLE", frequency: 0.1}},
-        sizeOscillator: {minValue: -30, maxValue: 500, type: "TRIANGLE", frequency: 0.1},                            
+        positionOscillator: {
+            minValue: 500, maxValue: 4500, type: "TRIANGLE", frequency: 0.2,
+            frequencyLFO: { minValue: -0.1, maxValue: 0.0, type: "TRIANGLE", frequency: 0.02 },
+            startLFO: { minValue: -500, maxValue: 500, type: "TRIANGLE", frequency: 0.1 },
+            endLFO: { minValue: -500, maxValue: 500, type: "TRIANGLE", frequency: 0.1 }
+        },
+        sizeOscillator: { minValue: -30, maxValue: 500, type: "TRIANGLE", frequency: 0.1 },
     }
 
     var _grains = [];
@@ -42,6 +44,7 @@ var zsGranulator = (function (u) {
     var _isReady = false;
     var _positionOscillator = null;
     var _sizeOscillator = null;
+    var _maxGain = 1.0;
 
     function ZsGranulatorException(msg) {
         this.message = msg;
@@ -151,7 +154,19 @@ var zsGranulator = (function (u) {
 
         return true;
     }
-
+    function _resetState() {
+        if (_isPlaying) {
+            _setStop(true);
+        }
+        _startTime = null;
+        _currentPosition = null;
+        _lastGrainTimeOffsetMs = null;
+        _isPlaying = false;
+        _isStop = false;
+        _isReady = false;
+        _positionOscillator = null;
+        _sizeOscillator = null;
+    }
     function _resetConfig() {
         if (_isPlaying) {
             _log("resetConfig: granulator is playing, ignore reset config");
@@ -185,22 +200,21 @@ var zsGranulator = (function (u) {
         }
 
         _log("Init Granulator");
+        _resetState();
 
         if (!audioContext || !audioBuffer) {
             _logError("initGranulator: invalid context of buffer");
-            _setReady(false);
             return;
         }
         _audioCtx = audioContext;
         _buffer = audioBuffer;
 
-        if(config.isUsePositionOscillator) {
+        if (config.isUsePositionOscillator) {
             _positionOscillator = _createPositionOscillator();
         }
-        if(config.isUseSizeOscillator) {
+        if (config.isUseSizeOscillator) {
             _sizeOscillator = _createSizeOscillator();
         }
-
         if (_isNull(destination)) {
             destination = _audioCtx.destination;
         }
@@ -212,20 +226,20 @@ var zsGranulator = (function (u) {
         _setReady(true);
     }
     function _createPositionOscillator() {
-        var cnf = config.positionOscillator;        
+        var cnf = config.positionOscillator;
         var now = _getNow();
         var osc = new u.ParamOscillator(POSITION_OSCILLATOR_ID, now, cnf.minValue, cnf.maxValue, cnf.type, cnf.frequency);
-        if(config.isUsePositionFrequencyMod) {
+        if (config.isUsePositionFrequencyMod) {
             var lfoConfig = cnf.frequencyLFO;
             var freqLFO = new u.ParamOscillator(POSITION_FREQ_LFO_ID, now, lfoConfig.minValue, lfoConfig.maxValue, lfoConfig.type, lfoConfig.frequency);
             osc.setFrequencyLFO(freqLFO);
         }
-        if(config.isUsePositionRangeMod) {
+        if (config.isUsePositionRangeMod) {
             var pConf = cnf.startLFO;
             var startLFO = new u.ParamOscillator(POSITION_START_LFO_ID, now, pConf.minValue, pConf.maxValue, pConf.type, pConf.frequency);
             osc.setMinValueLFO(startLFO);
         }
-        if(config.isUsePositionRangeMod) {
+        if (config.isUsePositionRangeMod) {
             var pConf = cnf.endLFO;
             var endLFO = new u.ParamOscillator(POSITION_END_LFO_ID, now, pConf.minValue, pConf.maxValue, pConf.type, pConf.frequency);
             osc.setMaxValueLFO(endLFO);
@@ -233,7 +247,7 @@ var zsGranulator = (function (u) {
         return osc;
     }
     function _createSizeOscillator() {
-        var cnf = config.sizeOscillator;        
+        var cnf = config.sizeOscillator;
         var now = _getNow();
         var osc = new u.ParamOscillator(SIZE_OSCILLATOR_ID, now, cnf.minValue, cnf.maxValue, cnf.type, cnf.frequency);
         return osc;
@@ -257,10 +271,10 @@ var zsGranulator = (function (u) {
         _isStop = false;
         _startTime = _audioCtx.currentTime;
         _currentPosition = 0;
-        if(!_isNull(_positionOscillator)) {
+        if (!_isNull(_positionOscillator)) {
             _positionOscillator.setStartTime(_startTime);
         }
-        if(!_isNull(_sizeOscillator)) {
+        if (!_isNull(_sizeOscillator)) {
             _sizeOscillator.setStartTime(_startTime);
         }
         _log("_play: startTime : " + _startTime + " context.state: " + _audioCtx.state);
@@ -282,6 +296,8 @@ var zsGranulator = (function (u) {
         if (_isStop) {
             _log("processGrains: STOPPING Granulator");
             _isPlaying = false;
+            _startTime = null;
+            _currentPosition = null;
             return;
         }
 
@@ -304,7 +320,11 @@ var zsGranulator = (function (u) {
             pitchRate = 1.0;
         }
 
-        _setMasterGain(config.masterGainVal);
+        var mGain = config.masterGainVal;
+        if (mGain > _maxGain) {
+            mGain = _maxGain;
+        }
+        _setMasterGain(mGain);
 
         while (_grains.length < maxGrains) {
             var grainOffsetSec = _calculateRndGrainOffsetSec(_currentPosition);
@@ -341,14 +361,14 @@ var zsGranulator = (function (u) {
             return;
         }
         var newVal = action.getValue(now);
-        if(!_isNull(newVal)) {
+        if (!_isNull(newVal)) {
             u.setNestedObjectValue(config, action.paramName, newVal);
         } else {
             _log("updateConfigValue: action returned invalid value");
         }
-        
-        if(action.isScheduleReminder) {            
-            var durationMs = u.secToMsec(action.reminderSec);            
+
+        if (action.isScheduleReminder) {
+            var durationMs = u.secToMsec(action.reminderSec);
             _addRampLinearAction(action.paramName, action.startValue, durationMs);
         }
     }
@@ -393,7 +413,7 @@ var zsGranulator = (function (u) {
         return u.getRandomFromRange(minOffsetSec, maxOffsetSec);
     }
     function _calculateCurrentPosition(now) {
-        if(_isNull(_positionOscillator)) {
+        if (_isNull(_positionOscillator)) {
             return _calculateCurrentPositionLinear(now);
         }
         var bufferDuration = _buffer.duration;
@@ -405,15 +425,15 @@ var zsGranulator = (function (u) {
         if (position < 0.0) {
             position = 0.0;
         }
-        // _log("Current position: " + position);
+        // _log("Current position: " + positionMs);
         return position;
     }
     function _calculateSize(now) {
         var size = config.grain.sizeMs;
-        if(_isNull(_sizeOscillator)) {
+        if (_isNull(_sizeOscillator)) {
             return size;
         }
-        var mod = _sizeOscillator.getValue(now);        
+        var mod = _sizeOscillator.getValue(now);
         var out = size + mod;
         var bufferDurationMs = u.secToMsec(_buffer.duration);
         if (out > bufferDurationMs) {
@@ -437,6 +457,12 @@ var zsGranulator = (function (u) {
         if (position > bDuration) {
             var reminder = (position * 100.0) % (bDuration * 100.0) / 100.0;
             position = reminder;
+        }
+        if (position < 0.0) {
+            var positionAbs = Math.abs(position);
+            var reminder = (positionAbs * 100.0) % (bDuration * 100.0) / 100.0;            
+            var margin = config.grain.sizeMs/1000;
+            position = bDuration - reminder - margin;
         }
         if (position < 0.0 || position > bDuration) {
             position = 0.0;
@@ -547,6 +573,20 @@ var zsGranulator = (function (u) {
 
         _buffer = audioBuffer;
     }
+    function _setMaxGain(level) {
+        if (_isNull(level)) {
+            return;
+        }
+        var g = level;
+        if (u.isString(g)) {
+            g = u.toFloat(g);
+        }
+        if (!u.isNumeric(g)) {
+            _logError("_setMaxGain: Invalid gain level: " + g);
+            return;
+        }
+        _maxGain = g;
+    }
     function _setMasterGain(level, timeMs) {
         if (!_audioCtx || !_masterGain) {
             _logError("setMasterGain: invalid context of master gain");
@@ -569,21 +609,24 @@ var zsGranulator = (function (u) {
         } else if (g > 1.0) {
             g = 1.0;
         }
+        if (g > _maxGain) {
+            g = _maxGain;
+        }
 
         var currentConfig = config.masterGainVal;
         var currentValue = _masterGain.gain.value;
-        if(currentConfig !== g) {
+        if (currentConfig !== g) {
             config.masterGainVal = g;
         }
-        if(currentValue === g) {
+        if (currentValue === g) {
             return;
         }
 
         if (!_isNull(timeMs) && u.isNumeric(timeMs)) {
             var timeSec = u.msecToSec(timeMs);
-            var now = _getNow(); 
+            var now = _getNow();
             var t = _audioCtx.currentTime + timeSec;
-            // _log("setMasterGain: " + g + " timeSec: " + timeSec + " actualTime: " + t + " now: " + now);
+            _log("setMasterGain: " + g + " timeSec: " + timeSec + " actualTime: " + t + " now: " + now);
             _masterGain.gain.linearRampToValueAtTime(g, t);
         } else {
             // _log("setMasterGain: " + g);
@@ -591,7 +634,7 @@ var zsGranulator = (function (u) {
         }
     }
     function _getNow() {
-        if(_isNull(_audioCtx)) {
+        if (_isNull(_audioCtx)) {
             return 0;
         }
         return _audioCtx.currentTime;
@@ -648,7 +691,6 @@ var zsGranulator = (function (u) {
         var ramp = u.createRampLinear(configParamName, rampEndValue, rampDurationMs, now, currentValue);
         _actions.push(ramp);
     }
-
     function _addRampSinAction(configParamName, rampAmplitude, rampFrequency, rampDurationMs) {
         if (!u.isString(configParamName) || !u.isNumeric(rampAmplitude) || !u.isNumeric(rampFrequency) || !u.isNumeric(rampDurationMs)) {
             _logError("addRampSinAction: Invalid input parameters: configParamName : " + configParamName + " rampAmplitude: " + rampAmplitude + " rampFrequency: " + rampFrequency + " rampDurationMs: " + rampDurationMs);
@@ -780,6 +822,9 @@ var zsGranulator = (function (u) {
         setGain: function (level, timeMs) {
             _setMasterGain(level, timeMs);
         },
+        setMaxGain: function (level) {
+            _setMaxGain(level);
+        },
         setBuffer: function (audioBuffer) {
             _setAudioBuffer(audioBuffer);
         },
@@ -806,6 +851,9 @@ var zsGranulator = (function (u) {
         },
         isReady: function () {
             return _getReady();
+        },
+        isPlaying: function () {
+            return _isPlaying;
         },
     }
 }(zsUtil));

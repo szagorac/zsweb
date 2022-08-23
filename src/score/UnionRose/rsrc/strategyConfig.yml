@@ -1,5 +1,6 @@
 scoreName: "Test Score"
 rndStrategy:
+  isActive: true
   pageRanges:
     - range: { start: 1, end: 8 }
       isRndActive: false

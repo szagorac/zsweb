@@ -3,36 +3,106 @@
         ZScore Web Client
     </description>
 
-    <property name="src" location="src"/>
-    <property name="dist" location="dist"/>
+    <property name="srcDir" location="src"/>
+<!--    <property name="prod" location="prod"/>-->
+    <property name="distDir" location="webroot"/>
 
-    <fileset id="distFileSet" dir="${src}" casesensitive="yes">
-        <include name="index.html"/>
-        <include name="test.html"/>
+    <fileset id="distSrcFileSet" dir="${srcDir}" casesensitive="yes">
+        <include name="audio/*.wav"/>
         <include name="audio/*.mp3"/>
-        <include name="css/zscore.css"/>
+        <include name = "js/**/*.min.js"/>
+        <include name = "css/**/*.min.css"/>
         <include name="img/*.*"/>
-        <include name="js/audio/*.js"/>
-        <include name="js/gsap/minified/gsap.min*"/>
-        <include name="js/net/zsNet.js"/>
-        <include name="js/svg/zsSvg.js"/>
-        <include name="js/util/zsUtil.js"/>
-        <include name="js/zscore.js"/>
+        <include name="score/**/*.*"/>
+        <include name="*.json"/>
+        <include name="*.html"/>
     </fileset>
 
     <target name="init">
-        <mkdir dir="${dist}"/>
+        <mkdir dir="${distDir}"/>
     </target>
 
     <target name="dist" depends="init" description="generate the distribution">
-        <copy todir="${dist}" overwrite="true">
-            <fileset refid="distFileSet"/>
+        <copy todir="${distDir}" overwrite="true">
+            <fileset refid="distSrcFileSet"/>
         </copy>
     </target>
 
-    <target name="clean" description="clean up">
-        <delete dir="${dist}"/>
+    <target name="deploy" depends="dist" description="replace prod lib names">
+        <!--Scores-->
+        <replace dir="${distDir}" token="zscoreWeb.js" value="zscoreWeb.min.js">
+            <include name="**/*.html"/>
+        </replace>
+        <replace dir="${distDir}" token="zscoreWebDialogs.js" value="zscoreWebDialogs.min.js">
+            <include name="**/*.html"/>
+        </replace>
+
+        <!--Audience Scores-->
+        <replace dir="${distDir}" token="adncUnionRose.js" value="adncUnionRose.min.js">
+            <include name="**/*.html"/>
+        </replace>
+        <replace dir="${distDir}" token="adncDialogs.js" value="adncDialogs.min.js">
+            <include name="**/*.html"/>
+        </replace>
+
+        <!--Libs-->
+        <replace dir="${distDir}" token="zsUtil.js" value="zsUtil.min.js">
+            <include name="**/*.html"/>
+        </replace>
+        <replace dir="${distDir}" token="zsSvg.js" value="zsSvg.min.js">
+            <include name="**/*.html"/>
+        </replace>
+        <replace dir="${distDir}" token="zsNet.js" value="zsNet.min.js">
+            <include name="**/*.html"/>
+        </replace>
+
+        <replace dir="${distDir}" token="zsAudio.js" value="zsAudio.min.js">
+            <include name="**/*.html"/>
+        </replace>
+        <replace dir="${distDir}" token="zsWsAudio.js" value="zsWsAudio.min.js">
+            <include name="**/*.html"/>
+        </replace>
+        <replace dir="${distDir}" token="zsBeep.js" value="zsBeep.min.js">
+            <include name="**/*.html"/>
+        </replace>
+        <replace dir="${distDir}" token="zsSpeech.js" value="zsSpeech.min.js">
+            <include name="**/*.html"/>
+        </replace>
+        <replace dir="${distDir}" token="zsGranulator.js" value="zsGranulator.min.js">
+            <include name="**/*.html"/>
+        </replace>
+        <replace dir="${distDir}" token="zsPlayer.js" value="zsPlayer.min.js">
+            <include name="**/*.html"/>
+        </replace>
+        <replace dir="${distDir}" token="zsSynth.js" value="zsSynth.min.js">
+            <include name="**/*.html"/>
+        </replace>
+        <replace dir="${distDir}" token="zsNoise.js" value="zsNoise.min.js">
+            <include name="**/*.html"/>
+        </replace>
+
+        <replace dir="${distDir}" token="zsMusic.js" value="zsMusic.min.js">
+            <include name="**/*.html"/>
+        </replace>
+        <replace dir="${distDir}" token="metronomeworker.js" value="metronomeworker.min.js">
+            <include name="**/*.html"/>
+        </replace>
+        <replace dir="${distDir}" token="metronome.js" value="metronome.min.js">
+            <include name="**/*.html"/>
+        </replace>
+
+        <!--css-->
+        <replace dir="${distDir}" token="zscore.css" value="zscore.min.css">
+            <include name="**/*.html"/>
+        </replace>
+        <replace dir="${distDir}" token="zscoreWeb.css" value="zscoreWeb.min.css">
+            <include name="**/*.html"/>
+        </replace>
     </target>
 
-    <target name="main" depends="clean, dist"/>
+    <target name="clean" description="clean up">
+        <delete dir="${distDir}"/>
+    </target>
+
+    <target name="main" depends="clean, dist, deploy"/>
 </project>

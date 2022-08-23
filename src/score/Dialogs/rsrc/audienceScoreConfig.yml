@@ -1,0 +1,289 @@
+scoreName: "Dialogs"
+presets:
+  - id: -2
+    config:
+      - granulator: {
+        masterGainVal: 0.5,
+        playDurationSec: 30.0,
+        playStartOffsetSec: 0.0,
+        maxGrains: 12,
+        bufferPositionPlayRate: 0.2,
+        audioStopToleranceMs: 5,
+        isUsePositionOscillator: true,
+        isUseSizeOscillator: true,
+        isUsePositionFrequencyMod: true,
+        isUsePositionRangeMod: true,
+        panner: { isUsePanner: false, panningModel: "equalpower", distanceModel: "linear", maxPanAngle: 45 },
+        envelope: { attackTime: 0.5, decayTime: 0.0, sustainTime: 0.0, releaseTime: 0.5, sustainLevel: 1.0 },
+        grain: { sizeMs: 100, pitchRate: 0.3, maxPositionOffsetRangeMs: 100, maxPitchRateRange: 0.1, timeOffsetStepMs: 50 },
+        positionOscillator: { minValue: 1000.0, maxValue: 7000.0, type: "TRIANGLE", frequency: 0.2,
+                              frequencyLFO: { minValue: -0.19, maxValue: 0.5, type: "TRIANGLE", frequency: 0.05 },
+                              startLFO: { minValue: -500.0, maxValue: 500.0, type: "TRIANGLE", frequency: 0.1 },
+                              endLFO: { minValue: -1000.0, maxValue: 500.0, type: "TRIANGLE", frequency: 0.1 } },
+        sizeOscillator: { minValue: -50.0, maxValue: 2000.0, type: "TRIANGLE", frequency: 0.5 },
+      }
+      - speechSynth: {
+        volume: 1.0,
+        pitch: 1.0,
+        rate: 0.7,
+        lang: "en-GB",
+        maxVoiceLoadAttempts: 10,
+        maxUtterances: 5,
+        utteranceTimeoutSec: 30,
+        isInterrupt: false,
+        interruptTimeout: 250,
+      }
+  - id: -1
+    scripts: [
+        "webScore.setInstructions('','','', false);"
+    ]
+  - id: 0
+    scripts: [
+        "webScore.setInstructions('Get ready','Turn up the volume!','');"
+    ]
+  - id: 1
+    scripts: [
+        "webScore.resetState();",
+        "webScore.setInstructions('Preparing for the next','<span style=\\'color:blueviolet;\\'>Dialogue</span>', '');"
+    ]
+  - id: 2
+    scripts: [
+        "webScore.reset(1);",
+        "webScore.reset(1002);",
+        "webScore.setSection('pitch');",
+        "webScore.activateViews('meter');",
+        "webScore.deactivateViews('notes','audio','thumbs','vote');",
+    ]
+  - id: 3
+    scripts: [
+        "webScore.reset(1);",
+        "webScore.reset(1003);",
+        "webScore.setSection('rhythm');",
+        "webScore.activateViews('meter');",
+        "webScore.deactivateViews('notes','audio','thumbs','vote');",
+    ]
+  - id: 4
+    scripts: [
+        "webScore.reset(1);",
+        "webScore.reset(1004);",
+        "webScore.setSection('melody');",
+        "webScore.activateViews('meter');",
+        "webScore.deactivateViews('notes','audio','thumbs','vote');",
+    ]
+  - id: 5
+    scripts: [
+        "webScore.reset(1);",
+        "webScore.reset(1005);",
+        "webScore.setSection('timbre');",
+        "webScore.activateViews('meter');",
+        "webScore.deactivateViews('notes','audio','thumbs','vote');",
+    ]
+  - id: 6
+    scripts: [
+        "webScore.reset(1);",
+        "webScore.reset(1006);",
+        "webScore.setSection('impro');",
+        "webScore.activateViews('meter');",
+        "webScore.deactivateViews('notes','audio','thumbs','vote');",
+    ]
+  - id: 1002
+    config:
+      - player: {
+        audioFiles: [
+            "/audio/DialogsPitch1-1.mp3",
+            "/audio/DialogsPitch1-2.mp3",
+            "/audio/DialogsPitch1-3.mp3",
+            "/audio/DialogsPitch2-1.mp3",
+            "/audio/DialogsPitch2-2.mp3",
+            "/audio/DialogsPitch2-3.mp3",
+            "/audio/DialogsPitch3-1.mp3",
+            "/audio/DialogsPitch3-2.mp3",
+            "/audio/DialogsPitch3-3.mp3"
+        ],
+        audioFilesIndexMap:  [
+          [],
+          [0, 1, 2],
+          [3, 4, 5],
+          [6, 7, 8]
+        ],
+      }
+      - synth: { bpm: 80,
+                 durMultiplier: 8.0,
+                 freqMultiplier: 1.0,
+                 osc1Freq: [ 783.99, 946.36, 1108.73 ],
+                 osc2Freq: [ 392.00, 473.19, 554.37 ],
+                 osc3Freq: [ 392.00, 554.37, 783.99, 1108.73, 1567.98, 2217.46, 3135.96, 4434.92, 6271.93, 8869.84 ]
+      }
+  - id: 1003
+    config:
+      - player: {
+        audioFiles: [
+            "/audio/DialogsRhythm2-1.wav",
+            "/audio/DialogsRhythm2-2.wav",
+            "/audio/DialogsRhythm3-1.wav",
+            "/audio/DialogsRhythm3-2.wav",
+            "/audio/DialogsRhythm4-1.wav",
+            "/audio/DialogsRhythm4-2.wav",
+            "/audio/DialogsRhythm5-1.wav",
+            "/audio/DialogsRhythm5-2.wav",
+            "/audio/DialogsRhythm6-1.wav",
+            "/audio/DialogsRhythm6-2.wav",
+            "/audio/DialogsRhythm7-1.wav",
+            "/audio/DialogsRhythm7-2.wav",
+            "/audio/DialogsRhythm8-1.wav",
+            "/audio/DialogsRhythm8-2.wav",
+            "/audio/DialogsRhythm9-1.wav",
+            "/audio/DialogsRhythm9-2.wav",
+            "/audio/DialogsRhythm10-1.wav",
+            "/audio/DialogsRhythm10-2.wav",
+            "/audio/DialogsRhythm11-1.wav",
+            "/audio/DialogsRhythm11-2.wav",
+        ],
+        audioFilesIndexMap:  [
+          [],
+          [0,1],
+          [2,3],
+          [4,5],
+          [6,7],
+          [8,9],
+          [10,11],
+          [12,13],
+          [14,15],
+          [16,17],
+          [18,19],
+        ],
+      }
+      - synth: { bpm: 100,
+                 durMultiplier: 8.0,
+                 freqMultiplier: 1.0,
+                 osc1Freq: [ 523.25, 631.62, 739.99 ],
+                 osc2Freq: [ 261.63, 315.81, 369.99 ],
+                 osc3Freq: [ 261.63, 369.99, 523.25, 739.99, 1046.5, 1479.98, 2093.0, 2959.96, 4186.01, 5919.91 ]
+      }
+  - id: 1004
+    config:
+      - player: {
+        audioFiles: [
+            "/audio/DialogsMelody2-1.wav",
+            "/audio/DialogsMelody2-2.wav",
+            "/audio/DialogsMelody3-1.wav",
+            "/audio/DialogsMelody3-2.wav",
+            "/audio/DialogsMelody4-1.wav",
+            "/audio/DialogsMelody4-2.wav",
+            "/audio/DialogsMelody5-1.wav",
+            "/audio/DialogsMelody5-2.wav",
+            "/audio/DialogsMelody6-1.wav",
+            "/audio/DialogsMelody6-2.wav",
+            "/audio/DialogsMelody7-1.wav",
+            "/audio/DialogsMelody7-2.wav",
+            "/audio/DialogsMelody9-1.wav",
+            "/audio/DialogsMelody9-2.wav",
+            "/audio/DialogsMelody11-1.wav",
+            "/audio/DialogsMelody11-2.wav",
+            "/audio/DialogsMelody12-1.wav",
+            "/audio/DialogsMelody12-2.wav",
+        ],
+        audioFilesIndexMap:  [
+          [],
+          [0,1],
+          [2,3],
+          [4,5],
+          [6,7],
+          [8,9],
+          [10,11],
+          [],
+          [12,13],
+          [],
+          [14,15],
+          [16,17],
+        ],
+      }
+      - synth: { bpm: 80,
+                 durMultiplier: 8.0,
+                 freqMultiplier: 1.0,
+                 osc1Freq: [ 622.25, 622.25, 880.00 ],
+                 osc2Freq: [ 311.13, 375.57, 440.00 ],
+                 osc3Freq: [ 311.13, 440.00, 622.25, 880.00, 1244.51, 1760.00, 2489.02, 3520.00, 4978.03, 7040.00 ]
+      }
+  - id: 1005
+    config:
+      - player: {
+        audioFiles: [
+            "/audio/DialogsTimbre2-1.wav",
+            "/audio/DialogsTimbre2-2.wav",
+            "/audio/DialogsTimbre3-1.wav",
+            "/audio/DialogsTimbre3-2.wav",
+            "/audio/DialogsTimbre4-1.wav",
+            "/audio/DialogsTimbre4-2.wav",
+            "/audio/DialogsTimbre5-1.wav",
+            "/audio/DialogsTimbre5-2.wav",
+            "/audio/DialogsTimbre6-1.wav",
+            "/audio/DialogsTimbre6-2.wav",
+            "/audio/DialogsTimbre7-1.wav",
+            "/audio/DialogsTimbre7-2.wav",
+            "/audio/DialogsTimbre9-1.wav",
+            "/audio/DialogsTimbre9-2.wav",
+            "/audio/DialogsTimbre10-1.wav",
+            "/audio/DialogsTimbre10-2.wav",
+            "/audio/DialogsTimbre11-1.wav",
+            "/audio/DialogsTimbre12-1.wav",
+            "/audio/DialogsTimbre12-2.wav",
+        ],
+        audioFilesIndexMap:  [
+          [],
+          [ 0,1 ],
+          [ 2,3 ],
+          [ 4,5 ],
+          [ 6,7 ],
+          [ 8,9 ],
+          [ 10,11 ],
+          [ 6,7 ],
+          [ 12,13 ],
+          [ 14,15 ],
+          [ 16,1 ],
+          [ 17,18 ],
+        ],
+      }
+      - synth: { bpm: 60,
+                 durMultiplier: 8.0,
+                 freqMultiplier: 1.0,
+                 osc1Freq: [ 739.99, 893.25, 1046.50 ],
+                 osc2Freq: [ 369.99, 446.62, 523.25 ],
+                 osc3Freq: [ 369.99, 523.25, 739.99, 1046.5, 1479.98, 2093.0, 2959.96, 4186.01, 5919.91, 8372.02 ]
+      }
+  - id: 1006
+    config:
+      - player: {
+        audioFiles: [
+            "/audio/DialogsImpro1-1.wav",
+            "/audio/DialogsImpro2-1.wav",
+            "/audio/DialogsImpro2-2.wav",
+            "/audio/DialogsImpro2-3.wav",
+            "/audio/DialogsImpro3-1.wav",
+            "/audio/DialogsImpro3-2.wav",
+            "/audio/DialogsImpro4-1.wav",
+            "/audio/DialogsImpro4-2.wav",
+            "/audio/DialogsImpro5-1.wav",
+            "/audio/DialogsImpro5-2.wav",
+            "/audio/DialogsImpro6-1.wav",
+            "/audio/DialogsImpro6-2.wav",
+        ],
+        audioFilesIndexMap:  [
+          [],
+          [ 0,1,2 ],
+          [ 0,1 ],
+          [ 0,2 ],
+          [ 0,3 ],
+          [ 4,5 ],
+          [ 6,7 ],
+          [ 8,9 ],
+          [ 10,11 ],
+        ],
+      }
+      - synth: { bpm: 60,
+                 durMultiplier: 8.0,
+                 freqMultiplier: 1.0,
+                 osc1Freq: [ 466.16, 562.705, 659.25 ],
+                 osc2Freq: [ 233.08, 281.355, 329.63 ],
+                 osc3Freq: [ 233.08, 329.63, 466.16, 659.25, 932.33, 1318.51, 1864.66, 2637.02, 3729.31, 5274.04 ]
+      }
