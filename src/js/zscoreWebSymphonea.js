@@ -86,6 +86,7 @@ var zscore = (function (u, n, s, a, m, win, doc) {
 
     const STRATEGY_BUILDER = "BUILDER";
     const STRATEGY_RND = "RND";
+    const STRATEGY_DYNAMIC = "DYNAMIC";
 
     var isTouch = null;
     var isSafari = null;
@@ -1333,9 +1334,14 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             case STRATEGY_RND:
                 processRndStrategy(strategy);
                 break;
+            case STRATEGY_DYNAMIC:
+                processDynamicMovementStrategy(strategy);
+                break;
             default:
                 logError("processStrategies: Unknown strategy: " + strategyName);
         }
+    }
+    function processDynamicMovementStrategy(strategy) {
     }
     function processBuidlerStrategy(strategy) {
         var isReady = false;
