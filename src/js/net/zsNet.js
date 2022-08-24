@@ -668,7 +668,7 @@ var zsNet = (function (u, win) {
                     logError("Unknown server response type: " + type);    
             }
         } catch (error) {
-            logError("_processResponse: failed to process type: " + type + " message: " + message);
+            logError("_processResponse: failed to process type: " + type + " message: " + message + " error: " + error + " error.message: " + error.message);
         }
     }
     function _processError(error) {

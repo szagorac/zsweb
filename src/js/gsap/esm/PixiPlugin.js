@@ -1,8 +1,8 @@
 /*!
- * PixiPlugin 3.2.6
+ * PixiPlugin 3.10.4
  * https://greensock.com
  *
- * @license Copyright 2008-2020, GreenSock. All rights reserved.
+ * @license Copyright 2008-2022, GreenSock. All rights reserved.
  * Subject to the terms at https://greensock.com/standard-license or for
  * Club GreenSock members, the agreement issued with that membership.
  * @author: Jack Doyle, jack@greensock.com
@@ -16,6 +16,7 @@ var gsap,
     _PIXI,
     PropTween,
     _getSetter,
+    _isV4,
     _windowExists = function _windowExists() {
   return typeof window !== "undefined";
 },
@@ -80,10 +81,7 @@ var gsap,
       filters = target.filters || [],
       i = filters.length,
       filter;
-
-  if (!filterClass) {
-    _warn(type + " not found. PixiPlugin.registerPIXI(PIXI)");
-  }
+  filterClass || _warn(type + " not found. PixiPlugin.registerPIXI(PIXI)");
 
   while (--i > -1) {
     if (filters[i] instanceof filterClass) {
@@ -349,9 +347,14 @@ var gsap,
     _initCore = function _initCore() {
   if (_windowExists()) {
     _win = window;
-    gsap = _coreInitted = _getGSAP();
-    _PIXI = _PIXI || _win.PIXI;
-    _splitColor = gsap.utils.splitColor;
+    gsap = _getGSAP();
+    _PIXI = _coreInitted = _PIXI || _win.PIXI;
+    _isV4 = _PIXI && _PIXI.VERSION && _PIXI.VERSION.charAt(0) === "4";
+
+    _splitColor = function _splitColor(color) {
+      return gsap.utils.splitColor((color + "").substr(0, 2) === "0x" ? "#" + color.substr(2) : color);
+    }; // some colors in PIXI are reported as "0xFF4421" instead of "#FF4421".
+
   }
 },
     i,
@@ -365,7 +368,7 @@ for (i = 0; i < _xyContexts.length; i++) {
 }
 
 export var PixiPlugin = {
-  version: "3.2.6",
+  version: "3.10.4",
   name: "pixi",
   register: function register(core, Plugin, propTween) {
     gsap = core;
@@ -378,24 +381,14 @@ export var PixiPlugin = {
     _PIXI = pixi;
   },
   init: function init(target, values, tween, index, targets) {
-    if (!_PIXI) {
-      _initCore();
-    }
+    _PIXI || _initCore();
 
-    if (!target instanceof _PIXI.DisplayObject) {
+    if (!_PIXI || !(target instanceof _PIXI.DisplayObject)) {
+      console.warn(target, "is not a DisplayObject or PIXI was not found. PixiPlugin.registerPIXI(PIXI);");
       return false;
     }
 
-    var isV4 = _PIXI.VERSION.charAt(0) === "4",
-        context,
-        axis,
-        value,
-        colorMatrix,
-        filter,
-        p,
-        padding,
-        i,
-        data;
+    var context, axis, value, colorMatrix, filter, p, padding, i, data;
 
     for (p in values) {
       context = _contexts[p];
@@ -438,7 +431,7 @@ export var PixiPlugin = {
           i = data.length;
 
           while (--i > -1) {
-            _addColorTween(isV4 ? data[i] : data[i][p.substr(0, 4) + "Style"], isV4 ? p : "color", value, this);
+            _addColorTween(_isV4 ? data[i] : data[i][p.substr(0, 4) + "Style"], _isV4 ? p : "color", value, this);
           }
         } else {
           _addColorTween(target, p, value, this);
@@ -448,7 +441,7 @@ export var PixiPlugin = {
         this.add(target, "alpha", target.alpha, value);
 
         this._props.push("alpha", "visible");
-      } else {
+      } else if (p !== "resolution") {
         this.add(target, p, "get", value);
       }
 

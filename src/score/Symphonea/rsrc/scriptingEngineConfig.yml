@@ -1,0 +1,6 @@
+scoreName: "Symphonea"
+presets:
+  - id: 1
+    scripts: [
+        "sce.resetState()",
+    ]

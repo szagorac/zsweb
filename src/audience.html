@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>ZScore</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="img/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16x16.png">
+    <link rel="manifest" href="img/manifest.json">
+    <link rel="shortcut icon" href="img/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="img/favicon.ico" type="image/x-icon">
+    <style>
+        body {
+            background-color: #545353;
+            color: azure;
+            font-size: 1.0em;
+            text-align: center;
+        }
+
+        h1 {
+            color: #d1d2d4;
+            font-size: 2.5em;
+        }
+
+        #intro {
+            font-size: 1.3em;
+        }
+
+        .top-3cm-spacer {
+            margin-top: 3cm;
+        }
+    </style>
+    <script type="text/javascript">
+        var redirectPage = "adncUnionRose.html" 
+        window.location = redirectPage;
+
+        function displayContent(){
+            var p = document.createElement('p');
+            var a = document.createElement('a');
+            var linkText = document.createTextNode("Enter the show");
+            var welcomeText = document.createTextNode("Welcome, ");
+            p.appendChild(welcomeText);
+            a.appendChild(linkText);
+            a.title = "Enter";
+            a.href = "adncUnionRose.html";
+            p.appendChild(a);
+            document.body.appendChild(p);
+        }
+        function log(val){
+            console.log(val);
+        }
+    </script>
+
+</head>
+
+<body>
+    <h1 class="top-3cm-spacer">Welcome to ZScore</h1>
+    <p id="intro">Landing Page</p>
+    
+    <noscript>
+        <h2>JavaScript-enabled browser is required</h2>
+        Unfortunately, you will not be able to participate in the performance.
+    </noscript>
+    <!-- <script type="text/javascript">
+        log("Javascript supported!!");
+        // displayContent();
+    </script> -->
+</body>
+
+</html>

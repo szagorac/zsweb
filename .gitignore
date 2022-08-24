@@ -28,6 +28,7 @@ hs_err_pid*
 target/
 .history/
 dist/
+webroot/
 .DS_Store
 .vscode/
 *.code-workspace

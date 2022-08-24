@@ -1,20 +1,21 @@
-var zsAudio = (function (u, gr, sp, win) {
+var zsAudio = (function (u, gr, sp, pl, nz, syn, win) {
     "use strict";
 
     //static members
     const LOG_ID = "zsAudio: ";
     const CTX_MAX_RETRY_COUNT = 3;
-    const OSCILATOR_TYPES = ['SAWTOOTH','SINE','SQUARE','TRIANGLE','RANDOM'];
+    const OSCILATOR_TYPES = ['SAWTOOTH', 'SINE', 'SQUARE', 'TRIANGLE', 'RANDOM'];
 
     // private vars
     var _ctx = null;
     var _isAudioInitialised = false;
     var _audioCtxRetryCount = 1;
     var _audioBuffers = null;
-    var _granulatorFileIndex = 0;
+    var _masterVolume = 1.0;
     var _audioFilesToLoad = [
         '/audio/violin-tuning.mp3',
     ];
+    var _onLoadedCallback = null;
 
     //Class defs
     function ZsAudioException(msg) {
@@ -34,6 +35,7 @@ var zsAudio = (function (u, gr, sp, win) {
         request.open("GET", url, true);
         request.responseType = "arraybuffer";
         var loader = this;
+        log("loading file: " + url);
 
         request.onload = function () {
             loader.context.decodeAudioData(
@@ -66,8 +68,8 @@ var zsAudio = (function (u, gr, sp, win) {
     // ----- AudioBufferLoader  END
 
     //Private functions
-    function _initAudio(audioFilesToLoad, granulatorFileIndex) {
-        if (!u || !gr || ! sp) {
+    function _initAudio(audioFilesToLoad, onLoadedCallback) {
+        if (!u || !gr || !sp || !pl) {
             throw new ZsAudioException("Invalid libraries. Required: zsUtil, zsGranulator and zsSpeech");
         }
 
@@ -78,7 +80,12 @@ var zsAudio = (function (u, gr, sp, win) {
                 _ctx = new AudioContext();
                 log("initAudio:  created audio context");
             }
-
+            if (u.isNotNull(onLoadedCallback)) {
+                _onLoadedCallback = onLoadedCallback;
+            }
+            if (u.isNotNull(_audioFilesToLoad)) {
+                _audioFilesToLoad = audioFilesToLoad;
+            }            
             if (_ctx.state === 'suspended') {
                 log("initAudio: Context suspended, resuming context : " + _ctx.state);
                 if (_audioCtxRetryCount >= CTX_MAX_RETRY_COUNT) {
@@ -97,44 +104,99 @@ var zsAudio = (function (u, gr, sp, win) {
                 if (win.hasOwnProperty('speechSynthesis')) {
                     win.speechSynthesis.getVoices();
                 }
-
                 _audioCtxRetryCount++;
                 setTimeout(function () {
-                    _initAudio(audioFilesToLoad, granulatorFileIndex);
+                    _initAudioRetry();
                 }, 1000);
                 return;
             }
-
-            log("initAudio: AudioContext state: " + _ctx.state);
-            _initSpeech();
-
-            if (u.isArray(audioFilesToLoad)) {
-                _audioFilesToLoad = audioFilesToLoad;
-            } else {
-                logError("Invalid audio files to load array");
-            }
-
-            if (granulatorFileIndex < 0 || granulatorFileIndex >= _audioFilesToLoad.length) {
-                logError("Invalid granulator file index: " + granulatorFileIndex);
-            } else {
-                _granulatorFileIndex = granulatorFileIndex;
-            }
-
-            var bufferLoader = new AudioBufferLoader(
-                _ctx, _audioFilesToLoad, _onAudioLoaded
-            );
-
-            bufferLoader.load();
+            _loadAudioBuffers(audioFilesToLoad);
         } catch (e) {
             _isAudioInitialised = false;
             logError('Web Audio API is not supported in this browser');
         }
     }
+    function _initAudioRetry() {
+        log("_initAudioRetry: ");
+        if(_isAudioInitialised) {
+            log("_initAudioRetry: Audio has been initialised, ignnoring retry...");
+            return;
+        }
+        _initAudio(_audioFilesToLoad, _onLoadedCallback);
+    }
+    function _loadAudioBuffers(audioFilesToLoad) {
+        log("_initAudioBuffers: AudioContext state: " + _ctx.state);
+        if (_ctx.state !== 'running') {
+            log("_initAudioBuffers: ignoring call. Invalid AudioContext state: " + _ctx.state);
+            return;
+        }
+        if (u.isArray(audioFilesToLoad)) {
+            _audioFilesToLoad = audioFilesToLoad;
+        }
+        if (!u.isArray(_audioFilesToLoad)) {
+            logError("Invalid audio files to load array, ignoring load");
+            return;
+        }
+        _isAudioInitialised = false;
+        var bufferLoader = new AudioBufferLoader(
+            _ctx, _audioFilesToLoad, _onAudioLoaded
+        );
+        bufferLoader.load();
+    }
     function _onAudioLoaded(bufferList) {
         _audioBuffers = bufferList;
 
-        _initGranulator(_granulatorFileIndex);
+        if (u.isNotNull(_onLoadedCallback)) {
+            _onLoadedCallback();
+        } else {
+            _initSpeech();
+            _initPlayer();
+            _initGranulator(0);
+            _initNoise();
+        }
         _isAudioInitialised = true;
+
+        // _playAudioBuffer(0);
+        // _playNoise(0.5);
+        // setTimeout(function () {
+        //     _playNoise(0.2);
+        // }, 3000);
+        // setTimeout(function () {
+        //     _playNoise(0.0);
+        // }, 4000);
+        // setTimeout(function () {
+        //     _stopNoise();
+        // }, 5000);
+        // pl.play(1);
+        // _playGranulator();
+        // var text = "This is a very long text."
+        // var timerId = setInterval(function () {
+        //     sp.speak(text, "random", true);
+        // }, 2000);
+
+        // setTimeout(function () {
+        //     _setMasterVolume(0.1, 2000);
+        // }, 2000);
+
+        // setTimeout(function () {
+        //     _setMasterVolume(1.0, 2000);
+        // }, 6000);
+
+        // setTimeout(function () {
+        //     _stopGranulator();
+        //     clearInterval(timerId);
+        //     pl.stop();
+        // }, 10000);
+        // pl.play(1);
+        // setTimeout(function () {
+        //     pl.setGain(0.1, 900, 1);
+        // }, 1000);
+        // setTimeout(function () {
+        //     pl.setGain(1.0, 5000, 1);
+        // }, 4000);
+        // setTimeout(function () {
+        //     pl.stop();
+        // }, 1000);
         //TODO remove
         // setGranulatorGain(0.4);        
         // setTimeout(function () {
@@ -170,79 +232,51 @@ var zsAudio = (function (u, gr, sp, win) {
     //     }, 100);
     // }
     function _getCurrentTime() {
-        if(isNull(_ctx)) {
+        if (isNull(_ctx)) {
             return 0;
         }
         return _ctx.currentTime;
     }
-    function _createBufferAudioSource(buffer) {
-        if (!buffer) {
-            logError("createBufferAudioSource: invalid audio buffer");
-            return null;
-        }
-        if (!_ctx) {
-            logError("createBufferAudioSource: Audio context is not initialised!!");
-            return null;
-        }
-
-        var audioSource = _ctx.createBufferSource();
-        audioSource.buffer = buffer;
-
-        audioSource.connect(_ctx.destination);
-        return audioSource;
-    }
-    function _playAudioBuffer(bufferIndex, startTime, offset, duration) {
-
-        if (bufferIndex < 0 || bufferIndex > _audioBuffers.length) {
-            logError("playAudioBuffer: Invalid buffer index: " + bufferIndex);
-            return;
-        }
-
-        var buffer = _audioBuffers[bufferIndex];
-        if (!buffer) {
-            log("playAudioBuffer: invalid buffer");
-            return;
-        }
-
-        var audioSourceNode = _createBufferAudioSource(buffer);
-        if (isNull(audioSourceNode)) {
-            logError("playAudioBuffer: invalid audio source");
-            return;
-        }
-        if (!audioSourceNode.start) {
-            audioSourceNode.start = audioSourceNode.noteOn;
-        }
-        if (!startTime) {
-            startTime = _ctx.currentTime;
-        }
-        if (!offset) {
-            offset = 0;
-        }
-        if (!duration) {
-            duration = buffer.duration;
-        }
-
-        audioSourceNode.onended = function (event) {
-            _onPlayComplete(audioSourceNode);
-        }
-
-        audioSourceNode.start(startTime, offset, duration);
-    }
-    function _onPlayComplete(audioSourceNode) {
-        log("onPlayComplete: ");
-        _stopAudioSource(audioSourceNode);
-    }
-    function _stopAudioSource(audioSourceNode) {
-        log("stopAudioSource: time:" + _ctx.currentTime);
-        if (!audioSourceNode) {
-            return;
-        }
-        audioSourceNode.disconnect();
-        audioSourceNode = null;
-    }
     function _resetAudio() {
         // _resetGranulator();
     }
+    function _setMasterVolume(level, timeMs) {
+        if (!_ctx) {
+            logError("_setMasterVolume: invalid context");
+            return;
+        }
+        if (u.isString(level)) {
+            level = u.toFloat(level);
+        }
+
+        var g = _masterVolume;
+        if (u.isNumeric(level)) {
+            g = level;
+        } else {
+            logError("_setMasterVolume: Invalid gain level: " + level);
+            return;
+        }
+        if (g < 0.0) {
+            g = 0.0;
+        } else if (g > 1.0) {
+            g = 1.0;
+        }
+        _masterVolume = g;
+        _setComponentVolume(_masterVolume, timeMs)
+    }
+    function _setComponentVolume(maxLevel, timeMs) {
+        _setPlayerMaxVolume(maxLevel);
+        _setPlayerVolume(maxLevel, timeMs);
+        _setGranulatorMaxVolume(maxLevel);
+        _setGranulatorVolume(maxLevel, timeMs);
+        _setSpeechMaxVolume(maxLevel, timeMs);
+        _setSpeechVolume(maxLevel, timeMs);
+        _setSynthVolume(maxLevel, timeMs);
+    }
+    function _calcBandpassFilterQ( octaves ){
+        return Math.sqrt( Math.pow(2, octaves) ) / ( Math.pow(2, octaves) - 1 )
+    }
+
     //speech
     function _initSpeech() {
         if (isNull(sp)) {
@@ -253,11 +287,60 @@ var zsAudio = (function (u, gr, sp, win) {
 
         sp.init();
     }
+    function _setSpeechVolume(level, timeMs) {
+        sp.setVolume(level);
+    }
+    function _setSpeechMaxVolume(level, timeMs) {
+        sp.setMaxVolume(level);
+    }
+    //speech END
+
+    //player
+    function _initPlayer() {
+        if (isNull(pl)) {
+            logError("_playAudioBuffer: Invalid player");
+            return;
+        }
+        pl.init(_ctx, _audioBuffers);
+    }
+    function _playAudioBuffer(bufferIndex, startTime, offset, duration) {
+        if (isNull(pl) || !_isAudioInitialised) {
+            logError("_playAudioBuffer: Invalid player");
+            return;
+        }
+        pl.play(bufferIndex, startTime, offset, duration);
+    }
+    function _setPlayerVolume(level, timeMs) {
+        if (isNull(pl) || !_isAudioInitialised) {
+            logError("_setPlayerVolume: Invalid player");
+            return;
+        }
+        pl.setGain(level, timeMs);
+    }
+    function _setPlayerMaxVolume(level) {
+        if (isNull(pl) || !_isAudioInitialised) {
+            logError("_setPlayerMaxVolume: Invalid player");
+            return;
+        }
+        pl.setMaxGain(level);
+    }
+    function _stopPlayer() {
+        if (isNull(pl) || !_isAudioInitialised) {
+            logError("_stopPlayer: Invalid player");
+            return;
+        }
+        pl.stop();
+    }
+    //player END
+
     //granulator
     function _initGranulator(bufferIndex, destination) {
         if (isNull(gr)) {
             logError("initGranulator: Can not initialise zsGranulator");
             gr = null;
+            return;
+        }
+        if(isNull(_audioBuffers)) {
             return;
         }
 
@@ -276,6 +359,17 @@ var zsAudio = (function (u, gr, sp, win) {
 
         gr.init(_ctx, _audioBuffers[bufferIndex], destination);
     }
+    function _setGranulatorMaxVolume(level) {
+        if (isNull(gr)) {
+            logError("setGranulatorRampLinear: Invalid granulator");
+            return;
+        }
+        gr.setMaxGain(level);
+    }
+    function _setGranulatorVolume(level, timeMs) {
+        _setGranulatorRampLinear('masterGainVal', level, timeMs);
+        // _setGranulatorGain(level, timeMs);
+    }
     function _setGranulatorRampLinear(configParamName, rampEndValue, rampDurationMs) {
         if (isNull(gr)) {
             logError("setGranulatorRampLinear: Invalid granulator");
@@ -291,35 +385,53 @@ var zsAudio = (function (u, gr, sp, win) {
         gr.addRampSin(configParamName, rampAmplitude, rampFrequency, rampDurationMs);
     }
     function _setGranulatorGain(level, timeMs) {
-        if (isNull(gr) || !_isAudioInitialised) {
-            logError("setGranulatorGain: Invalid granulator");
-            return;
-        }
-        gr.setGain(level, timeMs);
+        _setGranulatorVolume(level, timeMs);
+        // if (isNull(gr) || !_isAudioInitialised) {
+        //     logError("setGranulatorGain: Invalid granulator");
+        //     return;
+        // }
+        // if (u.isString(level)) {
+        //     level = u.toFloat(level);
+        // }
+        // var g = _masterVolume;
+        // if (u.isNumeric(level) && level <= _masterVolume) {
+        //     g = level;
+        // } else {
+        //     _logError("_setGranulatorGain: Invalid gain level: " + level);
+        //     return;
+        // }
+        // gr.setGain(g, timeMs);
     }
     function _setGranulatorEnvelope(envelopeConfig) {
-        if (isNull(gr) || !_isAudioInitialised) {
+        if (isNull(gr)) {
             logError("setGranulatorEnvelope: Invalid granulator");
             return;
         }
         gr.setGrainEnvelope(envelopeConfig);
     }
+    function _applyGranulatorGainEvelope(envelope, durationSec) {
+        if (isNull(gr)) {
+            logError("_applyGranulatorGainEvelope: Invalid granulator");
+            return;
+        }
+        gr.applyGainEvelope(envelope, durationSec);
+    }
     function _setGranulatorConfig(granulatorConfig) {
-        if (isNull(gr) || !_isAudioInitialised) {
+        if (isNull(gr)) {
             logError("setGranulatorConfig: Invalid granulator");
             return;
         }
         gr.setGranulatorConfig(granulatorConfig);
     }
     function _setGranulatorGrainConfig(grainConfig) {
-        if (isNull(gr) || !_isAudioInitialised) {
+        if (isNull(gr)) {
             logError("setGranulatorGrainConfig: Invalid granulator");
             return;
         }
         gr.setGrainConfig(grainConfig);
     }
     function _setGranulatorPlayDuration(durationSec) {
-        if (isNull(gr) || !_isAudioInitialised) {
+        if (isNull(gr)) {
             logError("setGranulatorPlayDuration: Invalid granulator");
             return;
         }
@@ -340,6 +452,12 @@ var zsAudio = (function (u, gr, sp, win) {
         }
         gr.play();
     }
+    function _isGranulatorPlaying() {
+        if (isNull(gr) || !_isAudioInitialised) {
+            return false;
+        }
+        return gr.isPlaying();
+    }
     function _stopGranulator() {
         if (isNull(gr) || !_isAudioInitialised) {
             logError("stopGranulator: Invalid granulator");
@@ -358,6 +476,71 @@ var zsAudio = (function (u, gr, sp, win) {
         }
         gr.reset();
     }
+    //granulator END
+
+    //noise
+    function _initNoise(destination) {
+        if (!nz) {
+            return;
+        }
+        if (isNull(nz)) {
+            nz = null;
+            return;
+        }
+        if(nz.isReady() || nz.isRunning()) {
+            return;
+        }
+        nz.init(_ctx, destination);
+    }
+    function _playNoise(volume) {
+        nz.play(volume);
+    }
+    function _stopNoise() {
+        nz.stop();
+    }
+    function _setNoiseFilterFreq(freq) {
+        nz.setFilterFreq(freq);
+    }
+    function _setNoiseFilterQ(quality) {
+        nz.setFilterQ(quality);
+    }
+    function _setNoiseFilterDetune(detune) {
+        nz.setFilterDetune(detune);
+    }    
+    function _setNoiseFilterType(type) {
+        nz.setFilterType(type);
+    }
+    //noise END
+
+    //synth
+    function _initSynth(destination) {
+        if (!syn) {
+            return;
+        }
+        if (isNull(syn)) {
+            syn = null;
+            return;
+        }
+
+        syn.init(_ctx, destination);
+    }
+    function _playSynth(freq, durationSec) {
+        syn.play(freq, durationSec);
+    }
+    function _stopSynth() {
+        syn.stop();
+    }
+    function _setSynthFilterFreq(zeroToOne) {
+        syn.setFilterFreq(zeroToOne);
+    }
+    function _setSynthFilterQ(zeroToOne) {
+        syn.setFilterQ(zeroToOne);
+    }
+    function _setSynthVolume(level, timeMs) {
+        syn.setGain(level, timeMs);
+    }
+    //synth END
+
 
     function logError(val) {
         u.logError(val, LOG_ID);
@@ -371,14 +554,38 @@ var zsAudio = (function (u, gr, sp, win) {
 
     // PUBLIC API
     return {
-        init: function (audioFilesToLoadArr, granulatorFileIndex) {
-            _initAudio(audioFilesToLoadArr, granulatorFileIndex);
+        init: function (audioFilesToLoadArr, onLoadedCallback) {
+            _initAudio(audioFilesToLoadArr, onLoadedCallback);
+        },
+        initSpeech: function () {
+            _initSpeech();
+        },
+        initPlayer: function () {
+            _initPlayer();
+        },
+        initGranulator: function (granulatorFileIndex) {
+            _initGranulator(granulatorFileIndex);
+        },
+        initNoise: function () {
+            _initNoise();
+        },
+        initSynth: function () {
+            _initSynth();
+        },
+        setSynthFilterFreq: function (zeroToOne) {
+            _setSynthFilterFreq(zeroToOne);
+        },
+        setSynthFilterQ: function (zeroToOne) {
+            _setSynthFilterQ(zeroToOne);
         },
         isReady: function () {
             return _isAudioInitialised;
         },
         playAudio: function (bufferIndex, startTime, offset, duration) {
             _playAudioBuffer(bufferIndex, startTime, offset, duration);
+        },
+        stopPlayer: function () {
+            return _stopPlayer();
         },
         setGranulatorRampLinear: function (configParamName, rampEndValue, rampDurationMs) {
             _setGranulatorRampLinear(configParamName, rampEndValue, rampDurationMs);
@@ -404,6 +611,9 @@ var zsAudio = (function (u, gr, sp, win) {
         playGranulator: function () {
             _playGranulator();
         },
+        isGranulatorPlaying: function () {
+            return _isGranulatorPlaying();
+        },
         stopGranulator: function () {
             _stopGranulator();
         },
@@ -422,6 +632,33 @@ var zsAudio = (function (u, gr, sp, win) {
         setSpeechConfig: function (params) {
             return sp.setSpeechConfig(params);
         },
+        playNoise: function (volume) {
+            _playNoise(volume);
+        },
+        stopNoise: function () {
+            _stopNoise();
+        },
+        setNoiseFilterFreq: function (freq) {
+            _setNoiseFilterFreq(freq);
+        },
+        setNoiseFilterQ: function (quality) {
+            _setNoiseFilterQ(quality);
+        },
+        setNoiseFilterDetune: function (detune) {
+            _setNoiseFilterDetune(detune);
+        },
+        setNoiseFilterType: function (type) {
+            _setNoiseFilterType(type);
+        },
+        playSynth: function (freq, durationSec) {
+            _playSynth(freq, durationSec);
+        },
+        stopSynth: function () {
+            _stopSynth();
+        },
+        setSynthVolume: function (level, timeMs) {
+            return _setSynthVolume(level, timeMs);
+        },
         rumpLinearSpeechParam: function (param, endValue, duration) {
             return sp.rampLinearConfigParam(param, endValue, duration);
         },
@@ -429,8 +666,32 @@ var zsAudio = (function (u, gr, sp, win) {
             _resetAudio();
         },
         getCurrentTime: function () {
-           return _getCurrentTime();
+            return _getCurrentTime();
         },
+        setMasterVolume: function (level, timeMs) {
+            return _setMasterVolume(level, timeMs);
+        },
+        setPlayerVolume: function (level, timeMs) {
+            return _setPlayerVolume(level, timeMs);
+        },
+        setPlayerMaxVolume: function (level, timeMs) {
+            return _setPlayerMaxVolume(level, timeMs);
+        },
+        loadAudioBuffers: function (audioFilesToLoad) {
+            return _loadAudioBuffers(audioFilesToLoad);
+        },
+        setSpeechVolume: function (level, timeMs) {
+            return _setSpeechVolume(level, timeMs);
+        },
+        setGranulatorVolume: function (level, timeMs) {
+            return _setGranulatorVolume(level, timeMs);
+        },
+        applyGranulatorGainEvelope: function (envelope, durationSec) {
+            return _applyGranulatorGainEvelope(envelope, durationSec);
+        },
+        calcBandpassFilterQ: function (octaves) {
+            return _calcBandpassFilterQ(octaves);
+        },        
     }
 
-}(zsUtil, zsGranulator, zsSpeech, window));
+}(zsUtil, zsGranulator, zsSpeech, zsPlayer, zsNoise, zsSynth, window));
