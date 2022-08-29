@@ -385,10 +385,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         //init audio
         initAudio();
         // init svg and html
-        initMeter();
         initInstructions();
-        initThumbs();
-        initNotes();
 
         initView();
         getServerState();
@@ -397,9 +394,9 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         resetAudio();
     }
     function initView() {
-        enableVoting();
-        hideThumbs();
-        hideNotes();
+        // enableVoting();
+        // hideThumbs();
+        // hideNotes();
     }
     function initNet() {
         n.init(config.connectionPreference, config.appUrlSse, config.appUrlWebsockets, config.appUrlHttp, processSeverState);
@@ -463,55 +460,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         u.listen('orientationchange', win, onWindowResize);
         setInstructions("Welcome to", "<span style='color:blueviolet;'>ZScore</span>", "awaiting performance start ...", null, true);
     }
-    function initThumbs() {
-        var duration = config.voteTimeoutMs / 1000;
-        state.thumbUpTween = gsap.from(u.toCssIdQuery(config.thumbUpSymId), {
-            duration: duration,
-            scaleY: 0.5,
-            fill: "green",
-            transformOrigin: "right bottom",
-            paused: true,
-            ease: "slow(0.9, 0.4, false)",
-            onComplete: onThumbUpComplete,
-        });
-        state.thumbUpTween.progress(1);
-        state.thumbDownTween = gsap.from(u.toCssIdQuery(config.thumbDownSymId), {
-            duration: duration,
-            scaleY: 0.5,
-            fill: "red",
-            transformOrigin: "left top",
-            paused: true,
-            ease: "slow(0.9, 0.4, false)",
-            onComplete: onThumbDownComplete,
-        });
-        state.thumbDownTween.progress(1);
-    }
-    function initNotes() {
-        initNoteUp();
-        initNoteDown();
-    }
-    function initNoteUp() {
-        var noteIdx = u.getRandomIntFromRange(0, config.noteDurations.length - 1);
-        var noteDuration = config.noteDurations[noteIdx];
-        var symRef = u.toCssIdQuery(config.noteSymbolsUp[noteIdx]);
-        var symbol = u.getElement(config.noteUpSymId);
-        symbol.setAttribute("href", symRef);
-        symbol.setAttribute("xlink:href", symRef);
-        var noteDurationSec = getWholeNoteDuration() * config.noteDurationMultipler;
-        state.noteUpDurationSec = noteDuration * noteDurationSec;
-        state.noteUpTween = createNoteUpTween();
-    }
-    function initNoteDown() {
-        var noteIdx = u.getRandomIntFromRange(0, config.noteDurations.length - 1);
-        var noteDuration = config.noteDurations[noteIdx];
-        var symRef = u.toCssIdQuery(config.noteSymbolsDown[noteIdx]);
-        var symbol = u.getElement(config.noteDownSymId);
-        symbol.setAttribute("href", symRef);
-        symbol.setAttribute("xlink:href", symRef);
-        var noteDurationSec = getWholeNoteDuration() * config.noteDurationMultipler;
-        state.noteDownDurationSec = noteDuration * noteDurationSec;
-        state.noteDownTween = createNoteDownTween();
-    }
+    
     function playMeterAudio(value, maxVal) {
         var previousValue = state.meterAudioValue;
         state.meterAudioValue = value;
