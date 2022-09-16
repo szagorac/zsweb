@@ -1324,8 +1324,13 @@ var zscore = (function (u, n, s, a, m, win, doc) {
         if (isNotNull(page)) {
             return page;
         }
-        var imgFileName = config.blankPageUrl;
-        var imgFileUrl = config.blankPageUrl;
+        var imgFileName = state.movement.imgContPageName;
+        if (isNull(imgFileName)) {
+            imgFileName = createDefaultPageImgFileName(pageNo, part);
+        } else {
+            imgFileName = u.replace(imgFileName, config.partNameToken, part);
+        }
+        var imgFileUrl = state.movement.imgDir + imgFileName;
         var page = new ZsPage(pageId, pageNo, part, imgFileName, imgFileUrl);
         var pagesMap = state.movement.partPages;
         var partPages = pagesMap[part];
