@@ -1069,25 +1069,8 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             return;
         }
 
-        var imgSrc = null;
-        var showPageId = stave.pageId;
-        var fileName = stave.filename;
-        var part = stave.part;
-        if (isNotNull(stave.rndPageId)) {
-            showPageId = stave.rndPageId;
-        }
-        var pageNo = getPageNo(showPageId);
-        if(pageNo > 0 && isNotNull(fileName)) {
-            imgSrc = state.movement.imgDir + fileName;
-        } else {
-            var pageImg = getPageImage(showPageId, part);
-            if (isNull(pageImg)) {
-                imgSrc = createStaveImgUrl(stave.filename);
-                log("Created img src: " + imgSrc);
-            } else {
-                imgSrc = pageImg.src;
-            }
-        }
+        var fileName = stave.filename;        
+        var imgSrc = state.movement.imgDir + fileName;
 
         var imgElement = u.getElement(conf.imgId);
         imgElement.setAttributeNS("http://www.w3.org/1999/xlink", "xlink:href", imgSrc);
@@ -1117,23 +1100,14 @@ var zscore = (function (u, n, s, a, m, win, doc) {
     function createStaveImgUrl(fileName) {
         return state.scoreDir + fileName;
     }
-    function getPageImage(pageId, part) {        
-        var page = getMovementPartPage(pageId, part);
-        if (isNull(page)) {
-            return null;
-        }
-        return page.img;
-    }
     function onPageImageLoad(pageId, part) {
-        var page = getMovementPartPage(pageId, part);
-        if (isNotNull(page)) {
-            page.isLoaded = true;
-        }
+        deleteMovementPartPage(pageId, part);
+        state.pageNoToLoad--;        
 
-        state.pageNoToLoad--;
-        if (state.pageNoToLoad === 0) {
+        if(isMovementLoaded()) {
             onPageLoadComplete();
         }
+
         notifyPageLoadListeners(state.pageNoToLoad);
     }
     function notifyPageLoadListeners(noPagesToLoad) {
@@ -1277,6 +1251,22 @@ var zscore = (function (u, n, s, a, m, win, doc) {
             return null;
         }
         return pagesMap[pageId];
+    }
+    function deleteMovementPartPage(pageId, part) {
+        var pagesMap = getMovementPartPages(part);
+        if(isNull(pagesMap)) {
+            return null;
+        }
+        delete pagesMap[pageId];
+    }
+    function isMovementLoaded() {
+        for (var i = 0; i < state.movement.parts.length; i++) {
+            var part = state.movement.parts[i];
+            if(Object.keys(state.movement.partPages[part]).length){
+                return false;
+            }
+        }
+        return true;
     }
     function getOrCreatePage(pageNo, part) {
         var pageId = createPageId(pageNo);
