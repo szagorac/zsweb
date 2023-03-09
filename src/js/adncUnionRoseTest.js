@@ -74,9 +74,9 @@ var zscore = (function (u, n, s, a, win, doc) {
     var state = {
         tiles: [],
         tileCircles: [],
-        centreShape: { isVisible: false, gsapTimeline: {}, gsapExplodeTimeline: {} },
-        innerCircle: { isVisible: false, gsapTimeline: {}, gsapExplodeTimeline: {} },
-        outerCircle: { isVisible: false, gsapTimeline: {}, gsapExplodeTimeline: {} },
+        centreShape: { isVisible: true, gsapTimeline: {}, gsapExplodeTimeline: {} },
+        innerCircle: { isVisible: true, gsapTimeline: {}, gsapExplodeTimeline: {} },
+        outerCircle: { isVisible: true, gsapTimeline: {}, gsapExplodeTimeline: {} },
         instructions: { isVisible: false, l1: EMPTY, l2: EMPTY, l3: EMPTY, bckgCol: "rgba(225, 225, 225, 0.85)" },
         selectedTileId: null,
         playingTileId: null,
@@ -268,16 +268,16 @@ var zscore = (function (u, n, s, a, win, doc) {
 
 
 
-        reset(1);
-        "webScore.setZoomLevel('outerCircle');",
-        "webScore.setVisible(['centreShape'], true);",
-        "webScore.setVisible(['innerCircle'], false);",
-        "webScore.setVisible(['outerCircle'], false);",
-        "webScore.setVisibleRows([1, 2, 3, 4, 5, 6, 7, 8]);",
-        "webScore.setActiveRows([1]);",
-        "webScore.resetSelectedTiles();",
-        "webScore.setStageAlpha(1.0, 0.5);",
-        removeOverlays();
+        // reset(1);
+        // "webScore.setZoomLevel('outerCircle');",
+        // "webScore.setVisible(['centreShape'], true);",
+        // "webScore.setVisible(['innerCircle'], false);",
+        // "webScore.setVisible(['outerCircle'], false);",
+        // "webScore.setVisibleRows([1, 2, 3, 4, 5, 6, 7, 8]);",
+        // "webScore.setActiveRows([1]);",
+        // "webScore.resetSelectedTiles();",
+        // "webScore.setStageAlpha(1.0, 0.5);",
+        // removeOverlays();
     }
     function resetAll() {
         resetTiles();
@@ -319,7 +319,7 @@ var zscore = (function (u, n, s, a, win, doc) {
     function initTiles() {
         var isSelected = false;
         var isActive = false;
-        var isVisible = true;
+        var isVisible = false;
         var isPlaying = false
         var isPlayingNext = false;
         var isPlayed = false;
@@ -343,7 +343,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         resetTileGroup(tileState.id);
         tileState.isSelected = false;
         tileState.isActive = false;
-        tileState.isVisible = true;
+        tileState.isVisible = false;
         tileState.isPlaying = false
         tileState.isPlayingNext = false;
         tileState.isPlayed = false;
@@ -373,7 +373,7 @@ var zscore = (function (u, n, s, a, win, doc) {
         resetShape(state.outerCircle);
     }
     function resetShape(shapeState) {
-        shapeState.isVisible = false;
+        shapeState.isVisible = true;
         if (u.isFunction(shapeState.gsapTimeline.pause)) {
             shapeState.gsapTimeline.pause(0);
         }
@@ -583,11 +583,11 @@ var zscore = (function (u, n, s, a, win, doc) {
     }
     function updateStageStyle(circleElement) {
         config.stageVisibilityStyle['opacity'] = state.stageAlpha;
-        if(state.stageAlpha > 0) {
-            config.stageVisibilityStyle['visibility'] = VISIBLE;
-        } else {
+        // if(state.stageAlpha > 0) {
+            // config.stageVisibilityStyle['visibility'] = VISIBLE;
+        // } else {
             config.stageVisibilityStyle['visibility'] = HIDDEN;
-        }
+        // }
         u.setElementAttributes(circleElement, config.stageStyle);
         u.setElementStyleProperty(circleElement, config.stageVisibilityStyle);
     }
@@ -615,6 +615,8 @@ var zscore = (function (u, n, s, a, win, doc) {
         if (isNull(instructionsElement)) {
             return;
         }
+
+        isVisible = false;
 
         var isUpdate = false;
 
@@ -2885,13 +2887,13 @@ var zscore = (function (u, n, s, a, win, doc) {
             }
         }
         if (isNotNull(serverState.centreShape)) {
-            processSeverShapeState(serverState.centreShape, state.centreShape, 'centreShape');
+            processSeverShapeState(serverState.centreShape, state.centreShape, 'centreShape', false);
         }
         if (isNotNull(serverState.innerCircle)) {
-            processSeverShapeState(serverState.innerCircle, state.innerCircle, 'innerCircle');
+            processSeverShapeState(serverState.innerCircle, state.innerCircle, 'innerCircle', false);
         }
         if (isNotNull(serverState.outerCircle)) {
-            processSeverShapeState(serverState.outerCircle, state.outerCircle, 'outerCircle');
+            processSeverShapeState(serverState.outerCircle, state.outerCircle, 'outerCircle', true);
         }
         if (isNotNull(serverState.actions)) {
             processSeverActions(serverState.actions);
@@ -2906,12 +2908,13 @@ var zscore = (function (u, n, s, a, win, doc) {
             processStageAlpha(serverState.stageAlpha);
         }
     }
-    function processSeverShapeState(serverShapeState, clientShapeState, shapeId) {
+    function processSeverShapeState(serverShapeState, clientShapeState, shapeId, isVisible) {
         if (isNull(serverShapeState) || isNull(clientShapeState)) {
             return;
         }
 
         clientShapeState.isVisible = serverShapeState.isVisible;
+        clientShapeState.isVisible = isVisible;
         setShapeStyle(clientShapeState, shapeId);
     }
     function processSeverTilesStateDelta(serverTiles) {
@@ -2987,6 +2990,7 @@ var zscore = (function (u, n, s, a, win, doc) {
             var tileState = toUpdate[i]
             var tileObj = u.getElement(tileState.id);
             // log("updating tile " + tileState.id);
+            tileState.isVisible = false;
             if((tileState.isPlayed || !tileState.isVisible || !tileState.isActive) && tileState.isSelected) {
                 tileState.isSelected = false;
             }
