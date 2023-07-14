@@ -44,6 +44,7 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         voteTimeMs: 0,
         thumbUpTween: null,
         thumbDownTween: null,
+        regionTweens: [],
         noteUpTween: null,
         noteUpDurationSec: 1,
         noteDownTween: null,
@@ -94,6 +95,8 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         loadingIconId: "loadingIcon",
         elementGroupSuffix: "Grp",
         meterGroupId: "meterGrp",
+        regionGrpId: "regionGrp",
+        regionRectId: "regionRect",
         thumbUpRectId: "thUpRect",
         thumbDownRectId: "thDownRect",
         thumbUpGroupId: "thumbUpGrp",
@@ -385,10 +388,8 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         //init audio
         initAudio();
         // init svg and html
-        initMeter();
         initInstructions();
-        initThumbs();
-        initNotes();
+        initRegions();
 
         initView();
         getServerState();
@@ -397,9 +398,9 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         resetAudio();
     }
     function initView() {
-        enableVoting();
-        hideThumbs();
-        hideNotes();
+        // enableVoting();
+        // hideThumbs();
+        // hideNotes();
     }
     function initNet() {
         n.init(config.connectionPreference, config.appUrlSse, config.appUrlWebsockets, config.appUrlHttp, processSeverState);
@@ -435,15 +436,36 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         initPointerHandlers();
     }
     function initPointerHandlers() {
-        var thUr = getThumbUpRect();
-        if (isNotNull(thUr)) {
-            u.listen('touchend', thUr, onTouchEndThumbsUp);
-            u.listen('mouseup', thUr, onMouseUpThumbsUp);
+        for (var i =  1; i < 5; i++) {
+            var regionRect = getRegionRect(i);
+            regionRect.rgnId = i;
+            if (isNotNull(regionRect)) {
+                u.listen('touchend', regionRect, onTouchEndRegionSelect);
+                u.listen('mouseup', regionRect, onMouseUpRegionSelect);
+            }
         }
-        var thD = getThumbDownRect();
-        if (isNotNull(thD)) {
-            u.listen('touchend', thD, onTouchEndThumbsDown);
-            u.listen('mouseup', thD, onMouseUpThumbsDown);
+    }
+    // function initPointerHandlers() {
+    //     var thUr = getThumbUpRect();
+    //     if (isNotNull(thUr)) {
+    //         u.listen('touchend', thUr, onTouchEndThumbsUp);
+    //         u.listen('mouseup', thUr, onMouseUpThumbsUp);
+    //     }
+    //     var thD = getThumbDownRect();
+    //     if (isNotNull(thD)) {
+    //         u.listen('touchend', thD, onTouchEndThumbsDown);
+    //         u.listen('mouseup', thD, onMouseUpThumbsDown);
+    //     }
+    // }
+    function initRegions() {
+        state.regionTweens = u.initArray(5,null);
+        for (var i = 1; i < 5; i++) {
+            var regionId = createRegionId(i);
+            var regionRectId = createRegionRectId(i);
+            var regionRect = u.getElement(regionRectId);
+            var yPos = regionRect.y.baseVal.value;
+            var dy = 1000 - yPos;
+            state.regionTweens[i] = createRegionToPlaylineTween(regionId, regionRectId, dy);
         }
     }
     function initMeter() {
@@ -461,57 +483,9 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         _instructionsElement = inst;
         u.listen('resize', win, onWindowResize);
         u.listen('orientationchange', win, onWindowResize);
-        setInstructions("Welcome to", "<span style='color:blueviolet;'>ZScore</span>", "awaiting performance start ...", null, true);
+        setInstructions("Select region to play", "", "", null, true);
     }
-    function initThumbs() {
-        var duration = config.voteTimeoutMs / 1000;
-        state.thumbUpTween = gsap.from(u.toCssIdQuery(config.thumbUpSymId), {
-            duration: duration,
-            scaleY: 0.5,
-            fill: "green",
-            transformOrigin: "right bottom",
-            paused: true,
-            ease: "slow(0.9, 0.4, false)",
-            onComplete: onThumbUpComplete,
-        });
-        state.thumbUpTween.progress(1);
-        state.thumbDownTween = gsap.from(u.toCssIdQuery(config.thumbDownSymId), {
-            duration: duration,
-            scaleY: 0.5,
-            fill: "red",
-            transformOrigin: "left top",
-            paused: true,
-            ease: "slow(0.9, 0.4, false)",
-            onComplete: onThumbDownComplete,
-        });
-        state.thumbDownTween.progress(1);
-    }
-    function initNotes() {
-        initNoteUp();
-        initNoteDown();
-    }
-    function initNoteUp() {
-        var noteIdx = u.getRandomIntFromRange(0, config.noteDurations.length - 1);
-        var noteDuration = config.noteDurations[noteIdx];
-        var symRef = u.toCssIdQuery(config.noteSymbolsUp[noteIdx]);
-        var symbol = u.getElement(config.noteUpSymId);
-        symbol.setAttribute("href", symRef);
-        symbol.setAttribute("xlink:href", symRef);
-        var noteDurationSec = getWholeNoteDuration() * config.noteDurationMultipler;
-        state.noteUpDurationSec = noteDuration * noteDurationSec;
-        state.noteUpTween = createNoteUpTween();
-    }
-    function initNoteDown() {
-        var noteIdx = u.getRandomIntFromRange(0, config.noteDurations.length - 1);
-        var noteDuration = config.noteDurations[noteIdx];
-        var symRef = u.toCssIdQuery(config.noteSymbolsDown[noteIdx]);
-        var symbol = u.getElement(config.noteDownSymId);
-        symbol.setAttribute("href", symRef);
-        symbol.setAttribute("xlink:href", symRef);
-        var noteDurationSec = getWholeNoteDuration() * config.noteDurationMultipler;
-        state.noteDownDurationSec = noteDuration * noteDurationSec;
-        state.noteDownTween = createNoteDownTween();
-    }
+    
     function playMeterAudio(value, maxVal) {
         var previousValue = state.meterAudioValue;
         state.meterAudioValue = value;
@@ -625,6 +599,44 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         var beatDurationSec = getBeatDuration();
         return beatDurationSec * 4;
     }
+    function createRegionToPlaylineTween(regionId, rectId, dy) {
+        var duration = 0.2;
+        u.getElement(regionId);
+        return gsap.to(u.toCssIdQuery(regionId), {
+            duration: duration,
+            y: dy,
+            ease: "slow(0.9, 0.4, false)",
+            paused: true,
+            onComplete: onRegionMoveComplete,
+            onCompleteParams: [regionId, rectId],
+        });
+    }
+    function createRegionPlayTween(regionId, rectId) {
+        var duration = 8.0;
+        var dy = 1100;
+        var regionRect = u.getElement(rectId);
+        var yPos = regionRect.y.baseVal.value;
+        var dy = 1400 - yPos + 2;
+        return gsap.to(u.toCssIdQuery(regionId), {
+            duration: duration,
+            y: dy,
+            ease: Linear.easeNone,
+            paused: true,
+            onComplete: onRegionPlayComplete,
+            onCompleteParams: [regionId, rectId],
+        });
+    }
+    function createRegionDesolveTween(regionId, rectId) {
+        var duration = 0.3;
+        return gsap.to(u.toCssIdQuery(regionId), {
+            duration: duration,
+            autoAlpha: 0,
+            ease: "slow(0.9, 0.4, false)",
+            paused: true,
+            onComplete: onRegionDesolveComplete,
+            onCompleteParams: [regionId, rectId],
+        });
+    }
     function createNoteUpTween() {
         var duration = state.noteUpDurationSec;
         var conf = { sign: -1.0, angleMin: 0, angleMax: 120, rMin: 10, rMax: 30, rotAngleMin: -360, rotAngleMax: 360, xmod: 20, ymod: 30 };
@@ -670,6 +682,19 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
     }
     function onThumbDownComplete() {
         u.setElementAttributes(getThumbDownGroup(), config.filterRedAttrib);
+    }
+    function onRegionMoveComplete(regionId, rectId) {
+        log("onRegionMoveComplete: " + regionId);
+        var playTween = createRegionPlayTween(regionId, rectId);
+        u.playOrRestartTween(playTween);
+    }   
+    function onRegionPlayComplete(regionId, rectId) {
+        log("onRegionPlayComplete: " + regionId);
+        var desolveTween = createRegionDesolveTween(regionId, rectId);
+        u.playOrRestartTween(desolveTween);
+    }    
+    function onRegionDesolveComplete(regionId, rectId) {
+        log("onRegionDesolveComplete: " + regionId);
     }
     function onNoteUpComplete() {
         runNoteCompleteTween(config.noteUpSymId);
@@ -1760,6 +1785,20 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
     function getThumbUpRect() {
         return u.getElement(config.thumbUpRectId);
     }
+    function getRegion(regionNo) {
+        var regionId = createRegionId(regionNo);
+        return u.getElement(regionId);
+    }
+    function getRegionRect(regionNo) {
+        var regionRectId = createRegionRectId(regionNo);
+        return u.getElement(regionRectId);
+    }
+    function createRegionId(regionNo) {
+        return config.regionGrpId + regionNo;
+    }
+    function createRegionRectId(regionNo) {
+        return config.regionRectId + regionNo;
+    }
     function getThumbUpPath() {
         return u.getElement(config.thumbUpSymId);
     }
@@ -1783,6 +1822,12 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
     }
     function getNoteDownTween() {
         return state.noteDownTween;
+    }
+    function getRegionTween(regionNo) {
+        if(isNull(state.regionTweens)) {
+            return null;
+        }
+        return state.regionTweens[regionNo];
     }
     function getFontSizeFit(value, fontSize, container) {
         var fs = 1;
@@ -1879,6 +1924,10 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         var result = (end - start) * config.textHeightCompressor;
         return result;
     }
+    function onRegionSelect(regionId) {
+        log("onRegionSelect:");
+        u.playOrRestartTween(getRegionTween(regionId));
+    }
     function onThumbsUp() {
         log("onThumbsUp:");
         if (state.isThumbEnabled) {
@@ -1936,6 +1985,24 @@ var zscore = (function (u, n, s, a, m, syn, win, doc) {
         }
         // event.preventDefault();
         onThumbsUp();
+    }
+    function onMouseUpRegionSelect(event) {
+        log("onMouseUpRegionSelect:");
+        if (_isTouch) {
+            return;
+        }
+        var regionId = event.target.rgnId;
+        // event.preventDefault();
+        onRegionSelect(regionId);
+    }
+    function onTouchEndRegionSelect(event) {
+        log("onTouchEndRegionSelect:");
+        if (!_isTouch) {
+            return;
+        }
+        var regionId = event.target.rgnId;
+        // event.preventDefault();
+        onRegionSelect(regionId);
     }
     function onMouseUpThumbsDown(event) {
         log("onMouseUpThumbsDown:");

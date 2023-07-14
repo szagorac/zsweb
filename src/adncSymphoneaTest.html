@@ -38,26 +38,37 @@
              
         </defs>
 
-        <g id="regionsGrpA" style="visibility:visible;">
-            <rect id="thDownRect1" x="200" y="1000" width="20" height="400" style="opacity:1;stroke:none;fill:red;fill-opacity:1" rx="0"/>
-            <rect id="thDownRect2" x="220" y="1000" width="20" height="400" style="opacity:1;stroke:none;fill:green;fill-opacity:1" rx="0"/>
-            <rect id="thDownRect3" x="240" y="1000" width="20" height="400" style="opacity:1;stroke:none;fill:blue;fill-opacity:1" rx="0"/>
-            <rect id="thDownRect" x="200" y="1000" width="100" height="400" style="opacity:1;stroke-width:5;stroke:black;fill:white;fill-opacity:0" rx="0"/>
+        <g id="regionGrp1" style="visibility:visible;">
+            <rect id="regionRect1-1" x="600" y="300" width="20" height="400" pointer-events="none" style="opacity:1;stroke:none;fill:red;fill-opacity:1" rx="0"/>
+            <rect id="regionRect1" x="600" y="300" width="100" height="400" style="opacity:1;stroke-width:5;stroke:black;fill:white;fill-opacity:0" rx="0"/>
         </g>
 
-        <g id="regionsGrpB" style="visibility:visible;">
-            <rect id="thDownRect1" x="400" y="1200" width="20" height="400" style="opacity:1;stroke:none;fill:red;fill-opacity:1" rx="0"/>
-            <rect id="thDownRect3" x="420" y="1200" width="20" height="400" style="opacity:1;stroke:none;fill:blue;fill-opacity:1" rx="0"/>
-            <rect id="thDownRect" x="400" y="1200" width="100" height="400" style="opacity:1;stroke-width:5;stroke:black;fill:white;fill-opacity:0" rx="0"/>
+        <g id="regionGrp2" style="visibility:visible;">
+            <rect id="regionRect2-1" x="200" y="300" width="20" height="400" pointer-events="none"  style="opacity:1;stroke:none;fill:red;fill-opacity:1" rx="0"/>
+            <rect id="regionRect2-2" x="220" y="300" width="20" height="400" pointer-events="none" style="opacity:1;stroke:none;fill:green;fill-opacity:1" rx="0"/>
+            <rect id="regionRect2" x="200" y="300" width="100" height="400" style="opacity:1;stroke-width:5;stroke:black;fill:white;fill-opacity:0" rx="0"/>
+        </g>
+
+        <g id="regionGrp3" style="visibility:visible;">
+            <rect id="regionRect3-1" x="325" y="800" width="20" height="400" pointer-events="none" style="opacity:1;stroke:none;fill:red;fill-opacity:1" rx="0"/>
+            <rect id="regionRect3-2" x="345" y="800" width="20" height="400" pointer-events="none" style="opacity:1;stroke:none;fill:green;fill-opacity:1" rx="0"/>
+            <rect id="regionRect3-3" x="365" y="800" width="20" height="400" pointer-events="none" style="opacity:1;stroke:none;fill:blue;fill-opacity:1" rx="0"/>
+            <rect id="regionRect3" x="325" y="800" width="100" height="400" style="opacity:1;stroke-width:5;stroke:black;fill:white;fill-opacity:0" rx="0"/>
+        </g>
+
+        <g id="regionGrp4" style="visibility:visible;">
+            <rect id="regionRect4-1" x="475" y="800" width="20" height="400" pointer-events="none" style="opacity:1;stroke:none;fill:red;fill-opacity:1" rx="0"/>
+            <rect id="regionRect4-2" x="495" y="800" width="20" height="400" pointer-events="none" style="opacity:1;stroke:none;fill:blue;fill-opacity:1" rx="0"/>
+            <rect id="regionRect4" x="475" y="800" width="100" height="400" style="opacity:1;stroke-width:5;stroke:black;fill:white;fill-opacity:0" rx="0"/>
         </g>
         
         <g id="playheadGrp" style="visibility:visible;">
-            <rect id="thDownRect" x="-1000" y="1404" width="2900" height="500" style="opacity:0.9;stroke-width:1;stroke:black;fill:white;fill-opacity:0.9" rx="0"/>
+            <rect id="regionRectMask" x="-1000" y="1404" width="2900" height="500" style="opacity:0.9;stroke-width:1;stroke:black;fill:white;fill-opacity:0.9" rx="0"/>
             <line id="playheadLine" x1="-1000" y1="1404" x2="1900" y2="1404" style="stroke:limegreen;stroke-width:8" />
         </g>
     </svg>
     
-    <div class="myTxt" id="instructionTxt"></br>Welcome to ZScore</div>
+    <div class="myTxt" id="instructionTxt"></div>
 
     <div id="loadingIcon" class="loading">
         <img src="img/loaderIcon.gif">
